@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { verifyAdminRole, handleAdminError } from "@/lib/auth-utils";
+import { verifyAdminRole } from "@/lib/auth-utils";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 function getWeekOfMonth(date: Date): number {
@@ -73,8 +73,9 @@ export async function GET(request: NextRequest) {
 
     // ─── Daily data (last 7 days in range) ─────────────────────────────
     const days = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+    const rangeEnd = dateTo ? new Date(dateTo) : new Date();
     const dailyData = Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date();
+      const d = new Date(rangeEnd);
       d.setDate(d.getDate() - (6 - i));
       const dateString = d.toISOString().split("T")[0];
       const dayName = days[d.getDay()];

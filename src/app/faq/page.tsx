@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { STORE_NAME } from "@/utils/storeConfig";
 import { ChevronDown } from "lucide-react";
 
 const faqs = [

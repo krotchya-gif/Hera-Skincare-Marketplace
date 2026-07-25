@@ -5,12 +5,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
 
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll() {
@@ -20,22 +14,21 @@ export async function proxy(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         );
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
-        );
       },
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
+      if (pathname.startsWith("/api/admin")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       if (pathname !== "/admin/login") {
         const url = request.nextUrl.clone();
         url.pathname = "/admin/login";
@@ -57,6 +50,9 @@ export async function proxy(request: NextRequest) {
           return NextResponse.redirect(url);
         }
       } else {
+        if (pathname.startsWith("/api/admin")) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
         const url = request.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);
@@ -64,7 +60,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { categories as mockCategoriesMetadata } from "@/utils/mockData";
+import { useToast } from "@/components/Toast";
 import { getProductEmoji } from "@/components/HomeClient";
 import { createClient } from "@/utils/supabase/client";
 import { addToCart, getWishlist, toggleWishlist } from "@/lib/cart-utils";
@@ -24,6 +24,7 @@ const sortOptions = [
 
 
 function ProductCard({ product }: { product: Product }) {
+  const { toast } = useToast();
   const [wished, setWished] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return getWishlist().includes(product.id);
@@ -42,7 +43,7 @@ function ProductCard({ product }: { product: Product }) {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert("Silakan masuk (login) terlebih dahulu untuk berbelanja.");
+        toast("info", "Silakan masuk (login) terlebih dahulu untuk berbelanja.");
         window.location.href = "/profil";
         return;
       }
@@ -73,7 +74,7 @@ function ProductCard({ product }: { product: Product }) {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert("Silakan masuk (login) terlebih dahulu untuk menambahkan wishlist.");
+        toast("info", "Silakan masuk (login) terlebih dahulu untuk menambahkan wishlist.");
         window.location.href = "/profil";
         return;
       }
@@ -93,7 +94,7 @@ function ProductCard({ product }: { product: Product }) {
           <span className="text-5xl md:text-6xl">{emoji}</span>
 
           {hasDiscount && (
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            <span className="absolute top-2 left-2 animate-shimmer-glow text-white text-xs font-bold px-2 py-0.5 rounded-full">
               -{discountPercent}%
             </span>
           )}
@@ -151,8 +152,7 @@ interface CategoryClientProps {
 }
 
 export default function CategoryClient({ category, initialResult, slug, searchQuery: initialSearch = "", subcategories }: CategoryClientProps) {
-  const meta = mockCategoriesMetadata.find((c) => c.slug === slug);
-  const description = meta?.description || "Semua produk terbaik untuk kesegaran harianmu.";
+  const description = "Semua produk terbaik untuk kesegaran harianmu.";
   const subCategories = subcategories || [];
 
   const [products, setProducts] = useState<Product[]>(initialResult.data);
@@ -194,7 +194,10 @@ export default function CategoryClient({ category, initialResult, slug, searchQu
   }, [selectedSub, slug, sortBy, page, priceMin, priceMax, searchTerm]);
 
   useEffect(() => {
-    fetchFilteredProducts();
+    const timer = setTimeout(() => {
+      fetchFilteredProducts();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchFilteredProducts]);
 
   return (

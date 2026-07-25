@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     // Rate limiting
     const rlKey = getRateLimitKey(request);
-    const { allowed, remaining } = checkRateLimit(rlKey, 10, 60000);
+    const { allowed } = checkRateLimit(rlKey, 10, 60000);
     if (!allowed) {
       return NextResponse.json(
         { error: "Terlalu banyak permintaan. Silakan coba lagi dalam beberapa menit." },

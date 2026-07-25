@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Link from "next/link";
 import { STORE_NAME } from "@/utils/storeConfig";
 import { createClient } from "@/utils/supabase/server";
 
@@ -35,10 +34,9 @@ export default async function BlogPage() {
         {articles.length > 0 ? (
           <div className="grid gap-4">
             {articles.map((article) => (
-              <Link
+              <div
                 key={article.slug}
-                href={`/blog/${article.slug}`}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:-translate-y-0.5 transition-all block"
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 block"
               >
                 <div className="flex items-start gap-4">
                   <span className="text-3xl shrink-0">{article.emoji || "📝"}</span>
@@ -47,7 +45,7 @@ export default async function BlogPage() {
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{article.excerpt}</p>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (

@@ -34,6 +34,11 @@ export async function PUT(
       if (body[key] !== undefined) sanitizedBody[key] = body[key];
     }
 
+    // Validate phone format
+    if (sanitizedBody.phone && !/^[0-9+\-\s]{8,15}$/.test(String(sanitizedBody.phone).replace(/\s/g, ''))) {
+      return NextResponse.json({ error: "Format nomor telepon tidak valid." }, { status: 400 });
+    }
+
     // If setting as default, unset others first
     if (sanitizedBody.is_default) {
       await supabase

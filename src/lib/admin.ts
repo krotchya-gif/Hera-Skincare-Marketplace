@@ -1,6 +1,6 @@
 // ─── Admin Data Layer — Supabase queries ─────────────────────────────────────
 import { createClient } from "@/utils/supabase/server";
-import type { Profile, Product, Review, Voucher, FlashSale, DashboardStats, OrderStatus, Category } from "@/types/database";
+import type { Profile, Product, Review, Voucher, DashboardStats, OrderStatus, Category } from "@/types/database";
 
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
 
@@ -389,21 +389,12 @@ export async function updateCategory(id: string, payload: Partial<Category>): Pr
   return true;
 }
 
-export async function deleteCategory(id: string): Promise<boolean> {
+// ponytail: soft-delete (set is_active = false), not hard delete
+export async function softDeleteCategory(id: string): Promise<boolean> {
   const supabase = await createClient();
   const { error } = await supabase.from("categories").update({ is_active: false }).eq("id", id);
-  if (error) { console.error("[deleteCategory]", error); return false; }
+  if (error) { console.error("[softDeleteCategory]", error); return false; }
   return true;
 }
 
-// ─── Admin Flash Sales ────────────────────────────────────────────────────────
 
-export async function getAllFlashSales(): Promise<FlashSale[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("flash_sales")
-    .select(`*, flash_sale_products(*, products(id, name, slug, price))`)
-    .order("starts_at", { ascending: false });
-  if (error) return [];
-  return (data as unknown as FlashSale[]) ?? [];
-}

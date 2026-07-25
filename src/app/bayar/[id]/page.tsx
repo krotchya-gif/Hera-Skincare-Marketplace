@@ -24,24 +24,14 @@ export default async function BayarPage({ params }: { params: Promise<{ id: stri
   // Verify ownership
   if (order.user_id !== user.id) notFound();
 
-  // Fetch bank account from store_settings (not hardcoded)
-  let bankAccount = { bank: "BCA", number: "1234567890", owner: "PT Hera Store" };
+  // Fetch bank account from store_settings
   const { data: paymentSettings } = await supabase
     .from("store_settings")
     .select("value")
     .eq("key", "payment")
     .single();
 
-  if (paymentSettings?.value) {
-    const val = paymentSettings.value as { bank_account?: { bank?: string; number?: string; owner?: string } };
-    if (val.bank_account) {
-      bankAccount = {
-        bank: val.bank_account.bank || bankAccount.bank,
-        number: val.bank_account.number || bankAccount.number,
-        owner: val.bank_account.owner || bankAccount.owner,
-      };
-    }
-  }
+  const bankAccount = (paymentSettings?.value as { bank_account?: { bank: string; number: string; owner: string } } | null)?.bank_account ?? null;
 
   const sudahLunas = order.payment_status === "lunas";
 
@@ -75,7 +65,7 @@ export default async function BayarPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
-          {!sudahLunas && (
+          {!sudahLunas && bankAccount && (
             <div className="border-t border-gray-100 pt-4">
               <h3 className="font-semibold text-gray-900 text-sm mb-3">Transfer ke:</h3>
               <div className="bg-blue-50 rounded-xl p-4 space-y-2">
@@ -93,9 +83,12 @@ export default async function BayarPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
               <p className="text-xs text-gray-400 mt-2">
-                Setelah transfer, klik tombol "Sudah Bayar" untuk konfirmasi.
+                Setelah transfer, klik tombol &quot;Sudah Bayar&quot; untuk konfirmasi.
               </p>
             </div>
+          )}
+          {!sudahLunas && !bankAccount && (
+            <p className="text-xs text-gray-400 mt-2">Info rekening belum tersedia. Hubungi admin untuk detail pembayaran.</p>
           )}
 
           <div className="mt-6 space-y-3">

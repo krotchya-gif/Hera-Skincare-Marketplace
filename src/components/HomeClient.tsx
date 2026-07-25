@@ -5,6 +5,7 @@ import { STORE_NAME } from "@/utils/storeConfig";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useToast } from "@/components/Toast";
 import { createClient } from "@/utils/supabase/client";
 import {
   Leaf,
@@ -17,6 +18,7 @@ import {
   Zap,
   Heart,
   X,
+  ArrowRight,
 } from "lucide-react";
 import type { Product, Category } from "@/types/database";
 
@@ -72,45 +74,60 @@ function useCountdown(targetDate: string | null) {
 // ─── Hero Banner ──────────────────────────────────────────────────
 function HeroBanner() {
   return (
-    <section className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 relative overflow-hidden animate-fade-in-up">
-      <div className="absolute top-0 right-0 w-64 md:w-96 h-64 md:h-96 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3" />
-      <div className="absolute bottom-0 left-1/4 w-32 md:w-48 h-32 md:h-48 bg-white/5 rounded-full translate-y-1/2" />
+    <section className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-700 relative overflow-hidden">
+      {/* Animated decorative circles */}
+      <div className="absolute top-0 right-0 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-white/[0.04] rounded-full translate-x-1/3 -translate-y-1/3 animate-float-slow" />
+      <div className="absolute bottom-0 left-1/4 w-24 sm:w-32 md:w-48 h-24 sm:h-32 md:h-48 bg-white/[0.04] rounded-full translate-y-1/2 animate-float-delayed" />
+      <div className="absolute top-1/2 right-1/4 w-16 md:w-24 h-16 md:h-24 bg-emerald-500/10 rounded-full animate-float" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-16 flex flex-col md:flex-row items-center gap-6 md:gap-12 relative z-10">
-        <div className="flex-1 text-center md:text-left">
-          <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <Leaf className="w-6 h-6 text-white" />
+      {/* Subtle grid pattern overlay */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 md:py-16 flex flex-col md:flex-row items-center gap-6 md:gap-12 relative z-10">
+        <div className="flex-1 text-center md:text-left animate-fade-in-up">
+          <div className="flex items-center justify-center md:justify-start gap-2 mb-3 sm:mb-4">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+              <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <span className="text-green-200 text-sm font-medium">{STORE_NAME}</span>
+            <span className="text-emerald-200/90 text-xs sm:text-sm font-medium tracking-wide">{STORE_NAME}</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-3">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-3 sm:mb-4 tracking-tight">
             Solusi Produk<br />
-            <span className="text-green-200">Berkualitas</span>
+            <span className="text-gradient-premium">Berkualitas</span>
           </h1>
-          <p className="text-green-100 text-sm md:text-base mb-6 max-w-md mx-auto md:mx-0">
+          <p className="text-emerald-100/80 text-xs sm:text-sm md:text-base mb-5 sm:mb-6 max-w-md mx-auto md:mx-0 leading-relaxed">
             Temukan ribuan produk rumah tangga premium — sabun, pembersih, perawatan tubuh, dan lebih banyak lagi.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-            <button className="bg-white text-green-700 font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all text-sm">
-              Belanja Sekarang
-            </button>
-            <button className="border-2 border-white/50 text-white font-semibold px-6 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm">
+            <Link
+              href="/kategori/semua"
+              className="relative overflow-hidden bg-white text-emerald-700 font-bold px-6 py-3 sm:py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 text-sm inline-flex items-center justify-center gap-2 group"
+            >
+              <span className="relative z-10">Belanja Sekarang</span>
+              <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform duration-200" />
+              {/* Shine sweep effect */}
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-emerald-100/60 to-transparent skew-x-12" />
+            </Link>
+            <Link
+              href="/#promo"
+              className="border-2 border-white/30 text-white font-semibold px-6 py-3 sm:py-3.5 rounded-xl hover:bg-white/10 hover:border-white/50 transition-all duration-300 text-sm backdrop-blur-sm text-center"
+            >
               Lihat Promo →
-            </button>
+            </Link>
           </div>
         </div>
 
-        <div className="flex gap-3 md:gap-4 shrink-0">
+        <div className="flex gap-3 md:gap-4 shrink-0 animate-fade-in-up delay-200">
           {["🧴", "🧼", "🌸"].map((emoji, i) => (
             <div
               key={i}
-              className={`bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-5 border border-white/20 shadow-xl ${i === 1 ? "-translate-y-3 md:-translate-y-4" : ""}`}
+              className={`bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 md:p-6 border border-white/15 shadow-xl hover:bg-white/15 transition-all duration-300 ${i === 1 ? "-translate-y-3 md:-translate-y-5" : ""}`}
+              style={{ animationDelay: `${i * 150}ms` }}
             >
-              <span className="text-4xl md:text-5xl block mb-2">{emoji}</span>
-              <div className="w-full h-1.5 bg-white/20 rounded-full">
+              <span className="text-3xl sm:text-4xl md:text-5xl block mb-2">{emoji}</span>
+              <div className="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-white rounded-full"
+                  className="h-full bg-gradient-to-r from-white/80 to-emerald-200 rounded-full transition-all duration-1000"
                   style={{ width: `${70 - i * 15}%` }}
                 />
               </div>
@@ -125,23 +142,27 @@ function HeroBanner() {
 // ─── Trust Bar ────────────────────────────────────────────────────
 function TrustBar() {
   const items = [
-    { icon: <Truck className="w-5 h-5 text-green-600" />, title: "Gratis Ongkir", sub: "Min. belanja tertentu" },
-    { icon: <BadgeCheck className="w-5 h-5 text-green-600" />, title: "Garansi Produk", sub: "100% Original" },
-    { icon: <Shield className="w-5 h-5 text-green-600" />, title: "Pembayaran Aman", sub: "Dijamin aman" },
-    { icon: <Headphones className="w-5 h-5 text-green-600" />, title: "Support 24/7", sub: "Siap membantu" },
+    { icon: <Truck className="w-5 h-5 text-emerald-600" />, title: "Gratis Ongkir", sub: "Min. belanja tertentu" },
+    { icon: <BadgeCheck className="w-5 h-5 text-emerald-600" />, title: "Garansi Produk", sub: "100% Original" },
+    { icon: <Shield className="w-5 h-5 text-emerald-600" />, title: "Pembayaran Aman", sub: "Dijamin aman" },
+    { icon: <Headphones className="w-5 h-5 text-emerald-600" />, title: "Support 24/7", sub: "Siap membantu" },
   ];
   return (
-    <section className="bg-white border-b border-gray-100 py-4 animate-fade-in-up delay-100">
+    <section className="bg-white/80 backdrop-blur-sm border-b border-gray-100/60 py-4 sm:py-5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-0 md:divide-x divide-gray-100">
-          {items.map((item) => (
-            <div key={item.title} className="flex items-center gap-3 px-0 md:px-6 first:pl-0 last:pr-0">
-              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          {items.map((item, i) => (
+            <div
+              key={item.title}
+              className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-emerald-50/50 transition-all duration-300 animate-fade-in-up"
+              style={{ animationDelay: `${(i + 1) * 100}ms` }}
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl flex items-center justify-center shrink-0 animate-glow-pulse border border-emerald-100/50">
                 {item.icon}
               </div>
               <div>
-                <p className="font-semibold text-gray-800 text-xs md:text-sm">{item.title}</p>
-                <p className="text-gray-400 text-xs">{item.sub}</p>
+                <p className="font-semibold text-gray-800 text-[11px] sm:text-xs md:text-sm leading-tight">{item.title}</p>
+                <p className="text-gray-400 text-[10px] sm:text-xs leading-tight mt-0.5">{item.sub}</p>
               </div>
             </div>
           ))}
@@ -161,6 +182,7 @@ function ProductCard({
   showDiscount?: boolean;
   stats?: { average: number; count: number; sold: number };
 }) {
+  const { toast } = useToast();
   const [wished, setWished] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return getWishlist().includes(product.id);
@@ -179,7 +201,7 @@ function ProductCard({
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert("Silakan masuk (login) terlebih dahulu untuk berbelanja.");
+        toast("info", "Silakan masuk (login) terlebih dahulu untuk berbelanja.");
         window.location.href = "/profil";
         return;
       }
@@ -205,12 +227,13 @@ function ProductCard({
 
   return (
     <Link href={`/produk/${product.slug}`} className="block">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all group cursor-pointer">
-        <div className="relative aspect-square bg-green-50 flex items-center justify-center">
-          <span className="text-5xl md:text-6xl">{emoji}</span>
+      <div className="bg-white rounded-2xl overflow-hidden card-premium group cursor-pointer">
+        {/* Image area */}
+        <div className="relative aspect-square bg-gradient-to-br from-emerald-50/80 via-green-50/60 to-teal-50/40 flex items-center justify-center">
+          <span className="text-4xl sm:text-5xl md:text-6xl group-hover:scale-110 transition-transform duration-500">{emoji}</span>
 
           {showDiscount && hasDiscount && (
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            <span className="absolute top-2 left-2 animate-shimmer-glow text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-lg shadow-sm">
               -{discountPercent}%
             </span>
           )}
@@ -223,7 +246,7 @@ function ProductCard({
                 const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
-                  alert("Silakan masuk (login) terlebih dahulu untuk menambahkan wishlist.");
+                  toast("info", "Silakan masuk (login) terlebih dahulu untuk menambahkan wishlist.");
                   window.location.href = "/profil";
                   return;
                 }
@@ -235,8 +258,8 @@ function ProductCard({
                 console.error(err);
               }
             }}
-            className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition-all ${
-              wished ? "bg-red-500 text-white" : "bg-white text-gray-400 hover:text-red-500"
+            className={`absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 active:scale-90 ${
+              wished ? "bg-gradient-to-br from-rose-500 to-red-500 text-white" : "bg-white/90 backdrop-blur-sm text-gray-400 hover:text-rose-500 hover:bg-white"
             }`}
           >
             <Heart className={`w-3.5 h-3.5 ${wished ? "fill-current" : ""}`} />
@@ -244,41 +267,44 @@ function ProductCard({
 
           <button
             onClick={handleAdd}
-            className={`absolute bottom-2 left-2 right-2 py-1.5 rounded-lg text-xs font-semibold transition-all ${added
-                ? "bg-green-600 text-white opacity-100"
-                : "bg-white text-green-700 border border-green-200 md:opacity-0 md:group-hover:opacity-100 opacity-100"
+            className={`absolute bottom-2 left-2 right-2 py-2 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 ${added
+                ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md opacity-100"
+                : "bg-white/90 backdrop-blur-sm text-emerald-700 border border-emerald-200/60 md:opacity-0 md:group-hover:opacity-100 opacity-100 hover:bg-emerald-50"
               }`}
           >
             {added ? "✓ Ditambahkan!" : "+ Keranjang"}
           </button>
         </div>
 
-        <div className="p-3">
-          <p className="font-medium text-gray-900 text-xs leading-snug line-clamp-2 mb-1">
+        {/* Content */}
+        <div className="p-3 sm:p-3.5">
+          <p className="font-medium text-gray-900 text-xs sm:text-[13px] leading-snug line-clamp-2 mb-1.5">
             {product.name}
           </p>
           <div className="flex items-center gap-1 mb-1.5">
-            <Star className="w-3 h-3 text-yellow-400 fill-current" />
-            <span className="text-xs text-gray-500">
+            <Star className="w-3 h-3 text-amber-400 fill-current" />
+            <span className="text-[10px] sm:text-xs text-gray-500">
               {stats && stats.count > 0 ? `${stats.average} · ${stats.sold.toLocaleString("id-ID")} terjual` : "Produk Baru"}
             </span>
           </div>
           <div>
-            <p className="font-bold text-green-700 text-sm">
+            <p className="font-bold text-emerald-700 text-sm sm:text-[15px]">
               {formatRp(finalPrice)}
             </p>
             {hasDiscount && (
-              <p className="text-gray-400 text-xs line-through">
+              <p className="text-gray-400 text-[10px] sm:text-xs line-through">
                 {formatRp(product.price)}
               </p>
             )}
           </div>
           {product.categories && (
-            <span className="mt-1.5 inline-block bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">
+            <span className="mt-1.5 inline-block bg-gray-50 text-gray-500 text-[10px] sm:text-xs px-2 py-0.5 rounded-full border border-gray-100">
               {product.categories.name}
             </span>
           )}
-          <p className="text-gray-400 text-xs mt-1">📦 Gratis Ongkir</p>
+          <p className="text-gray-400 text-[10px] sm:text-xs mt-1.5 flex items-center gap-1">
+            <span className="text-emerald-500">📦</span> Gratis Ongkir
+          </p>
         </div>
       </div>
     </Link>
@@ -288,14 +314,17 @@ function ProductCard({
 // ─── Section Header ───────────────────────────────────────────────
 function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href?: string }) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <div>
-        <h2 className="text-lg md:text-xl font-bold text-gray-900">{title}</h2>
-        {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+    <div className="flex items-center justify-between mb-5 sm:mb-6">
+      <div className="flex items-center gap-3">
+        <div className="w-1 h-6 sm:h-7 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full" />
+        <div>
+          <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 tracking-tight">{title}</h2>
+          {subtitle && <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+        </div>
       </div>
       {href && (
-        <Link href={href} className="flex items-center gap-1 text-green-600 text-xs md:text-sm font-semibold hover:text-green-700 transition-colors">
-          Lihat Semua <ChevronRight className="w-4 h-4" />
+        <Link href={href} className="flex items-center gap-1 text-emerald-600 text-xs md:text-sm font-semibold hover:text-emerald-700 transition-colors duration-200 group">
+          Lihat Semua <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" />
         </Link>
       )}
     </div>
@@ -312,6 +341,7 @@ interface HomeClientProps {
 }
 
 export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {} }: HomeClientProps) {
+  const { toast } = useToast();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [emailSubscribe, setEmailSubscribe] = useState("");
   const [subscribeStatus, setSubscribeStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -319,18 +349,27 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
 
   const handleSubscribe = async () => {
     if (!emailSubscribe.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailSubscribe.trim())) {
-      alert("Masukkan alamat email yang valid.");
+      toast("error", "Masukkan alamat email yang valid.");
       return;
     }
     setSubscribeStatus("loading");
     try {
       // Simpan ke store_settings untuk keperluan marketing
       const supabase = createClient();
+      const { data: existing } = await supabase
+        .from("store_settings")
+        .select("value")
+        .eq("key", "subscribed_emails")
+        .maybeSingle();
+      const existingEmails: string[] = (existing?.value as { emails?: string[] })?.emails || [];
+      if (!existingEmails.includes(emailSubscribe.trim())) {
+        existingEmails.push(emailSubscribe.trim());
+      }
       const { error } = await supabase
         .from("store_settings")
         .upsert({
           key: "subscribed_emails",
-          value: { emails: [emailSubscribe.trim()] },
+          value: { emails: existingEmails },
           updated_at: new Date().toISOString(),
         }, { onConflict: "key" });
       if (error) {
@@ -339,6 +378,7 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
       }
       setSubscribeStatus("success");
       setEmailSubscribe("");
+      toast("success", "Terima kasih! Anda berhasil berlangganan newsletter kami.");
       setTimeout(() => setSubscribeStatus("idle"), 3000);
     } catch (err) {
       console.error("[Email Subscribe] Error:", err);
@@ -347,38 +387,38 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-slate-50 pb-20 md:pb-0">
       <Navbar />
 
       <HeroBanner />
 
       <TrustBar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-12">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-8 sm:space-y-12">
 
         {/* Kategori Populer */}
-        <section>
+        <section className="animate-fade-in-up">
           <SectionHeader title="Kategori Populer" subtitle="Temukan produk sesuai kebutuhanmu" />
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
             {categories.slice(0, 6).map((cat, i) => (
               <Link
                 key={cat.slug}
                 href={`/kategori/${cat.slug}`}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 md:p-4 flex flex-col items-center gap-2 hover:shadow-md hover:-translate-y-0.5 hover:border-green-200 transition-all group animate-scale-in"
+                className="bg-white rounded-2xl shadow-sm border border-gray-100/80 p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 hover:shadow-lg hover:-translate-y-1 hover:border-emerald-200 transition-all duration-300 group animate-scale-in"
                 style={{ animationDelay: `${(i + 1) * 80}ms` }}
               >
-                <span className="text-2xl md:text-3xl">{cat.icon || "📦"}</span>
-                <p className="text-xs font-medium text-gray-700 text-center leading-tight group-hover:text-green-700">
+                <span className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">{cat.icon || "📦"}</span>
+                <p className="text-[10px] sm:text-xs font-medium text-gray-700 text-center leading-tight group-hover:text-emerald-700 transition-colors duration-200">
                   {cat.name}
                 </p>
-                <p className="text-xs text-gray-400">Lihat detail</p>
+                <p className="text-[9px] sm:text-xs text-gray-400 group-hover:text-emerald-500 transition-colors duration-200">Lihat detail</p>
               </Link>
             ))}
           </div>
           {categories.length > 6 && (
             <button
               onClick={() => setShowAllCategories(true)}
-              className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-green-300 text-green-700 font-medium text-sm hover:bg-green-50 transition-colors"
+              className="mt-3 sm:mt-4 w-full flex items-center justify-center gap-2 py-3 sm:py-3.5 rounded-2xl border-2 border-dashed border-emerald-300/60 text-emerald-700 font-medium text-xs sm:text-sm hover:bg-emerald-50 hover:border-emerald-400/60 transition-all duration-300 active:scale-[0.99]"
             >
               Tampilkan Semua Kategori ({categories.length})
             </button>
@@ -387,22 +427,22 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
 
         {/* All Categories Modal */}
         {showAllCategories && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAllCategories(false)} />
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-6 z-10">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900 text-lg">Semua Kategori</h3>
-                <button onClick={() => setShowAllCategories(false)} className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={() => setShowAllCategories(false)} />
+            <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 sm:p-6 z-10 animate-scale-in">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-bold text-gray-900 text-lg">Semua Kategori</h3>
+                <button onClick={() => setShowAllCategories(false)} className="w-9 h-9 rounded-xl hover:bg-gray-100 flex items-center justify-center transition-colors duration-200">
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
                 {categories.map((cat) => (
                   <Link
                     key={cat.slug}
                     href={`/kategori/${cat.slug}`}
                     onClick={() => setShowAllCategories(false)}
-                    className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all"
+                    className="flex flex-col items-center gap-2 p-4 bg-gray-50/80 rounded-2xl hover:bg-emerald-50 hover:border-emerald-200 border border-transparent transition-all duration-200 active:scale-95"
                   >
                     <span className="text-3xl">{cat.icon || "📦"}</span>
                     <p className="text-xs font-medium text-gray-700 text-center">{cat.name}</p>
@@ -416,34 +456,34 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
         {/* Flash Sale */}
         {flashSaleProducts.length > 0 && (
           <section id="flash-sale" className="scroll-mt-20 animate-fade-in-up delay-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-red-500 rounded-lg flex items-center justify-center">
-                    <Zap className="w-4 h-4 text-white fill-current animate-pulse" />
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-red-500 to-rose-500 rounded-xl flex items-center justify-center shadow-md shadow-red-200/50">
+                    <Zap className="w-4 h-4 text-white fill-current" />
                   </div>
-                  <h2 className="text-lg md:text-xl font-bold text-gray-900">Flash Sale</h2>
+                  <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 tracking-tight">Flash Sale</h2>
                 </div>
-                <span className="text-gray-400 text-xs hidden sm:block">Berakhir dalam</span>
+                <span className="text-gray-400 text-[10px] sm:text-xs hidden sm:block">Berakhir dalam</span>
                 <div className="flex items-center gap-1">
                   {[countdown.h, countdown.m, countdown.s].map((val, i) => (
                     <span key={i} className="flex items-center gap-1">
-                      <span className="bg-gray-900 text-white font-mono font-bold text-xs md:text-sm px-2 py-1 rounded-lg">
+                      <span className="bg-gradient-to-b from-gray-800 to-gray-900 text-white font-mono font-bold text-[10px] sm:text-xs md:text-sm px-1.5 sm:px-2 py-1 rounded-lg shadow-sm">
                         {String(val).padStart(2, "0")}
                       </span>
-                      {i < 2 && <span className="text-gray-400 font-bold text-sm">:</span>}
+                      {i < 2 && <span className="text-gray-400 font-bold text-xs sm:text-sm">:</span>}
                     </span>
                   ))}
                 </div>
               </div>
-              <Link href="/kategori/semua?sort=popular" className="flex items-center gap-1 text-red-500 text-xs md:text-sm font-semibold hover:text-red-600">
-                Lihat Semua <ChevronRight className="w-4 h-4" />
+              <Link href="/kategori/semua?sort=popular" className="flex items-center gap-1 text-red-500 text-[10px] sm:text-xs md:text-sm font-semibold hover:text-red-600 transition-colors duration-200 group">
+                Lihat Semua <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" />
               </Link>
             </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible snap-x snap-mandatory">
+            <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible snap-x snap-mandatory no-scrollbar">
               {flashSaleProducts.map((product) => (
-                <div key={product.id} className="min-w-[160px] md:min-w-0 snap-start">
+                <div key={product.id} className="min-w-[140px] sm:min-w-[160px] md:min-w-0 snap-start">
                   <ProductCard product={product} showDiscount stats={productStats[product.id]} />
                 </div>
               ))}
@@ -455,7 +495,7 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
         {promoProducts && promoProducts.length > 0 && (
           <section id="promo" className="scroll-mt-20 animate-fade-in-up delay-300">
             <SectionHeader title="Promo Terbatas" subtitle="Diskon spesial khusus minggu ini" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4">
               {promoProducts.map((product) => (
                 <ProductCard key={product.id} product={product} showDiscount stats={productStats[product.id]} />
               ))}
@@ -466,7 +506,7 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
         {/* Best Sellers */}
         <section id="terlaris" className="scroll-mt-20 animate-fade-in-up delay-300">
           <SectionHeader title="Produk Terlaris" subtitle="Pilihan favorit ribuan pelanggan" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4">
             {bestSellerProducts.map((product) => (
               <ProductCard key={product.id} product={product} stats={productStats[product.id]} />
             ))}
@@ -475,28 +515,34 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
 
         {/* CTA Banner */}
         <section className="animate-fade-in-up delay-200">
-          <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full translate-x-1/4 -translate-y-1/4" />
+          <div className="bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden">
+            {/* Decorative elements */}
+            <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/[0.05] rounded-full translate-x-1/4 -translate-y-1/4 animate-float-slow" />
+            <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-emerald-500/10 rounded-full -translate-x-1/4 translate-y-1/4 animate-float-delayed" />
+
             <div className="relative z-10 flex flex-col md:flex-row items-center gap-4 md:gap-8">
               <div className="flex-1 text-center md:text-left">
-                <h3 className="text-xl md:text-2xl font-bold mb-2">Daftar Sekarang & Dapatkan Promo!</h3>
-                <p className="text-green-100 text-sm">Voucher diskon 15% untuk pembelian pertamamu.</p>
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 tracking-tight">Daftar Sekarang & Dapatkan Promo!</h3>
+                <p className="text-emerald-200/80 text-xs sm:text-sm">Voucher diskon 15% untuk pembelian pertamamu.</p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+              <div className="flex flex-col sm:flex-row gap-2 shrink-0 w-full sm:w-auto">
                 <input
                   type="email"
                   placeholder="Masukkan emailmu..."
                   value={emailSubscribe}
                   onChange={(e) => setEmailSubscribe(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") handleSubscribe(); }}
-                  className="bg-white/20 border border-white/30 text-white placeholder-green-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:bg-white/30 w-full sm:w-56"
+                  className="bg-white/10 border border-white/20 text-white placeholder-emerald-300/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:bg-white/15 focus:border-white/30 w-full sm:w-56 backdrop-blur-sm transition-all duration-200"
                 />
                 <button
                   onClick={handleSubscribe}
                   disabled={subscribeStatus === "loading"}
-                  className="bg-white text-green-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-green-50 transition-colors whitespace-nowrap disabled:opacity-60"
+                  className="relative overflow-hidden bg-white text-emerald-700 font-bold px-5 py-3 rounded-xl text-sm hover:bg-emerald-50 transition-all duration-300 whitespace-nowrap disabled:opacity-60 shadow-lg hover:shadow-xl group active:scale-95"
                 >
-                  {subscribeStatus === "loading" ? "Mendaftarkan..." : subscribeStatus === "success" ? "✓ Terdaftar!" : "Daftar Gratis"}
+                  <span className="relative z-10">
+                    {subscribeStatus === "loading" ? "Mendaftarkan..." : subscribeStatus === "success" ? "✓ Terdaftar!" : "Daftar Gratis"}
+                  </span>
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-emerald-100/60 to-transparent skew-x-12" />
                 </button>
               </div>
             </div>

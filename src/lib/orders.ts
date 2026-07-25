@@ -128,6 +128,7 @@ export async function createOrder(payload: CreateOrderPayload): Promise<Order | 
       discount: payload.discount,
       total: payload.total,
       notes: payload.notes ?? null,
+      voucher_code: payload.voucher_code ?? null,
     })
     .select()
     .single();

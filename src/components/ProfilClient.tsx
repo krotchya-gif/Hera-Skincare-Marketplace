@@ -423,9 +423,14 @@ export default function ProfilClient({ initialUser, initialProfile, orders }: Pr
           {/* Sidebar - desktop only */}
           <aside className="hidden md:block w-60 shrink-0">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center text-3xl">
-                  👤
+                <div className="flex items-center gap-3 mb-3">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
+                  <svg width="56" height="56" viewBox="0 0 56 56">
+                    <rect width="56" height="56" rx="16" fill="#DCFCE7" />
+                    <text x="28" y="28" textAnchor="middle" dominantBaseline="central" fill="#16A34A" fontSize="22" fontWeight="bold" fontFamily="sans-serif">
+                      {displayName.charAt(0).toUpperCase()}
+                    </text>
+                  </svg>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-gray-900 text-sm truncate">{displayName}</p>
@@ -478,8 +483,19 @@ export default function ProfilClient({ initialUser, initialProfile, orders }: Pr
           <div className="md:hidden w-full space-y-3">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-700 rounded-2xl flex items-center justify-center text-4xl shadow-sm">
-                  👤
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+                  <svg width="64" height="64" viewBox="0 0 64 64">
+                    <defs>
+                      <linearGradient id="avatar-grad-m" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#4ADE80" />
+                        <stop offset="100%" stopColor="#16A34A" />
+                      </linearGradient>
+                    </defs>
+                    <rect width="64" height="64" rx="16" fill="url(#avatar-grad-m)" />
+                    <text x="32" y="32" textAnchor="middle" dominantBaseline="central" fill="white" fontSize="26" fontWeight="bold" fontFamily="sans-serif">
+                      {displayName.charAt(0).toUpperCase()}
+                    </text>
+                  </svg>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="font-bold text-gray-900 text-base truncate">{displayName}</h2>

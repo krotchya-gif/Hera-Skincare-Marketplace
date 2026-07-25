@@ -1,6 +1,6 @@
 // ─── Export Orders as CSV ──────────────────────────────────────
 import { NextRequest, NextResponse } from "next/server";
-import { getAllOrders } from "@/lib/orders";
+import { getAllOrders, type OrderFilters } from "@/lib/orders";
 import { verifyAdminRole, handleAdminError } from "@/lib/auth-utils";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
+    const status = searchParams.get("status") as OrderFilters["status"] || undefined;
+    const search = searchParams.get("search") || undefined;
 
     // Validasi parameter date wajib
     if (!dateFrom || !dateTo) {
@@ -27,8 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Hitung perkiraan jumlah data dalam range
-    const previewParams = new URLSearchParams({ dateFrom, dateTo, pageSize: "1", page: "1" });
-    const previewRes = await getAllOrders({ dateFrom, dateTo, page: 1, pageSize: 1 });
+    const previewRes = await getAllOrders({ dateFrom, dateTo, status, search, page: 1, pageSize: 1 });
     const estimatedCount = previewRes.count || 0;
 
     if (estimatedCount > MAX_EXPORT_ROWS) {
@@ -43,13 +44,13 @@ export async function GET(request: NextRequest) {
     }
 
     const CHUNK_SIZE = 500;
-    const firstPage = await getAllOrders({ dateFrom, dateTo, page: 1, pageSize: CHUNK_SIZE });
+    const firstPage = await getAllOrders({ dateFrom, dateTo, status, search, page: 1, pageSize: CHUNK_SIZE });
     const totalCount = firstPage.count;
     const totalPages = Math.ceil(Math.min(totalCount, MAX_EXPORT_ROWS) / CHUNK_SIZE);
 
     let allOrders = [...firstPage.data];
     for (let page = 2; page <= totalPages; page++) {
-      const chunk = await getAllOrders({ dateFrom, dateTo, page, pageSize: CHUNK_SIZE });
+      const chunk = await getAllOrders({ dateFrom, dateTo, status, search, page, pageSize: CHUNK_SIZE });
       allOrders = [...allOrders, ...chunk.data];
     }
 

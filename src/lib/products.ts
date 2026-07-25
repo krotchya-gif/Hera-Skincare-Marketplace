@@ -169,6 +169,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
     return { data: [], count: 0, page, pageSize, totalPages: 0 };
   }
 
+  // ponytail: safe cast — Supabase row shape matches Product type
   return {
     data: (data as unknown as Product[]) ?? [],
     count: count ?? 0,
@@ -240,7 +241,7 @@ export async function getActiveFlashSaleEnd(): Promise<string | null> {
     .gte("ends_at", now)
     .order("ends_at", { ascending: true })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   return data?.ends_at ?? null;
 }

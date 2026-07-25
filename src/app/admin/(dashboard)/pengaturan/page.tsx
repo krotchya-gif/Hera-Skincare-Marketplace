@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { Plus, Loader2, Upload } from "lucide-react";
+import { useToast } from "@/components/Toast";
 import {
   STORE_NAME,
   STORE_EMAIL,
@@ -39,6 +40,7 @@ const Toggle = ({ active, onToggle }: { active: boolean; onToggle: () => void })
 );
 
 export default function SettingsPage() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("Informasi Toko");
   const [, startTransition] = useTransition();
   const [loading, setLoading] = useState(true);
@@ -271,9 +273,9 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: "whatsapp_number", value: waNumber })
       });
-      alert("Informasi toko berhasil disimpan!");
+      toast("success", "Informasi toko berhasil disimpan!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -299,9 +301,9 @@ export default function SettingsPage() {
         const errorJson = await res.json();
         throw new Error(errorJson.error || "Gagal menyimpan pengaturan pengiriman");
       }
-      alert("Pengaturan pengiriman berhasil disimpan!");
+      toast("success", "Pengaturan pengiriman berhasil disimpan!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -330,9 +332,9 @@ export default function SettingsPage() {
         const errorJson = await res.json();
         throw new Error(errorJson.error || "Gagal menyimpan pengaturan pembayaran");
       }
-      alert("Pengaturan pembayaran berhasil disimpan!");
+      toast("success", "Pengaturan pembayaran berhasil disimpan!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -356,16 +358,19 @@ export default function SettingsPage() {
         const errorJson = await res.json();
         throw new Error(errorJson.error || "Gagal menyimpan pengaturan notifikasi");
       }
-      alert("Pengaturan notifikasi berhasil disimpan!");
+      toast("success", "Pengaturan notifikasi berhasil disimpan!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
   };
 
   const inviteAdmin = async () => {
-    if (!inviteEmail) return alert("Email wajib diisi");
+    if (!inviteEmail) {
+      toast("error", "Email wajib diisi");
+      return;
+    }
     try {
       setSaving(true);
       const res = await fetch("/api/admin/settings", {
@@ -379,12 +384,12 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal mengangkat admin");
-      alert("Admin berhasil diangkat!");
+      toast("success", "Admin berhasil diangkat!");
       setShowInviteModal(false);
       setInviteEmail("");
       fetchSettings();
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -404,10 +409,10 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal mencabut admin");
-      alert("Hak akses admin berhasil dicabut.");
+      toast("success", "Hak akses admin berhasil dicabut.");
       fetchSettings();
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -436,9 +441,9 @@ export default function SettingsPage() {
         const errorJson = await res.json();
         throw new Error(errorJson.error || "Gagal menyimpan pengaturan SEO");
       }
-      alert("Pengaturan SEO berhasil disimpan!");
+      toast("success", "Pengaturan SEO berhasil disimpan!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -456,9 +461,9 @@ export default function SettingsPage() {
         })
       });
       if (!res.ok) throw new Error("Gagal menyimpan");
-      alert("Halaman Tentang Kami berhasil disimpan!");
+      toast("success", "Halaman Tentang Kami berhasil disimpan!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -476,9 +481,9 @@ export default function SettingsPage() {
         })
       });
       if (!res.ok) throw new Error("Gagal menyimpan");
-      alert("Halaman Karir berhasil disimpan!");
+      toast("success", "Halaman Karir berhasil disimpan!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -503,9 +508,9 @@ export default function SettingsPage() {
         })
       });
       if (!res.ok) throw new Error("Gagal menyimpan");
-      alert("Halaman Hubungi Kami berhasil disimpan!");
+      toast("success", "Halaman Hubungi Kami berhasil disimpan!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -523,9 +528,9 @@ export default function SettingsPage() {
         })
       });
       if (!res.ok) throw new Error("Gagal menyimpan");
-      alert("Halaman Blog berhasil disimpan!");
+      toast("success", "Halaman Blog berhasil disimpan!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast("error", err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }

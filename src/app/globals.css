@@ -2,16 +2,33 @@
 @import "tailwindcss";
 
 :root {
-  --color-primary: #16A34A;
-  --color-primary-light: #DCFCE7;
-  --color-primary-dark: #15803D;
+  /* ─── Premium Color System ─────────────────────────── */
+  --color-primary: #059669;
+  --color-primary-light: #D1FAE5;
+  --color-primary-dark: #065F46;
+  --color-accent: #D4A853;
+  --color-accent-light: #FEF3C7;
   --color-danger: #EF4444;
-  --color-warning: #FBBF24;
+  --color-warning: #F59E0B;
   --color-text-primary: #111827;
   --color-text-secondary: #6B7280;
   --color-border: #E5E7EB;
-  --color-bg: #F9FAFB;
+  --color-bg: #F8FAFC;
   --color-white: #FFFFFF;
+
+  /* ─── Premium Gradients ────────────────────────────── */
+  --gradient-primary: linear-gradient(135deg, #059669 0%, #047857 50%, #065F46 100%);
+  --gradient-hero: linear-gradient(135deg, #065F46 0%, #047857 30%, #059669 60%, #0D9488 100%);
+  --gradient-card-hover: linear-gradient(135deg, rgba(5, 150, 105, 0.04) 0%, rgba(13, 148, 136, 0.02) 100%);
+  --gradient-gold: linear-gradient(135deg, #D4A853 0%, #F6D48A 50%, #D4A853 100%);
+
+  /* ─── Premium Shadows ──────────────────────────────── */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(5, 150, 105, 0.04);
+  --shadow-card-hover: 0 8px 30px rgba(5, 150, 105, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-navbar: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 20px rgba(0, 0, 0, 0.03);
+  --shadow-navbar-scrolled: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(5, 150, 105, 0.06);
+  --shadow-button: 0 2px 8px rgba(5, 150, 105, 0.20), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 20px rgba(5, 150, 105, 0.15);
 }
 
 * {
@@ -22,32 +39,38 @@ body {
   font-family: 'Poppins', sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar styling */
+/* ─── Scoped Transition (replaces old * transition bug) ── */
+a, button, input, select, textarea,
+[class*="hover:"], [class*="group-hover:"],
+.transition-premium {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Scrollbar Styling ──────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 3px;
+  border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-/* Smooth transitions */
-* {
-  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
-  transition-duration: 150ms;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* ─── Premium Animations ─────────────────────────────── */
 
-/* Toast slide-up animation */
+/* Toast / element slide up */
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(1rem); }
   to { opacity: 1; transform: translateY(0); }
@@ -56,7 +79,7 @@ body {
   animation: slide-up 0.3s ease-out;
 }
 
-/* Fade in + slide up */
+/* Fade in + slide up (stagger-ready) */
 @keyframes fade-in-up {
   from { opacity: 0; transform: translateY(1.5rem); }
   to { opacity: 1; transform: translateY(0); }
@@ -67,21 +90,118 @@ body {
 
 /* Scale in */
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.9); }
+  from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
 }
 .animate-scale-in {
   animation: scale-in 0.4s ease-out forwards;
 }
 
-/* Stagger animation delays */
+/* Shimmer — for premium buttons / badges */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.animate-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Float — gentle floating for decorative elements */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: float 6s ease-in-out infinite;
+}
+.animate-float-delayed {
+  animation: float 5s ease-in-out 1s infinite;
+}
+
+/* Glow pulse — for trust/feature icons */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.15); }
+  50% { box-shadow: 0 0 16px 4px rgba(5, 150, 105, 0.12); }
+}
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Subtle shine sweep */
+@keyframes shine-sweep {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+
+/* ─── Stagger Delays ─────────────────────────────────── */
 .delay-100 { animation-delay: 100ms; }
 .delay-200 { animation-delay: 200ms; }
 .delay-300 { animation-delay: 300ms; }
 .delay-400 { animation-delay: 400ms; }
 .delay-500 { animation-delay: 500ms; }
 
-/* No scrollbar utility */
+/* ─── Glassmorphism Utilities ────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+.glass-dark {
+  background: rgba(0, 0, 0, 0.30);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+/* ─── Gradient Text Utility ──────────────────────────── */
+.text-gradient-premium {
+  background: linear-gradient(135deg, #A7F3D0 0%, #D4A853 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Premium Card Utility ───────────────────────────── */
+.card-premium {
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  border-radius: 1rem;
+  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+.card-premium:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+  border-color: rgba(5, 150, 105, 0.15);
+}
+
+/* ─── Premium Glow & Shimmer utilities ───────────────── */
+.shadow-premium-glow {
+  box-shadow: 0 0 15px rgba(5, 150, 105, 0.08), 0 0 3px rgba(5, 150, 105, 0.04);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.shadow-premium-glow:hover {
+  box-shadow: 0 0 25px rgba(5, 150, 105, 0.22), 0 0 8px rgba(5, 150, 105, 0.08);
+  transform: translateY(-1px);
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.animate-shimmer-glow {
+  background: linear-gradient(90deg, #ef4444 0%, #fca5a5 35%, #ef4444 70%, #ef4444 100%);
+  background-size: 200% auto;
+  animation: shimmer-sweep 2.5s infinite linear;
+}
+
+/* ─── No Scrollbar ───────────────────────────────────── */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -90,7 +210,25 @@ body {
   scrollbar-width: none;
 }
 
-/* Safe area for bottom nav on mobile */
+/* ─── Safe Area ──────────────────────────────────────── */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ─── Mobile-specific Optimizations ──────────────────── */
+@media (max-width: 768px) {
+  /* Prevent layout shift on mobile bottom nav */
+  body {
+    padding-bottom: 64px;
+  }
+
+  /* Better tap targets on mobile - controlled via classes instead of global override */
+
+  /* Disable hover animations on touch devices for performance */
+  @media (hover: none) {
+    .card-premium:hover {
+      transform: none;
+      box-shadow: var(--shadow-card);
+    }
+  }
 }

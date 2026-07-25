@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { verifyAdminRole, handleAdminError } from "@/lib/auth-utils";
+import { verifyAdminRole } from "@/lib/auth-utils";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
 
     // Verify admin role via helper
-    const { userId } = await verifyAdminRole();
+    await verifyAdminRole();
 
     // Fetch all store settings
     const { data: settingsData, error: settingsError } = await supabase

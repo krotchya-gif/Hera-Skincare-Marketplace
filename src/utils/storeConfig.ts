@@ -10,8 +10,6 @@ export const STORE_DESCRIPTION =
 export const STORE_ADDRESS = 
   process.env.NEXT_PUBLIC_STORE_ADDRESS || 
   "Jl. Industri No. 45, Jakarta Selatan, DKI Jakarta 12345";
-export const STORE_CITY = process.env.NEXT_PUBLIC_STORE_CITY || "Jakarta Selatan";
-
 // Untuk domain email dinamis yang menyesuaikan dengan email toko
 export const getStoreDomain = () => {
   return STORE_EMAIL.split("@")[1] || "herastore.com";

@@ -89,13 +89,13 @@ export async function GET(request: Request) {
     ];
 
     const [{ data: categories }, { data: products }] = await Promise.all([
-      supabase.from("categories").select("slug, updated_at").eq("is_active", true),
+      supabase.from("categories").select("slug, created_at").eq("is_active", true),
       supabase.from("products").select("slug, updated_at").eq("is_active", true),
     ]);
 
     const categoryPages = (categories || []).map((cat) => ({
       url: `${BASE_URL}/kategori/${cat.slug}`,
-      lastModified: new Date(cat.updated_at || new Date()),
+      lastModified: new Date(cat.created_at || new Date()),
       changeFrequency: "weekly" as const,
       priority: 0.8,
     }));

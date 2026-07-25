@@ -1,5 +1,6 @@
 // ─── Formatting Utilities ──────────────────────────────────────
 
+// ponytail: formatRp = full ("Rp 1.500.000"), formatRupiah = abbreviate ("Rp 1,5jt") untuk dashboard
 export const formatRp = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
 
 export const formatRupiah = (value: number) => {
@@ -8,11 +9,4 @@ export const formatRupiah = (value: number) => {
   return `Rp ${value}`;
 };
 
-export const formatDate = (dateStr: string, locale = "id-ID") => {
-  return new Date(dateStr).toLocaleDateString(locale);
-};
 
-export const getDiscountPercent = (price: number, discountPrice: number | null) => {
-  if (!discountPrice || discountPrice >= price) return null;
-  return Math.round(((price - discountPrice) / price) * 100);
-};
