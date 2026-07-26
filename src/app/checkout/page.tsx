@@ -617,7 +617,7 @@ export default function CheckoutPage() {
                   Pesanan Berhasil! 🎉
                 </h2>
                 <p className="text-gray-500 text-sm mb-6">
-                  Terima kasih telah berbelanja di Hera Store. Pesananmu sedang diproses!
+                  Terima kasih telah berbelanja di Hera Skincare. Pesananmu sedang diproses!
                 </p>
 
                 <div className="bg-gray-50 rounded-xl p-4 mb-6">

@@ -57,7 +57,7 @@ export default async function KarirPage() {
             <p className="text-sm text-gray-400">Belum ada lowongan tersedia saat ini.</p>
           )}
           <p className="text-xs text-gray-400 mt-2">
-            Kirim lamaran ke email: hr@{STORE_EMAIL.split("@")[1] || "herastore.com"}
+            Kirim lamaran ke email: hr@{STORE_EMAIL.split("@")[1] || "heraskincare.com"}
           </p>
         </div>
       </div>

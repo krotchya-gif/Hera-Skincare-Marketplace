@@ -89,6 +89,7 @@ export interface Order {
   discount: number;
   total: number;
   notes: string | null;
+  voucher_code: string | null;
   created_at: string;
   updated_at: string;
   // joined

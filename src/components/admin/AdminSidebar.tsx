@@ -19,6 +19,7 @@ import {
   Leaf,
   ChevronRight,
   X,
+  FileText,
 } from "lucide-react";
 import { STORE_NAME } from "@/utils/storeConfig";
 
@@ -31,6 +32,7 @@ const navItems = [
       { label: "Pesanan", href: "/admin/pesanan", icon: ClipboardList },
       { label: "Pelanggan", href: "/admin/pelanggan", icon: Users },
       { label: "Kategori", href: "/admin/kategori", icon: Tag },
+      { label: "Blog", href: "/admin/blog", icon: FileText },
     ],
   },
   {

@@ -7,7 +7,7 @@ import { ChevronDown } from "lucide-react";
 
 const faqs = [
   {
-    q: "Bagaimana cara berbelanja di Hera Store?",
+    q: "Bagaimana cara berbelanja di Hera Skincare?",
     a: "Cukup pilih produk yang diinginkan, tambahkan ke keranjang, lalu lanjut ke checkout. Isi alamat pengiriman dan pilih metode pembayaran. Setelah pesanan berhasil, kami akan memprosesnya.",
   },
   {
@@ -27,7 +27,7 @@ const faqs = [
     a: "Pengembalian barang dapat dilakukan dalam 7 hari setelah barang diterima. Pastikan barang masih dalam kondisi baik dan belum digunakan. Hubungi customer service kami untuk proses lebih lanjut.",
   },
   {
-    q: "Apakah produk di Hera Store original?",
+    q: "Apakah produk di Hera Skincare original?",
     a: "Ya, semua produk yang kami jual adalah 100% original dan berkualitas. Kami bekerja sama dengan distributor resmi untuk memastikan keaslian produk.",
   },
   {

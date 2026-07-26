@@ -77,7 +77,7 @@ export default function SettingsPage() {
     Object.fromEntries(paymentMethods.map((p) => [p, true]))
   );
   const [bankName, setBankName] = useState("BCA");
-  const [bankOwner, setBankOwner] = useState("PT Hera Store");
+  const [bankOwner, setBankOwner] = useState("Hera Skincare");
   const [bankNumber, setBankNumber] = useState("1234567890");
   const [paymentTimeout, setPaymentTimeout] = useState(24);
 
@@ -110,8 +110,6 @@ export default function SettingsPage() {
   const [pageTentangMisi, setPageTentangMisi] = useState("");
   const [karirJobs, setKarirJobs] = useState<{ title: string; type: string; location: string }[]>([]);
   const [karirContent, setKarirContent] = useState("");
-  const [blogArticles, setBlogArticles] = useState<{ slug: string; title: string; excerpt: string; emoji: string }[]>([]);
-
   // --- States for Hubungi Kami ---
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -209,9 +207,6 @@ export default function SettingsPage() {
       if (settings.page_karir) {
         setKarirJobs(settings.page_karir.jobs || []);
         setKarirContent(settings.page_karir.content || "");
-      }
-      if (settings.page_blog) {
-        setBlogArticles(settings.page_blog.articles || []);
       }
       if (settings.page_hubungi_kami) {
         setContactEmail(settings.page_hubungi_kami.email || "");
@@ -509,26 +504,6 @@ export default function SettingsPage() {
       });
       if (!res.ok) throw new Error("Gagal menyimpan");
       toast("success", "Halaman Hubungi Kami berhasil disimpan!");
-    } catch (err) {
-      toast("error", err instanceof Error ? err.message : String(err));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const savePageBlog = async () => {
-    try {
-      setSaving(true);
-      const res = await fetch("/api/admin/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          key: "page_blog",
-          value: { articles: blogArticles }
-        })
-      });
-      if (!res.ok) throw new Error("Gagal menyimpan");
-      toast("success", "Halaman Blog berhasil disimpan!");
     } catch (err) {
       toast("error", err instanceof Error ? err.message : String(err));
     } finally {
@@ -1046,7 +1021,7 @@ export default function SettingsPage() {
                   onChange={(e) => setSeoDefaultTitle(e.target.value)}
                   type="text"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
-                  placeholder="Hera Store — Marketplace Produk Rumah Tangga"
+                  placeholder="Hera Skincare — Marketplace Produk Rumah Tangga"
                 />
               </div>
               <div>
@@ -1125,7 +1100,7 @@ export default function SettingsPage() {
                 placeholder={`User-agent: *
 Allow: /
 
-Sitemap: ${typeof window !== "undefined" ? window.location.origin : "https://herastore.com"}/sitemap.xml`}
+Sitemap: ${typeof window !== "undefined" ? window.location.origin : "https://heraskincare.com"}/sitemap.xml`}
               />
             </div>
 
@@ -1179,7 +1154,7 @@ Sitemap: ${typeof window !== "undefined" ? window.location.origin : "https://her
                 placeholder={`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>${typeof window !== "undefined" ? window.location.origin : "https://herastore.com"}/</loc>
+    <loc>${typeof window !== "undefined" ? window.location.origin : "https://heraskincare.com"}/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -1248,7 +1223,7 @@ Mendukung produk lokal`} />
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Email</label>
                 <input className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
-                  value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="info@herastore.com" />
+                  value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="info@heraskincare.com" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Telepon</label>
@@ -1341,56 +1316,6 @@ Mendukung produk lokal`} />
             </div>
           </div>
 
-          {/* Blog */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-800 text-sm">Halaman Blog — Artikel</h3>
-              <button onClick={() => setBlogArticles([...blogArticles, { slug: "", title: "", excerpt: "", emoji: "📝" }])}
-                className="flex items-center gap-1.5 text-xs font-semibold text-green-600 hover:text-green-700">
-                <Plus className="w-3.5 h-3.5" /> Tambah Artikel
-              </button>
-            </div>
-            <div className="space-y-3">
-              {blogArticles.map((article, i) => (
-                <div key={i} className="p-3 bg-gray-50 rounded-xl space-y-2">
-                  <div className="flex items-center gap-2">
-                    <input className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
-                      value={article.slug} onChange={(e) => {
-                        const updated = [...blogArticles];
-                        updated[i] = { ...updated[i], slug: e.target.value };
-                        setBlogArticles(updated);
-                      }} placeholder="Slug (contoh: tips-belajar)" />
-                    <input className="w-16 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400 text-center"
-                      value={article.emoji} onChange={(e) => {
-                        const updated = [...blogArticles];
-                        updated[i] = { ...updated[i], emoji: e.target.value };
-                        setBlogArticles(updated);
-                      }} placeholder="📝" />
-                    <button onClick={() => setBlogArticles(blogArticles.filter((_, j) => j !== i))}
-                      className="text-red-400 hover:text-red-600 text-xs font-semibold shrink-0">Hapus</button>
-                  </div>
-                  <input className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
-                    value={article.title} onChange={(e) => {
-                      const updated = [...blogArticles];
-                      updated[i] = { ...updated[i], title: e.target.value };
-                      setBlogArticles(updated);
-                    }} placeholder="Judul artikel" />
-                  <textarea rows={2} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400 resize-none"
-                    value={article.excerpt} onChange={(e) => {
-                      const updated = [...blogArticles];
-                      updated[i] = { ...updated[i], excerpt: e.target.value };
-                      setBlogArticles(updated);
-                    }} placeholder="Ringkasan artikel..." />
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 flex justify-end">
-              <button onClick={savePageBlog} disabled={saving}
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50">
-                Simpan Blog
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

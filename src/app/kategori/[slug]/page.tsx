@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // Handle "semua" slug for search
   if (slug === "semua") {
     return {
-      title: `Cari Produk — ${seo.default_title || "Hera Store"}`,
+      title: `Cari Produk — ${seo.default_title || "Hera Skincare"}`,
       description: seo.default_description || undefined,
     };
   }
@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${category.name} — ${seo.default_title || "Hera Store"}`,
-    description: `Belanja produk ${category.name} terbaik di Hera Store. ${seo.default_description || ""}`,
+    title: `${category.name} — ${seo.default_title || "Hera Skincare"}`,
+    description: `Belanja produk ${category.name} terbaik di Hera Skincare. ${seo.default_description || ""}`,
     keywords: seo.default_keywords || undefined,
   };
 }

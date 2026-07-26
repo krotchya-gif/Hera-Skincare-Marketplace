@@ -44,12 +44,12 @@ export async function GET(request: NextRequest) {
     const finalSettings: Record<string, unknown> = {
       ...settingsMap, // include all stored keys (pages, etc.)
       store_info: (settingsMap["store_info"] as Record<string, unknown> | undefined) || {
-        name: "Hera Store",
-        email: "info@herastore.com",
+        name: "Hera Skincare",
+        email: "info@heraskincare.com",
         phone: "+6281234567890",
         city: "Jakarta Selatan",
         description: "Marketplace produk rumah tangga premium.",
-        address: "Alamat Gudang Hera Store",
+        address: "Alamat Gudang Hera Skincare",
         operational_hours: { start: "08:00", end: "21:00", days: ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"] },
         social_media: { instagram: "", tiktok: "", facebook: "" }
       },
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       payment: (settingsMap["payment"] as Record<string, unknown> | undefined) || {
         methods: ["Transfer Bank (BCA, Mandiri, BRI)", "GoPay", "OVO", "Dana", "ShopeePay", "Virtual Account", "COD (Bayar di Tempat)"],
         payment_timeout_hours: 24,
-        bank_account: { bank: "BCA", owner: "PT Hera Store", number: "1234567890" }
+        bank_account: { bank: "BCA", owner: "Hera Skincare", number: "1234567890" }
       },
       seo: (settingsMap["seo"] as Record<string, unknown> | undefined) || {
         meta_pixel_id: "",
@@ -140,7 +140,7 @@ export async function PUT(request: NextRequest) {
         .maybeSingle();
 
       if (getProfileError || !targetProfile) {
-        return NextResponse.json({ error: "Email tidak terdaftar sebagai customer di Hera Store. Minta mereka untuk mendaftar akun terlebih dahulu." }, { status: 400 });
+        return NextResponse.json({ error: "Email tidak terdaftar sebagai customer di Hera Skincare. Minta mereka untuk mendaftar akun terlebih dahulu." }, { status: 400 });
       }
 
       // Map role display values to database keys if needed

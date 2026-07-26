@@ -1,4 +1,4 @@
-# Hera Store Marketplace
+# Hera Skincare Marketplace
 
 Full-stack marketplace untuk produk rumah tangga dan perawatan pribadi. **Next.js 16** + **Supabase**.
 
@@ -29,9 +29,10 @@ marketplace/
 │   │   ├── tentang-kami/, karir/, blog/, hubungi-kami/, faq/, cara-belanja/, pengembalian-barang/
 │   │   ├── kategori/[slug]/, produk/[slug]/, keranjang/, checkout/, profil/
 │   │   ├── bayar/[id]/, voucher/
-│   │   ├── admin/ (login + 10 dashboard pages)
+│   │   ├── admin/ (login + 12 dashboard pages)
 │   │   ├── sitemap.xml/, robots.txt/
 │   │   └── api/ (24 route handlers)
+│   │   ├── admin/blog/     # Blog CRUD (terpisah dari Pengaturan)
 │   ├── components/
 │   │   ├── Navbar.tsx, Footer.tsx, Toast.tsx, ErrorBoundary.tsx
 │   │   ├── *Client.tsx (Home, Category, ProductDetail, Profil)
@@ -42,7 +43,7 @@ marketplace/
 │   ├── types/      (database.ts)
 │   └── utils/      (format, storeConfig, order-status, supabase client/server)
 │   └── proxy.ts    # Next.js 16 Proxy (menggantikan middleware.ts)
-├── supabase/migrations/ (6 files)
+├── supabase/migrations/ (1 file — consolidated)
 ```
 
 ## Fitur
@@ -62,17 +63,18 @@ marketplace/
 - Bottom Tab Bar (fixed root layout), Floating WhatsApp, mobile-first responsive layout.
 - **Sticky Product Action Bar** — Tombol checkout melayang di bagian bawah halaman detail produk mobile.
 
-### Admin Dashboard (11 halaman)
-- **Overview** — 4 KPI + LineChart 30 hari + PieChart
+### Admin Dashboard (12 halaman)
+- **Overview** — 4 KPI + LineChart 30 hari + PieChart + badge status payment
 - **Produk** — CRUD + toggle status + upload foto, slide-out form modal
-- **Pesanan** — Filter status/date, detail modal, update status + resi
+- **Pesanan** — Filter status/date, detail modal, update status + resi (input diperbesar)
 - **Pelanggan** — Tabel + total belanja + riwayat + block/activate
 - **Kategori** — Card grid + CRUD
+- **Blog** — CRUD artikel blog (slug, title, excerpt, emoji) — terpisah dari Pengaturan
 - **Keuangan** — Filter period + BarChart + PieChart
 - **Promo** — Voucher CRUD + Flash Sale (read-only)
 - **Ulasan** — Rating summary + progress bar + toggle
 - **Marketing** — Dashboard (placeholder)
-- **Pengaturan** — 7 tabs: Info, Pengiriman, Pembayaran, Notifikasi, Admin, SEO, Halaman Statis
+- **Pengaturan** — 7 tabs: Info, Pengiriman, Pembayaran, Notifikasi, Admin, SEO, Halaman Statis (blog dihapus)
 - **Login Admin Bento Grid** — Redesain premium bermotif bento grid dengan live server status metrics dan terminal logs.
 
 ### Infrastructure
@@ -82,6 +84,7 @@ marketplace/
 - **Security** — CSP + headers di `next.config.ts`, rate limiting, atomic stock, input validation
 - **Auth** — proxy guard admin routes + `verifyAdminRole()` per-handler
 - **Toast Notifications** — Integrasi custom toast menggantikan semua dialog `alert()` bawaan browser.
+- **Payment Redirect** — Setelah konfirmasi bayar, customer otomatis redirect ke halaman pesanan.
 
 ## API Routes (24)
 
@@ -124,7 +127,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 ### 2. Database
 ```bash
-supabase db push    # Jalankan 6 migrations
+supabase db push    # Jalankan full_schema.sql (schema + seed)
 ```
 
 ### 3. Install & Run
@@ -139,23 +142,20 @@ UPDATE profiles SET role = 'super_admin' WHERE email = 'your@email.com';
 ```
 Login di `/admin/login`.
 
-## Migrations (6 files)
+## Migration
 
-| File | Deskripsi |
+Hanya **1 file** yang di-commit ke GitHub — sisanya hanya ada di lokal:
+
+| File (tracked) | Deskripsi |
 |------|-----------|
-| `20260621000001_full_schema.sql` | Semua tabel, RLS, functions, triggers, storage |
-| `20260621000002_seed_data.sql` | Seed: kategori, produk, varian, voucher, flash sale, settings |
-| `20260621000003_notifications.sql` | Tabel + trigger notifikasi |
-| `20260622000001_fix_security.sql` | RLS fixes, CHECK constraints, indexes, atomic stock |
-| `20260623000001_additional_fixes.sql` | Variant stock RPC |
-| `20260624000001_voucher_code_order.sql` | Kolom `voucher_code` di orders + index |
+| `supabase/migrations/20260621000001_full_schema.sql` | Schema + seed data lengkap (tabel, RLS, functions, triggers, storage, kategori, produk, varian, voucher, flash sale, settings). **Ini satu-satunya file migration.** |
 
 ## Status
 
 | Area | Status |
 |------|--------|
 | Customer Pages | ✅ 15/15 |
-| Admin Dashboard | ✅ 11/11 |
+| Admin Dashboard | ✅ 12/12 (➕ Blog) |
 | API Routes | ✅ 24/24 |
-| Build | ✅ 42 routes, 0 error |
+| Build | ✅ 43 routes, 0 error |
 | Bugs Fixed | ✅ 77/108 (17 skip, 14 LOW open) |

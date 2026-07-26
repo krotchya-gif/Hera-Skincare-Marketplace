@@ -278,7 +278,12 @@ export default function AdminDashboardClient({ stats }: AdminDashboardClientProp
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
-                          <StatusBadge status={order.status} />
+                          <div className="flex items-center gap-1.5">
+                            <StatusBadge status={order.status} />
+                            {order.payment_status === "belum_bayar" && (
+                              <span className="text-[10px] bg-yellow-100 text-yellow-700 font-semibold px-1.5 py-0.5 rounded-full">Belum Bayar</span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3.5">
                           <Link

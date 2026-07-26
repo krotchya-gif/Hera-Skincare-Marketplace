@@ -82,7 +82,7 @@ export default function ProductDetailClient({
   // Construct specs table
   const specifications = [
     { label: "SKU", value: product.sku || "-" },
-    { label: "Merek / Brand", value: product.brand || "Hera Store" },
+    { label: "Merek / Brand", value: product.brand || "Hera Skincare" },
     { label: "Satuan", value: product.unit || "pcs" },
     { label: "Berat Bersih", value: product.weight_gram ? `${product.weight_gram} g` : "-" },
     {
@@ -217,7 +217,7 @@ export default function ProductDetailClient({
               <div className="w-6 h-6 bg-green-600 rounded-lg flex items-center justify-center">
                 <Store className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="text-sm text-green-700 font-medium">Hera Store Official</span>
+              <span className="text-sm text-green-700 font-medium">Hera Skincare Official</span>
               <span className="text-xs text-gray-400">• Jakarta Selatan</span>
             </div>
 

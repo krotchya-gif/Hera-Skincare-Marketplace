@@ -181,7 +181,7 @@ export default function OrderDetailModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
             <div className="bg-gray-50 rounded-2xl p-4">
               <p className="text-xs font-semibold text-gray-700 mb-2">Pembayaran</p>
               <p className="text-xs text-gray-900 font-medium">{order.payment_method || "Transfer"}</p>
@@ -192,15 +192,31 @@ export default function OrderDetailModal({
             <div className="bg-gray-50 rounded-2xl p-4">
               <p className="text-xs font-semibold text-gray-700 mb-2">Pengiriman</p>
               <p className="text-xs text-gray-900 font-medium">{order.shipping_method || "JNE"}</p>
-              {order.status === "menunggu" || order.status === "diproses" ? (
-                <input
-                  value={trackingNumberInput}
-                  onChange={(e) => setTrackingNumberInput(e.target.value)}
-                  placeholder="Input no. resi..."
-                  className="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-green-400"
-                />
+              {order.tracking_number ? (
+                <p className="text-xs text-green-600 font-mono mt-1">✓ {order.tracking_number}</p>
+              ) : order.status === "diproses" ? (
+                <div className="mt-2">
+                  <p className="text-[10px] text-orange-600 font-medium mb-1">⚠️ Resi wajib diisi sebelum kirim</p>
+                  <input
+                    value={trackingNumberInput}
+                    onChange={(e) => setTrackingNumberInput(e.target.value)}
+                    placeholder="Masukkan nomor resi pengiriman..."
+                    className="w-full border-2 border-orange-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-400"
+                    autoFocus
+                  />
+                </div>
+              ) : order.status === "menunggu" ? (
+                <div className="mt-2">
+                  <p className="text-[10px] text-gray-500 mb-1">Resi akan diinput saat pengiriman</p>
+                  <input
+                    value={trackingNumberInput}
+                    onChange={(e) => setTrackingNumberInput(e.target.value)}
+                    placeholder="Input no. resi (opsional)..."
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
+                  />
+                </div>
               ) : (
-                <p className="text-xs text-green-600 font-mono mt-1">{order.tracking_number || "-"}</p>
+                <p className="text-xs text-gray-400 mt-1">-</p>
               )}
             </div>
           </div>

@@ -32,7 +32,7 @@ export default async function VoucherPage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
             <span className="text-5xl block mb-3">🏷️</span>
             <p className="font-semibold text-gray-900">Belum ada voucher</p>
-            <p className="text-sm text-gray-500 mt-1">Nantikan promo menarik dari Hera Store</p>
+            <p className="text-sm text-gray-500 mt-1">Nantikan promo menarik dari Hera Skincare</p>
           </div>
         ) : (
           <div className="space-y-3">

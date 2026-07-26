@@ -32,9 +32,9 @@ export default function ConfirmPaymentButton({ orderId, orderNumber }: ConfirmPa
       }
 
       setStatus("success");
-      // Refresh halaman setelah 1 detik
+      // Redirect ke halaman pesanan setelah 1 detik
       setTimeout(() => {
-        router.refresh();
+        router.push("/profil?tab=pesanan");
       }, 1000);
     } catch (err) {
       setStatus("error");
