@@ -28,7 +28,7 @@ import { addToCart, getWishlist, toggleWishlist } from "@/lib/cart-utils";
 export function getProductEmoji(slug: string | null, categoryIcon?: string | null): string {
   if (!slug) return categoryIcon || "📦";
   const map: Record<string, string> = {
-    "sabun-cair-hera-store": "🧴",
+    "sabun-cair-hera-skincare": "🧴",
     "pembersih-lantai-harum": "🧹",
     "hand-sanitizer-500ml": "🧼",
     "sabun-cuci-piring": "🍽️",

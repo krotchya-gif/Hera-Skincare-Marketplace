@@ -1041,7 +1041,7 @@ export default function SettingsPage() {
                   onChange={(e) => setSeoDefaultKeywords(e.target.value)}
                   type="text"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
-                  placeholder="hera store, marketplace, produk rumah tangga, belanja online"
+                  placeholder="hera skincare, marketplace, produk rumah tangga, belanja online"
                 />
                 <p className="text-[10px] text-gray-400 mt-1">Pisahkan dengan koma</p>
               </div>

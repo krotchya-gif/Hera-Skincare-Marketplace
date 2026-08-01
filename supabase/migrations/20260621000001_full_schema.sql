@@ -1,5 +1,5 @@
 -- =============================================
--- HERA STORE MARKETPLACE — Full Schema
+-- HERA SKINCARE MARKETPLACE — Full Schema
 -- Consolidated migration: tables, RLS, functions, triggers, storage, seed
 -- Includes all fixes from migrations 2–6 merged into a single file
 -- =============================================

@@ -1,5 +1,5 @@
 // Utilitas Konfigurasi Nama dan Info Toko
-// Menggunakan Environment Variables dengan fallback default "Hera Store"
+// Menggunakan Environment Variables dengan fallback default "Hera Skincare"
 
 export const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || "Hera Skincare";
 export const STORE_EMAIL = process.env.NEXT_PUBLIC_STORE_EMAIL || "info@heraskincare.com";

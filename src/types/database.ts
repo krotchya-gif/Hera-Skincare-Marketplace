@@ -1,4 +1,4 @@
-// ─── Database Types — Hera Store (matches Supabase schema) ───────────────────
+// ─── Database Types — Hera Skincare (matches Supabase schema) ────────────────
 
 export type UserRole = "super_admin" | "admin" | "operator" | "finance" | "customer";
 export type UserStatus = "aktif" | "nonaktif" | "diblokir";
