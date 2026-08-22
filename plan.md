@@ -72,6 +72,7 @@ npm run build       # exit 0
 | [T-07](#t-07--konsolidasi-dokumentasi--arsip-project-react) | P3 | Konsolidasi dokumentasi & arsip project React | BACKLOG |
 | [T-08](#t-08--pembaruan-dependencies-ke-versi-stabil) | P1 | Pembaruan dependencies ke versi stabil | DONE |
 | [T-09](#t-09--ganti-navigasi-windowlocation-dengan-router-nextjs) | P1 | Ganti navigasi window.location dengan Router Next.js | DONE |
+| [T-10](#t-10--hardening-fungsi-security-definer-database) | P0 | Hardening fungsi SECURITY DEFINER database | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -422,6 +423,67 @@ navigasi baru memicu fetch RSC dengan sesi segar.
 
 ---
 
+### T-10 — Hardening Fungsi SECURITY DEFINER Database
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
+
+**Tujuan:** Menutup temuan kritis Supabase security advisor: 9 fungsi `SECURITY DEFINER` dapat dieksekusi publik tanpa login via `/rest/v1/rpc/...` (ACL terverifikasi `anon=X/postgres`), memungkinkan korupsi stok (`decrement/increment_*_stock`), pembakaran kuota voucher (`increment_voucher_usage`), dan probing role (`has_role`). Plus lint `function_search_path_mutable` pada `generate_order_number`.
+
+**Keputusan desain (terverifikasi terhadap live DB sebelum migrasi):**
+- 5 fungsi stok/voucher → REVOKE dari `anon`, KEEP `authenticated` (app memanggil via cookie client — bukti: `src/lib/orders.ts`, `src/lib/vouchers.ts`)
+- `handle_new_user`, `handle_order_status_change`, `rls_auto_enable` → REVOKE dari `anon`+`authenticated` (trigger/event-trigger, tidak pernah dipanggil via RPC oleh app)
+- `has_role` → **KEEP semua role** — terverifikasi dipakai di 20 RLS policies; revoke akan mematahkan evaluasi RLS untuk guest. Warning advisor utk fungsi ini diterima sebagai risiko rendah terdokumentasi (read-only boolean, search_path fixed).
+- `generate_order_number` → REVOKE anon + `SET search_path = ''` (aman: body sudah schema-qualified ke `public.orders`; pg_catalog tetap implicit)
+
+**Scope-IN**
+- Migration live DB via MCP + file `supabase/migrations/20260822120000_secure_functions.sql`
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Seluruh `src/**`, definisi body fungsi, struktur tabel, policy RLS
+
+**Kriteria Selesai**
+1. ACL live: 5 fungsi stok/voucher tanpa `anon=X`; 3 fungsi trigger/maintenance tanpa `anon=X` & `authenticated=X`
+2. `generate_order_number` punya `search_path` fixed
+3. Security advisor turun; sisa warning terdokumentasi beserta alasannya
+4. RPC yang dipakai app masih executable oleh `authenticated`
+5. Bukti tercatat di bagian Bukti
+
+**Bukti**
+```
+== Migration live (via MCP) ==
+secure_functions_hardening + secure_functions_hardening_public (koreksi
+grant PUBLIC =X yang membuat revoke per-role tidak efektif — ditemukan
+saat verifikasi ACL pasca-migrasi pertama).
+File repo: supabase/migrations/20260822120000_secure_functions_hardening.sql
+
+== ACL final (live query) ==
+decrement_product_stock / decrement_variant_stock /
+increment_product_stock / increment_variant_stock /
+increment_voucher_usage / generate_order_number
+  → authenticated=X, service_role=X   (anon & PUBLIC hilang) ✅
+handle_new_user / handle_order_status_change / rls_auto_enable
+  → service_role=X saja ✅
+has_role → semua role (by design, dipakai 20 RLS policies) ✅
+
+== search_path generate_order_number ==
+config: search_path="" ✅ (lint function_search_path_mutable HILANG)
+
+== Security advisor ==
+19 warnings → 7 warnings.
+Sisa 7 = by-design & terdokumentasi:
+- authenticated-lint ×6 pada fungsi yang memang dipanggil app
+  (decrement/increment stok+voucher, has_role via policy)
+- anon-lint ×1 pada has_role (wajib utk evaluasi RLS guest)
+```
+
+Kriteria 1–5 terpenuhi. Status: DONE.
+
+---
+
 ## 🧾 Changelog (APPEND-ONLY — dilarang mengedit/menghapus entri lama)
 
 | Tanggal | ID | Perubahan | Oleh |
@@ -432,3 +494,6 @@ navigasi baru memicu fetch RSC dengan sesi segar.
 | 2026-08-22 | T-08 | Keputusan pemilik: opsi 2 — perbaikan 10 call-site asli dibuat task terpisah. T-08 → DONE (Selesai 22 Agu 2026) | ox-alpha |
 | 2026-08-22 | T-09 | Task T-09 dibuat & dimulai (IN_PROGRESS): ganti window.location dengan useRouter di 10 lokasi + ignore `.claude/**` di eslint config | ox-alpha |
 | 2026-08-22 | T-09 | Selesai (DONE): 10/10 lokasi diganti, 0 warning rule target, lint bersih dari polusi worktree (baseline asli: 14 err/8 warn), tsc & build exit 0. Temuan dokumentasi: angka baseline lama tercemar salinan `.claude/worktrees/**` | ox-alpha |
+| 2026-08-22 | — | Commit T-08 (`5b4ee22`) & T-09 (`cb738c2`) sesuai format R6 | ox-alpha |
+| 2026-08-22 | T-10 | Task T-10 dibuat & dimulai (IN_PROGRESS) hasil re-audit + instruksi pemilik project: hardening fungsi SECURITY DEFINER live DB | ox-alpha |
+| 2026-08-22 | T-10 | Selesai (DONE): 2 migration diterapkan (incl. koreksi grant PUBLIC), advisor security 19→7 (sisa by-design terdokumentasi), search_path fixed, ACL diverifikasi live | ox-alpha |
