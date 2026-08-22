@@ -63,7 +63,7 @@ npm run build       # exit 0
 
 | ID | Prioritas | Task | Status |
 |----|-----------|------|--------|
-| [T-01](#t-01--infrastruktur-verifikasi--baseline) | P0 | Infrastruktur verifikasi & baseline | BACKLOG |
+| [T-01](#t-01--infrastruktur-verifikasi--baseline) | P0 | Infrastruktur verifikasi & baseline | DONE |
 | [T-02](#t-02--midtrans-snap-pembayaran-online-server-side) | P0 | Midtrans Snap pembayaran online (server-side) | BACKLOG |
 | [T-03](#t-03--flash-sale-crud-di-admin) | P1 | Flash Sale CRUD di Admin | BACKLOG |
 | [T-04](#t-04--tutup-bug-low-dari-audit-lama) | P1 | Tutup bug LOW dari audit lama | BACKLOG |
@@ -85,8 +85,8 @@ Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID leb
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
-| Mulai / Selesai | — / — |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
 
 **Tujuan:** Pastikan ketiga gerbang verifikasi tersedia dan kondisi awal project tercatat sebagai acuan regresi.
 
@@ -105,7 +105,20 @@ Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID leb
 
 **Bukti**
 ```
-(paste output di sini saat mengerjakan)
+== npm run lint ==
+✖ 22 problems (14 errors, 8 warnings)   exit=1 (error pre-existing)
+Rincian error: no-explicit-any ×10, set-state-in-effect ×3, immutability ×1
+Rincian warning: img-element ×4, unused-vars ×3, exhaustive-deps ×1
+(Baseline ASLI — .claude/worktrees sudah di-ignore sejak T-09)
+
+== npm run typecheck ==  tsc --noEmit   exit=0
+
+== npm run build ==                     exit=0
+
+== .env.example ==
+Kode mereferensi 8 var: SUPABASE_URL, PUBLISHABLE_DEFAULT_KEY, SITE_URL
+(wajib) + 5 STORE_* (opsional, fallback di storeConfig.ts) — semua kini
+ada di example. .env.local lokal: BASE_URL diperbaiki → SITE_URL.
 ```
 
 ---
@@ -497,3 +510,5 @@ Kriteria 1–5 terpenuhi. Status: DONE.
 | 2026-08-22 | — | Commit T-08 (`5b4ee22`) & T-09 (`cb738c2`) sesuai format R6 | ox-alpha |
 | 2026-08-22 | T-10 | Task T-10 dibuat & dimulai (IN_PROGRESS) hasil re-audit + instruksi pemilik project: hardening fungsi SECURITY DEFINER live DB | ox-alpha |
 | 2026-08-22 | T-10 | Selesai (DONE): 2 migration diterapkan (incl. koreksi grant PUBLIC), advisor security 19→7 (sisa by-design terdokumentasi), search_path fixed, ACL diverifikasi live | ox-alpha |
+| 2026-08-22 | T-10 | Commit `76aa5ea` (plan.md) + `0adb560` (track semua migration + .gitignore) | ox-alpha |
+| 2026-08-22 | T-01 | Dimulai & selesai (DONE): script typecheck ditambahkan, .env.example disinkronkan 8 var, baseline asli tercatat (lint 14err/8warn exit1 pre-existing · typecheck 0 · build 0) | ox-alpha |
