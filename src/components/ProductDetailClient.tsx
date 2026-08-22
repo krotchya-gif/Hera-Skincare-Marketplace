@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,11 +20,15 @@ import {
   Share2,
   Store,
   Package,
+  GitCompare,
 } from "lucide-react";
 import type { Product, Review } from "@/types/database";
+import type { ProductQuestion } from "@/lib/products";
+import ProductQnA from "@/components/ProductQnA";
 
 import { formatRp } from "@/utils/format";
 import { addToCart, getWishlist, toggleWishlist } from "@/lib/cart-utils";
+import { toggleCompare, isInCompare, MAX_COMPARE } from "@/lib/comparison-utils";
 import { useToast } from "@/components/Toast";
 
 interface ProductDetailClientProps {
@@ -36,6 +40,7 @@ interface ProductDetailClientProps {
     breakdown: Record<number, number>;
   };
   relatedProducts: Product[];
+  questions: ProductQuestion[];
 }
 
 export default function ProductDetailClient({
@@ -43,10 +48,11 @@ export default function ProductDetailClient({
   reviews,
   ratingSummary,
   relatedProducts,
+  questions,
 }: ProductDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"deskripsi" | "spesifikasi" | "ulasan">("deskripsi");
+  const [activeTab, setActiveTab] = useState<"deskripsi" | "spesifikasi" | "ulasan" | "qna">("deskripsi");
   const [quantity, setQuantity] = useState(1);
   
   // Resolve variants
@@ -66,6 +72,39 @@ export default function ProductDetailClient({
     if (typeof window === "undefined") return false;
     return getWishlist().includes(product.id);
   });
+  const [compared, setCompared] = useState(false);
+
+  useEffect(() => {
+    const refreshCompare = () => setCompared(isInCompare(product.id));
+    window.addEventListener("compare-updated", refreshCompare);
+    // defer agar tidak setState sinkron di dalam effect (react-hooks rule)
+    const t = setTimeout(refreshCompare, 0);
+    return () => {
+      window.removeEventListener("compare-updated", refreshCompare);
+      clearTimeout(t);
+    };
+  }, [product.id]);
+
+  const handleToggleCompare = () => {
+    const result = toggleCompare({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      discount_price: product.discount_price ?? null,
+      emoji: getProductEmoji(product.slug, product.categories?.icon) ?? undefined,
+      stock: product.stock,
+      slug: product.slug ?? undefined,
+    });
+    setCompared(isInCompare(product.id));
+    if (result.full) {
+      toast("info", `Maksimal ${MAX_COMPARE} produk untuk dibandingkan.`);
+    } else {
+      toast(
+        result.added ? "success" : "info",
+        result.added ? "Ditambahkan ke perbandingan." : "Dihapus dari perbandingan."
+      );
+    }
+  };
   const [addedToCart, setAddedToCart] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
 
@@ -196,6 +235,17 @@ export default function ProductDetailClient({
               >
                 <Heart className={`w-5 h-5 ${wished ? "fill-current" : ""}`} />
               </button>
+
+              {/* T-06.2: Toggle perbandingan produk */}
+              <button
+                onClick={handleToggleCompare}
+                title="Bandingkan produk"
+                className={`absolute top-16 right-4 w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all ${
+                  compared ? "bg-green-600 text-white" : "bg-white text-gray-400 hover:text-green-600"
+                }`}
+              >
+                <GitCompare className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Thumbnails */}
@@ -216,6 +266,14 @@ export default function ProductDetailClient({
                 </button>
               ))}
             </div>
+            {compared && (
+              <Link
+                href="/perbandingan"
+                className="inline-block mt-2 text-xs font-semibold text-green-600 hover:underline"
+              >
+                Lihat perbandingan →
+              </Link>
+            )}
           </div>
 
           {/* Right: Product Info */}
@@ -376,7 +434,7 @@ export default function ProductDetailClient({
         {/* Tabs */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-8">
           <div className="flex border-b border-gray-100">
-            {(["deskripsi", "spesifikasi", "ulasan"] as const).map((tab) => (
+            {(["deskripsi", "spesifikasi", "ulasan", "qna"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -388,6 +446,8 @@ export default function ProductDetailClient({
               >
                 {tab === "ulasan"
                   ? `Ulasan (${ratingSummary.count})`
+                  : tab === "qna"
+                  ? `Tanya Jawab (${questions.length})`
                   : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
@@ -489,6 +549,10 @@ export default function ProductDetailClient({
                   )}
                 </div>
               </div>
+            )}
+
+            {activeTab === "qna" && (
+              <ProductQnA productId={product.id} questions={questions} />
             )}
           </div>
         </div>

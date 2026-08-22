@@ -356,3 +356,30 @@ export async function getBestSellerProducts(limit = 8): Promise<Product[]> {
 
   return getProductsByIds(topIds);
 }
+
+// ─── Product Q&A (T-06.1) ───────────────────────────────────────────────────
+
+export interface ProductQuestion {
+  id: string;
+  product_id: string;
+  user_id: string;
+  question: string;
+  answer: string | null;
+  answered_at: string | null;
+  helpful_count: number;
+  created_at: string;
+}
+
+export async function getQuestionsByProduct(productId: string): Promise<ProductQuestion[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("product_qna")
+    .select("*")
+    .eq("product_id", productId)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("[getQuestionsByProduct]", error);
+    return [];
+  }
+  return (data as ProductQuestion[]) ?? [];
+}

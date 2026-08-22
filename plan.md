@@ -68,7 +68,7 @@ npm run build       # exit 0
 | [T-03](#t-03--flash-sale-crud-di-admin) | P1 | Flash Sale CRUD di Admin | DONE |
 | [T-04](#t-04--tutup-bug-low-dari-audit-lama) | P1 | Tutup bug LOW dari audit lama | DONE |
 | [T-05](#t-05--notifikasi-otomatis-emailwa) | P2 | Notifikasi otomatis Email/WA | DONE |
-| [T-06](#t-06--port-fitur-qa-produk--comparison-dari-project-react) | P2 | Port Q&A produk + comparison dari React | BACKLOG |
+| [T-06](#t-06--port-fitur-qa-produk--comparison-dari-project-react) | P2 | Port Q&A produk + comparison dari React | DONE |
 | [T-07](#t-07--konsolidasi-dokumentasi--arsip-project-react) | P3 | Konsolidasi dokumentasi & arsip project React | BACKLOG |
 | [T-08](#t-08--pembaruan-dependencies-ke-versi-stabil) | P1 | Pembaruan dependencies ke versi stabil | DONE |
 | [T-09](#t-09--ganti-navigasi-windowlocation-dengan-router-nextjs) | P1 | Ganti navigasi window.location dengan Router Next.js | DONE |
@@ -350,18 +350,32 @@ menunggu kredensial.
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
-| Mulai / Selesai | — / — |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
 | Referensi | `../Hera Store React/src/context/ComparisonContext.jsx`, tabel `product_qna` di `../Hera Store React/supabase/init.sql` |
 
-**Catatan:** Ini prioritas P2 — boleh di-skip permanen oleh pemilik project. Jika dijalankan, pecah menjadi dua sub-task: T-06.1 (Q&A) dan T-06.2 (Comparison), masing-masing dengan migration + API route + UI sendiri.
+**Catatan:** Dijalankan penuh atas instruksi "lanjut semua" pemilik project; dipecah sesuai catatan: T-06.1 (Q&A) dan T-06.2 (Comparison).
 
-**Scope-IN:** migration DB, API routes baru, komponen/halaman terkait produk detail
-**Scope-OUT:** halaman lain, styling global
+#### T-06.1 — Q&A Produk
+
+**Implementasi**
+- Migration live `product_qna` via MCP (adaptasi UUID dari init.sql React) + mirror ke full_schema.sql: tabel + index + 3 policy (select publik, insert authenticated, update admin via has_role)
+- API: `POST /api/products/qna` (bertanya, auth) · `GET /api/admin/qna` (daftar) · `PATCH+DELETE /api/admin/qna/[id]` (jawab/hapus, verifyAdminRole)
+- lib/products.ts: `getQuestionsByProduct()`; UI customer: tab "Tanya Jawab" di detail produk (list + form bertanya, login-gated); UI admin: panel jawab/hapus pertanyaan di halaman ulasan
+
+#### T-06.2 — Comparison
+
+**Implementasi**
+- `src/lib/comparison-utils.ts`: port ComparisonContext.jsx → localStorage (`hera_compare`, maks 4 produk, event `compare-updated`)
+- Tombol toggle perbandingan (GitCompare) di galeri detail produk + link ke halaman khusus
+- Halaman `/perbandingan`: tabel side-by-side harga/stok/detail + hapus item + kosongkan
 
 **Bukti**
 ```
-(paste output di sini saat mengerjakan)
+Migration live : product_qna (MCP success) + mirror full_schema ✅
+Gerbang        : typecheck exit 0 · lint 14 err/0 warn (baseline sama;
+                 2 error pola setState-in-effect dari kode baru diperbaiki
+                 saat proses) · build exit 0
 ```
 
 ---
@@ -719,3 +733,5 @@ project baru; struktur finalnya identik dengan DB live hari ini.
 | 2026-08-22 | T-04 | Dimulai: daftar dipecah 14 sub-entri; verifikasi aktual menunjukkan 10 item sudah hilang/obsolete dari sesi fix sebelumnya | ox-alpha |
 | 2026-08-22 | T-04 | Selesai (DONE): T-04.9 CLI devDep (c83f820) + T-04.10 nol warning lint (fd9dcdd); 12 lainnya SKIP/SUDAH-FIX terdokumentasi per-sub di tabel | ox-alpha |
 | 2026-08-22 | T-05 | Dimulai & selesai (DONE): provider Resend (email) + Fonnte (WA) murni fetch; notify.ts + integrasi 3 titik pemicu; gerbang hijau; runtime test menunggu kredensial owner | ox-alpha |
+| 2026-08-22 | T-05 | Commit `14af7ca` | ox-alpha |
+| 2026-08-22 | T-06 | Dimulai & selesai (DONE): migration product_qna live+mirror, API tanya/jawab, tab Q&A detail produk, panel admin di ulasan, comparison utils+tombol+halaman /perbandingan; gerbang hijau | ox-alpha |

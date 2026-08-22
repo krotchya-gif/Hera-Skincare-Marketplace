@@ -587,6 +587,39 @@ create trigger on_order_status_change
 -- STORE SETTINGS (key-value)
 -- =============================================
 create table if not exists public.store_settings (
+
+-- ============================================================
+-- PRODUCT Q&A (T-06.1)
+-- ============================================================
+
+create table if not exists public.product_qna (
+  id uuid primary key default uuid_generate_v4(),
+  product_id uuid not null references public.products(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  question text not null,
+  answer text,
+  answered_at timestamptz,
+  helpful_count int not null default 0 check (helpful_count >= 0),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_product_qna_product on public.product_qna(product_id);
+
+alter table public.product_qna enable row level security;
+
+create policy "QnA publicly viewable"
+  on public.product_qna for select using (true);
+
+create policy "Authenticated users can ask questions"
+  on public.product_qna for insert to authenticated
+  with check (auth.uid() = user_id);
+
+create policy "Admins can answer questions"
+  on public.product_qna for update using (
+    public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text, 'operator'::text])
+  );
+
+create table if not exists public.store_settings (
   key text primary key,
   value jsonb,
   updated_at timestamptz not null default now()

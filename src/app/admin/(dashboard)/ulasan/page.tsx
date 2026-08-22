@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useTransition } from "react";
-import { Star } from "lucide-react";
+import { Star, MessageCircleQuestion } from "lucide-react";
 import type { Review } from "@/types/database";
+import type { ProductQuestion } from "@/lib/products";
 
 const ratingColors = ["", "text-red-400", "text-orange-400", "text-yellow-400", "text-blue-400", "text-green-500"];
 
@@ -69,6 +70,57 @@ export default function ReviewsPage() {
     });
   };
 
+  // ── Q&A Produk (T-06.1) ──
+  const [questions, setQuestions] = useState<ProductQuestion[]>([]);
+  const [answerDrafts, setAnswerDrafts] = useState<Record<string, string>>({});
+
+  const fetchQuestions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/qna");
+      if (res.ok) setQuestions((await res.json()) ?? []);
+    } catch (error) {
+      console.error("Failed to fetch questions", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    startTransition(() => {
+      fetchQuestions();
+    });
+  }, [fetchQuestions]);
+
+  const handleAnswer = async (id: string) => {
+    const answer = answerDrafts[id]?.trim();
+    if (!answer) return;
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/admin/qna/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answer }),
+        });
+        if (res.ok) {
+          setAnswerDrafts((prev) => ({ ...prev, [id]: "" }));
+          fetchQuestions();
+        }
+      } catch (error) {
+        console.error("Failed to answer question", error);
+      }
+    });
+  };
+
+  const handleDeleteQuestion = async (id: string) => {
+    if (!confirm("Hapus pertanyaan ini?")) return;
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/admin/qna/${id}`, { method: "DELETE" });
+        if (res.ok) fetchQuestions();
+      } catch (error) {
+        console.error("Failed to delete question", error);
+      }
+    });
+  };
+
   // Client side rating filters
   const filtered = reviews.filter((r) => {
     if (filter === "Semua" || filter === "Tampil" || filter === "Disembunyikan") return true;
@@ -84,6 +136,69 @@ export default function ReviewsPage() {
         <h2 className="text-xl font-bold text-gray-900">Manajemen Ulasan</h2>
         <p className="text-sm text-gray-500 mt-0.5">Pantau dan moderasi ulasan pelanggan</p>
       </div>
+
+      {/* Q&A Produk (T-06.1) */}
+      {questions.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+            <MessageCircleQuestion className="w-4 h-4 text-green-600" />
+            <h3 className="font-semibold text-gray-900 text-sm">
+              Pertanyaan Produk{" "}
+              <span className="text-xs font-normal text-gray-400">
+                ({questions.filter((q) => !q.answer).length} menunggu jawaban)
+              </span>
+            </h3>
+          </div>
+          <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
+            {questions.map((q) => {
+              const productName = (q as unknown as { products?: { name?: string } }).products?.name;
+              return (
+                <div key={q.id} className="px-5 py-3.5 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm text-gray-800">{q.question}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                        {productName ?? "Produk"} · {new Date(q.created_at).toLocaleDateString("id-ID")}
+                        {!q.answer && <span className="ml-1.5 text-orange-500 font-medium">• belum terjawab</span>}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteQuestion(q.id)}
+                      className="text-[11px] text-red-400 hover:text-red-600 shrink-0"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                  {q.answer ? (
+                    <div className="bg-green-50/70 rounded-lg p-2.5">
+                      <p className="text-xs text-gray-700">{q.answer}</p>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        value={answerDrafts[q.id] ?? ""}
+                        onChange={(e) => setAnswerDrafts((prev) => ({ ...prev, [q.id]: e.target.value }))}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAnswer(q.id);
+                        }}
+                        placeholder="Tulis jawaban..."
+                        className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-green-400"
+                      />
+                      <button
+                        onClick={() => handleAnswer(q.id)}
+                        disabled={!answerDrafts[q.id]?.trim()}
+                        className="bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white text-xs font-semibold px-3 py-2 rounded-lg"
+                      >
+                        Jawab
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { Product, PaginatedResult } from "@/types/database";
 import ProductDetailClient from "@/components/ProductDetailClient";
-import { getProductBySlug, getReviewsByProduct, getProductRatingSummary, getProducts } from "@/lib/products";
+import { getProductBySlug, getReviewsByProduct, getProductRatingSummary, getProducts, getQuestionsByProduct } from "@/lib/products";
 import { getSeoSettings } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { STORE_NAME } from "@/utils/storeConfig";
@@ -41,7 +41,7 @@ export default async function ProdukDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const [reviews, ratingSummary, relatedProductsResult] = await Promise.all([
+  const [reviews, ratingSummary, relatedProductsResult, questions] = await Promise.all([
     getReviewsByProduct(product.id),
     getProductRatingSummary(product.id),
     product.categories?.slug
@@ -51,6 +51,7 @@ export default async function ProdukDetailPage({ params }: PageProps) {
           pageSize: 7,
         })
       : Promise.resolve({ data: [], count: 0, page: 1, pageSize: 0, totalPages: 0 } as PaginatedResult<Product>),
+    getQuestionsByProduct(product.id),
   ]);
 
   const relatedProducts = relatedProductsResult.data
@@ -63,6 +64,7 @@ export default async function ProdukDetailPage({ params }: PageProps) {
       reviews={reviews}
       ratingSummary={ratingSummary}
       relatedProducts={relatedProducts}
+      questions={questions}
     />
   );
 }
