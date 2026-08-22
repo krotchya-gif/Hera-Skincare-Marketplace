@@ -28,34 +28,37 @@ marketplace/
 │   │   ├── icon-512.png/    # Dynamic PWA icon route
 │   │   ├── tentang-kami/, karir/, blog/, hubungi-kami/, faq/, cara-belanja/, pengembalian-barang/
 │   │   ├── kategori/[slug]/, produk/[slug]/, keranjang/, checkout/, profil/
-│   │   ├── bayar/[id]/, voucher/
+│   │   ├── bayar/[id]/, voucher/, perbandingan/          # perbandingan = T-06.2
 │   │   ├── admin/ (login + 12 dashboard pages)
 │   │   ├── sitemap.xml/, robots.txt/
-│   │   └── api/ (26 route handlers)
+│   │   └── api/ (33 route handlers)
 │   │   ├── admin/blog/     # Blog CRUD (terpisah dari Pengaturan)
 │   ├── components/
 │   │   ├── Navbar.tsx, Footer.tsx, Toast.tsx, ErrorBoundary.tsx
 │   │   ├── *Client.tsx (Home, Category, ProductDetail, Profil)
+│   │   ├── ProductQnA.tsx  # Q&A produk (T-06.1)
 │   │   ├── VoucherCard.tsx
 │   │   └── admin/ (Shell, Sidebar, Topbar, Dashboard, StatCard, StatusBadge,
 │   │                ProductFormModal, OrderDetailModal, NotificationDropdown)
-│   ├── lib/        (products, orders, admin, auth-utils, vouchers, rate-limit, cart-utils, seo)
+│   ├── lib/        (products, orders, admin, auth-utils, vouchers, rate-limit,
+│   │                cart-utils, comparison-utils, notify, seo)
 │   ├── types/      (database.ts)
-│   └── utils/      (format, storeConfig, order-status, supabase client/server)
+│   └── utils/      (format, storeConfig, order-status, supabase client/server/admin)
 │   └── proxy.ts    # Next.js 16 Proxy (menggantikan middleware.ts)
 ├── supabase/migrations/ (1 file — full schema konsolidasi)
 ```
 
 ## Fitur
 
-### Customer (15 halaman)
+### Customer (16 halaman)
 - **Homepage** — Hero, Kategori Populer, Flash Sale (countdown), Terlaris, Promo
 - **Kategori** — Breadcrumb, sub-kategori, filter, pagination
-- **Detail Produk** — Galeri, varian, qty, CTA, ulasan, rekomendasi
+- **Detail Produk** — Galeri, varian, qty, CTA, tab deskripsi/ulasan/**tanya jawab**, rekomendasi, tombol perbandingan
+- **Perbandingan** — Bandingkan hingga 4 produk side-by-side (`/perbandingan`)
 - **Keranjang** — Checkbox, qty, voucher, ringkasan
 - **Checkout** — 5-step: Alamat → Pengiriman → Pembayaran → Konfirmasi → Selesai
 - **Profil** — Tab pesanan, wishlist, alamat, edit profil, aksi per-status
-- **Pembayaran** — Info rekening dari DB, konfirmasi bayar
+- **Pembayaran** — Info rekening dari DB, konfirmasi bayar, **bayar online via Xendit** (QRIS/e-wallet/VA) + salin/kirim link invoice via WhatsApp
 - **Voucher** — Daftar voucher + copy code
 - **7 halaman statis** — Tentang Kami, Karir, Blog, Hubungi Kami (WhatsApp + Maps), FAQ, Cara Belanja, Pengembalian Barang
 
@@ -71,8 +74,8 @@ marketplace/
 - **Kategori** — Card grid + CRUD
 - **Blog** — CRUD artikel blog (slug, title, excerpt, emoji) — terpisah dari Pengaturan
 - **Keuangan** — Filter period + BarChart + PieChart
-- **Promo** — Voucher CRUD + Flash Sale (read-only)
-- **Ulasan** — Rating summary + progress bar + toggle
+- **Promo** — Voucher CRUD + **Flash Sale CRUD penuh** (create/edit/delete/toggle + items)
+- **Ulasan** — Rating summary + progress bar + toggle + **panel jawab pertanyaan produk (Q&A)**
 - **Marketing** — Dashboard (placeholder)
 - **Pengaturan** — 7 tabs: Info, Pengiriman, Pembayaran, Notifikasi, Admin, SEO, Halaman Statis (blog dihapus)
 - **Login Admin Bento Grid** — Redesain premium bermotif bento grid dengan live server status metrics dan terminal logs.
@@ -86,13 +89,16 @@ marketplace/
 - **Toast Notifications** — Integrasi custom toast menggantikan semua dialog `alert()` bawaan browser.
 - **Payment Redirect** — Setelah konfirmasi bayar, customer otomatis redirect ke halaman pesanan.
 - **Client Routing** — Navigasi internal memakai `useRouter().push()` (bukan `window.location.href`).
+- **Pembayaran Online** — Xendit Invoice API v2 (QRIS/e-wallet/VA/kartu/retail) via route server-side; webhook `x-callback-token` verified + idempotent; alur transfer manual tetap utuh.
+- **Notifikasi Otomatis** — Email (Resend) & WhatsApp (Fonnte) ke customer saat status pesanan berubah; fire-and-forget, nonaktif bila env kosong.
 
-## API Routes (26)
+## API Routes (33)
 
 | Route | Method | Auth | Deskripsi |
 |-------|--------|------|-----------|
 | `/api/payments/xendit/create` | POST | Required | Buat/pakai-ulang Xendit Invoice untuk order milik user |
 | `/api/payments/xendit/webhook` | POST | Callback token | Callback status pembayaran Xendit (server-to-server) |
+| `/api/products/qna` | POST | Required | Ajukan pertanyaan produk |
 | `/api/products` | GET | Public | List produk (filter, sort, pagination) |
 | `/api/orders` | POST | Required | Buat pesanan + validasi |
 | `/api/orders/[id]/confirm-payment` | POST | Required | Konfirmasi bayar |
@@ -115,6 +121,11 @@ marketplace/
 | `/api/admin/reviews/[id]/toggle` | PATCH | Admin | Toggle visibilitas |
 | `/api/admin/vouchers` | GET/POST | Admin | CRUD voucher |
 | `/api/admin/vouchers/[id]/toggle` | PATCH | Admin | Toggle status |
+| `/api/admin/flash-sales` | GET/POST | Admin | List & create flash sale + items |
+| `/api/admin/flash-sales/[id]` | PUT/DELETE | Admin | Update/hapus flash sale |
+| `/api/admin/flash-sales/[id]/toggle` | PATCH | Admin | Toggle status flash sale |
+| `/api/admin/qna` | GET | Admin | Daftar semua pertanyaan produk |
+| `/api/admin/qna/[id]` | PATCH/DELETE | Admin | Jawab/hapus pertanyaan |
 | `/api/admin/finance` | GET | Admin | Data keuangan |
 | `/api/admin/settings` | GET/PUT | Admin | Store settings (semua key) |
 | `/api/admin/upload` | POST | Admin | Upload foto produk |
@@ -159,9 +170,20 @@ Jalankan dengan `supabase db push` pada project baru.
 
 | Command | Fungsi |
 |---------|--------|
-| `npm run lint` | ESLint (baseline: 22 problems — 14 error & 8 warning pre-existing) |
+| `npm run lint` | ESLint (baseline: 14 problems — semua error pre-existing `no-explicit-any` dll., 0 warning) |
 | `npm run typecheck` | `tsc --noEmit`, harus exit 0 |
 | `npm run build` | Production build, harus exit 0 |
+
+## Environment Variables
+
+| Var | Wajib | Fungsi |
+|-----|-------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` / `..._KEY` | ✅ | Supabase project |
+| `NEXT_PUBLIC_SITE_URL` | ✅ | sitemap & robots |
+| `SUPABASE_SERVICE_ROLE_KEY` | utk webhook | Service-role (server-side only) |
+| `XENDIT_SECRET_KEY` / `XENDIT_CALLBACK_TOKEN` | opsional | Pembayaran online Xendit |
+| `RESEND_API_KEY` / `RESEND_FROM_EMAIL` / `FONNTE_TOKEN` | opsional | Notifikasi Email/WA |
+| `NEXT_PUBLIC_STORE_*` (5 var) | opsional | Fallback di `storeConfig.ts` |
 
 ## Status
 
