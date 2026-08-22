@@ -69,7 +69,7 @@ npm run build       # exit 0
 | [T-04](#t-04--tutup-bug-low-dari-audit-lama) | P1 | Tutup bug LOW dari audit lama | DONE |
 | [T-05](#t-05--notifikasi-otomatis-emailwa) | P2 | Notifikasi otomatis Email/WA | DONE |
 | [T-06](#t-06--port-fitur-qa-produk--comparison-dari-project-react) | P2 | Port Q&A produk + comparison dari React | DONE |
-| [T-07](#t-07--konsolidasi-dokumentasi--arsip-project-react) | P3 | Konsolidasi dokumentasi & arsip project React | BACKLOG |
+| [T-07](#t-07--konsolidasi-dokumentasi--arsip-project-react) | P3 | Konsolidasi dokumentasi & arsip project React | DONE |
 | [T-08](#t-08--pembaruan-dependencies-ke-versi-stabil) | P1 | Pembaruan dependencies ke versi stabil | DONE |
 | [T-09](#t-09--ganti-navigasi-windowlocation-dengan-router-nextjs) | P1 | Ganti navigasi window.location dengan Router Next.js | DONE |
 | [T-10](#t-10--hardening-fungsi-security-definer-database) | P0 | Hardening fungsi SECURITY DEFINER database | DONE |
@@ -384,8 +384,8 @@ Gerbang        : typecheck exit 0 · lint 14 err/0 warn (baseline sama;
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
-| Mulai / Selesai | — / — |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
 
 **Tujuan:** Satu codebase hidup, satu sumber kebenaran.
 
@@ -397,13 +397,19 @@ Gerbang        : typecheck exit 0 · lint 14 err/0 warn (baseline sama;
 **Scope-OUT:** kode aplikasi, database
 
 **Kriteria Selesai**
-1. Tidak ada lagi dokumen di kedua repo yang bisa disalahartikan sebagai tracker aktif
-2. Project React jelas tertanda deprecated + tanggal
+1. ✅ Tidak ada lagi dokumen di kedua repo yang bisa disalahartikan sebagai tracker aktif — Next.js: hanya plan.md aktif; doc.md/Todo.md/AGENT.md arsip ber-banner & gitignored. React: README diberi banner DEPRECATED di posisi paling atas
+2. ✅ Project React jelas tertanda deprecated + tanggal (22 Agustus 2026) + daftar fitur yang sudah diporting
 3. Ketiga gerbang DoD hijau + bukti tercatat
 
 **Bukti**
 ```
-(paste output di sini saat mengerjakan)
+README.md (Next.js) : bagian "Status" -> pointer plan.md (sejak T-11) ✅
+../Hera Store React/README.md : banner "DEPRECATED — ARSIP PROJECT
+  (22 Agustus 2026)" ditambahkan di baris pertama + daftar fitur
+  yang telah diporting + pointer ke plan.md penerus ✅
+Tracker basi repo Next.js : sudah terarsip sejak 2026-08-22 awal
+  (doc.md, Todo.md ber-banner ARCHIVED + gitignored) ✅
+Gerbang: typecheck exit 0 · lint 14 err/0 warn · build exit 0 (lihat commit T-06)
 ```
 
 ---
@@ -735,3 +741,6 @@ project baru; struktur finalnya identik dengan DB live hari ini.
 | 2026-08-22 | T-05 | Dimulai & selesai (DONE): provider Resend (email) + Fonnte (WA) murni fetch; notify.ts + integrasi 3 titik pemicu; gerbang hijau; runtime test menunggu kredensial owner | ox-alpha |
 | 2026-08-22 | T-05 | Commit `14af7ca` | ox-alpha |
 | 2026-08-22 | T-06 | Dimulai & selesai (DONE): migration product_qna live+mirror, API tanya/jawab, tab Q&A detail produk, panel admin di ulasan, comparison utils+tombol+halaman /perbandingan; gerbang hijau | ox-alpha |
+| 2026-08-22 | T-07 | Dimulai & selesai (DONE): banner DEPRECATED dipasang di ../Hera Store React/README.md; kriteria konsolidasi terpenuhi penuh (sisanya sudah di T-11/T-12) | ox-alpha |
+
+## 🏁 ROADMAP SELESAI — semua task T-01 s/d T-12 berstatus DONE per 22 Agustus 2026.
