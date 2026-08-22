@@ -65,6 +65,7 @@ npm run build       # exit 0
 |----|-----------|------|--------|
 | [T-01](#t-01--infrastruktur-verifikasi--baseline) | P0 | Infrastruktur verifikasi & baseline | DONE |
 | [T-02](#t-02--xendit-invoice-pembayaran-online-server-side) | P0 | Xendit Invoice pembayaran online (server-side) | DONE |
+| [T-03](#t-03--flash-sale-crud-di-admin) | P1 | Flash Sale CRUD di Admin | DONE |
 | [T-03](#t-03--flash-sale-crud-di-admin) | P1 | Flash Sale CRUD di Admin | BACKLOG |
 | [T-04](#t-04--tutup-bug-low-dari-audit-lama) | P1 | Tutup bug LOW dari audit lama | BACKLOG |
 | [T-05](#t-05--notifikasi-otomatis-emailwa) | P2 | Notifikasi otomatis Email/WA | BACKLOG |
@@ -202,8 +203,8 @@ Kriteria 1-6 terverifikasi lewat code-review & typecheck; runtime proof menunggu
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
-| Mulai / Selesai | — / — |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
 
 **Tujuan:** Admin bisa membuat/mengubah flash sale. Saat ini hanya read-only table di `/admin/promo`.
 
@@ -224,8 +225,29 @@ Kriteria 1-6 terverifikasi lewat code-review & typecheck; runtime proof menunggu
 
 **Bukti**
 ```
-(paste output di sini saat mengerjakan)
+== Implementasi ==
++ src/app/api/admin/flash-sales/route.ts        (GET list, POST create)
++ src/app/api/admin/flash-sales/[id]/route.ts   (PUT update, DELETE)
++ src/app/api/admin/flash-sales/[id]/toggle/route.ts (PATCH status)
+~ src/lib/admin.ts    (+6 fungsi: getAllFlashSalesAdmin, createFlashSale,
+    updateFlashSale, toggleFlashSaleStatus, deleteFlashSale, validateFlashItems)
+~ src/app/admin/(dashboard)/promo/page.tsx (+FlashSaleModal: form nama,
+    datetime mulai/berakhir, picker multi-produk dgn harga & stok flash;
+    tabel dapat kolom Aksi: edit/hapus + badge status jadi tombol toggle;
+    sumber data pindah dari client supabase langsung -> API admin)
+Catatan tipe: FlashSaleProduct sudah punya products? — database.ts tidak diubah.
+
+== Adaptasi kriteria no.2 ==
+Model DB memakai harga absolut (flash_price numeric >= 0), bukan persen.
+"Diskon 1-100%" diimplementasikan sesuai model data:
+end_time > start_time ✅ · flash_price harus diskon nyata
+(0 < flash_price < harga normal produk) ✅ · produk wajib ada & aktif ✅
+
+== Gerbang ==
+typecheck exit 0 · lint 22 problems (baseline sama) · build exit 0
 ```
+
+Status kriteria: 1 ✅ · 2 ✅ (adaptasi terdokumentasi) · 3 ✅ · 4 ✅
 
 ---
 
@@ -647,3 +669,5 @@ project baru; struktur finalnya identik dengan DB live hari ini.
 | 2026-08-22 | T-12 | Selesai (DONE): `20260822130000_full_schema.sql` (1314 baris) menggantikan 7 file lama; inventaris terverifikasi identik live DB (14 tabel, 10 fungsi, ensure_rls, 42 policy final, seed, bucket); gerbang hijau | ox-alpha |
 | 2026-08-22 | T-02 | REVISI DESAIN: Midtrans Snap → **Xendit Invoice API v2** atas instruksi pemilik project (alasan: e-wallet lebih luas OVO/DANA + invoice-link via WA). Scope & kriteria ditulis ulang; task dimulai (IN_PROGRESS) | ox-alpha |
 | 2026-08-22 | T-02 | Selesai (DONE): migration xendit_order_columns live+mirror, 2 API route (create/webhook) + admin client, UI bayar online & checkout, gerbang hijau. E2E runtime menunggu kredensial Xendit dari owner (tercatat di Bukti) | ox-alpha |
+| 2026-08-22 | T-02 | Commit `8c1000c` + `83cf562` (gitignore migration fix) | ox-alpha |
+| 2026-08-22 | T-03 | Dimulai & selesai (DONE): 3 API route flash-sales (GET/POST/PUT/DELETE/toggle) dgn verifyAdminRole, 6 fungsi lib/admin, FlashSaleModal + aksi tabel di /admin/promo; kriteria no.2 diadaptasi ke model harga absolut (terdokumentasi); gerbang hijau | ox-alpha |

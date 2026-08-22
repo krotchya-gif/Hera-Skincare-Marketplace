@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { Plus, X, RefreshCcw, Check, AlertCircle } from "lucide-react";
+import { Plus, X, RefreshCcw, Check, AlertCircle, Pencil, Trash2 } from "lucide-react";
 import { STORE_NAME } from "@/utils/storeConfig";
-import { createClient } from "@/utils/supabase/client";
 import { formatRp } from "@/utils/format";
 import type { Voucher, FlashSale } from "@/types/database";
 
@@ -229,12 +228,263 @@ function VoucherModal({
   );
 }
 
+// Konversi ISO -> format "YYYY-MM-DDTHH:mm" untuk input datetime-local
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+interface FlashItemRow {
+  product_id: string;
+  flash_price: string;
+  flash_stock: string;
+}
+
+function FlashSaleModal({
+  sale,
+  onClose,
+  onSuccess,
+}: {
+  sale: FlashSale | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [name, setName] = useState(sale?.name ?? "");
+  const [startsAt, setStartsAt] = useState(sale ? toLocalInput(sale.starts_at) : "");
+  const [endsAt, setEndsAt] = useState(sale ? toLocalInput(sale.ends_at) : "");
+  const [items, setItems] = useState<FlashItemRow[]>(
+    sale?.flash_sale_products?.length
+      ? sale.flash_sale_products.map((p) => ({
+          product_id: p.product_id,
+          flash_price: String(p.flash_price),
+          flash_stock: String(p.flash_stock),
+        }))
+      : [{ product_id: "", flash_price: "", flash_stock: "" }]
+  );
+  const [productOptions, setProductOptions] = useState<{ id: string; name: string; price: number }[]>([]);
+  const [isPending, startTransition] = useTransition();
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const res = await fetch("/api/admin/products?pageSize=100");
+        if (!res.ok) return;
+        const json = await res.json();
+        setProductOptions(
+          ((json.data ?? []) as { id: string; name: string; price: number }[]).map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+          }))
+        );
+      } catch (e) {
+        console.error("Failed to fetch products", e);
+      }
+    };
+    loadProducts();
+  }, []);
+
+  const updateItem = (index: number, patch: Partial<FlashItemRow>) => {
+    setItems((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  };
+
+  const removeItem = (index: number) => {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+
+    if (!name.trim()) return setMessage({ type: "error", text: "Nama event wajib diisi." });
+    if (!startsAt || !endsAt) return setMessage({ type: "error", text: "Waktu mulai & berakhir wajib diisi." });
+    const start = new Date(startsAt);
+    const end = new Date(endsAt);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return setMessage({ type: "error", text: "Format waktu tidak valid." });
+    if (end <= start) return setMessage({ type: "error", text: "Waktu berakhir harus setelah waktu mulai." });
+
+    const filled = items.filter((i) => i.product_id);
+    if (filled.length === 0) return setMessage({ type: "error", text: "Minimal satu produk wajib dipilih." });
+    for (const item of filled) {
+      if (Number(item.flash_price) <= 0)
+        return setMessage({ type: "error", text: "Harga flash harus lebih besar dari 0." });
+      if (!Number.isInteger(Number(item.flash_stock)) || Number(item.flash_stock) < 0)
+        return setMessage({ type: "error", text: "Stok flash harus berupa angka >= 0." });
+    }
+
+    const payload = {
+      name: name.trim(),
+      starts_at: startsAt,
+      ends_at: endsAt,
+      items: filled.map((i) => ({
+        product_id: i.product_id,
+        flash_price: Number(i.flash_price),
+        flash_stock: Number(i.flash_stock),
+      })),
+    };
+
+    startTransition(async () => {
+      try {
+        const res = await fetch(sale ? `/api/admin/flash-sales/${sale.id}` : "/api/admin/flash-sales", {
+          method: sale ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal menyimpan flash sale");
+        }
+        setMessage({ type: "success", text: sale ? "Flash sale diperbarui!" : "Flash sale berhasil dibuat!" });
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+        }, 1200);
+      } catch (error) {
+        setMessage({ type: "error", text: error instanceof Error ? error.message : "Terjadi kesalahan." });
+      }
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <form onSubmit={handleSubmit} className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto z-10">
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
+          <h2 className="font-semibold text-gray-900">{sale ? "Edit Flash Sale" : "Buat Flash Sale Baru"}</h2>
+          <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {message && (
+          <div className={`mx-6 mt-4 p-3 rounded-xl flex items-center gap-2 text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+            {message.type === "success" ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+            {message.text}
+          </div>
+        )}
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Nama Event *</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+              placeholder="CONTOH: Flash Sale Gajian"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Mulai *</label>
+              <input
+                type="datetime-local"
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Berakhir *</label>
+              <input
+                type="datetime-local"
+                value={endsAt}
+                onChange={(e) => setEndsAt(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-medium text-gray-600">Produk &amp; Harga Flash *</label>
+              <button
+                type="button"
+                onClick={() => setItems((prev) => [...prev, { product_id: "", flash_price: "", flash_stock: "" }])}
+                className="flex items-center gap-1 text-xs font-semibold text-green-600 hover:text-green-700"
+              >
+                <Plus className="w-3.5 h-3.5" /> Tambah Produk
+              </button>
+            </div>
+            <div className="space-y-2">
+              {items.map((item, index) => {
+                const selected = item.product_id ? productOptions.find((p) => p.id === item.product_id) : null;
+                return (
+                  <div key={index} className="flex gap-2 items-start bg-gray-50/60 rounded-xl p-2 border border-gray-100">
+                    <select
+                      value={item.product_id}
+                      onChange={(e) => {
+                        const pid = e.target.value;
+                        const opt = productOptions.find((p) => p.id === pid);
+                        updateItem(index, { product_id: pid, flash_price: opt && !item.flash_price ? String(opt.price) : item.flash_price });
+                      }}
+                      className="flex-1 min-w-0 border border-gray-200 rounded-lg px-2 py-2 text-xs focus:outline-none focus:border-green-400 bg-white"
+                    >
+                      <option value="">Pilih produk...</option>
+                      {productOptions.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} — Rp {p.price.toLocaleString("id-ID")}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.flash_price}
+                      onChange={(e) => updateItem(index, { flash_price: e.target.value })}
+                      className={`w-24 border rounded-lg px-2 py-2 text-xs focus:outline-none focus:border-green-400 ${
+                        selected && Number(item.flash_price) >= selected.price ? "border-red-300 bg-red-50" : "border-gray-200"
+                      }`}
+                      placeholder="Harga flash"
+                      title={selected ? `Harga normal: Rp ${selected.price.toLocaleString("id-ID")}` : ""}
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      value={item.flash_stock}
+                      onChange={(e) => updateItem(index, { flash_stock: e.target.value })}
+                      className="w-20 border border-gray-200 rounded-lg px-2 py-2 text-xs focus:outline-none focus:border-green-400"
+                      placeholder="Stok"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeItem(index)}
+                      disabled={items.length === 1}
+                      className="w-8 h-8 shrink-0 rounded-lg hover:bg-red-50 flex items-center justify-center text-gray-400 hover:text-red-500 disabled:opacity-30"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-2">
+          <button type="button" onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-gray-50">Batal</button>
+          <button type="submit" disabled={isPending} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50">
+            {isPending ? "Menyimpan..." : "Simpan Flash Sale"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function PromotionsPage() {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
   const [isFlashLoading, setIsFlashLoading] = useState(true);
+  const [showFlashModal, setShowFlashModal] = useState(false);
+  const [editingFlash, setEditingFlash] = useState<FlashSale | null>(null);
   const [, startTransition] = useTransition();
 
   const fetchVouchers = async () => {
@@ -258,24 +508,58 @@ export default function PromotionsPage() {
     });
   }, []);
 
-  // Fetch flash sales
-  useEffect(() => {
-    const fetchFlashSales = async () => {
-      try {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("flash_sales")
-          .select(`*, flash_sale_products(*)`)
-          .order("starts_at", { ascending: false });
+  // Fetch flash sales via API admin (T-03)
+  const fetchFlashSales = async () => {
+    setIsFlashLoading(true);
+    try {
+      const res = await fetch("/api/admin/flash-sales");
+      if (res.ok) {
+        const data = await res.json();
         setFlashSales(data ?? []);
-      } catch (e) {
-        console.error("Failed to fetch flash sales", e);
-      } finally {
-        setIsFlashLoading(false);
       }
-    };
-    fetchFlashSales();
+    } catch (e) {
+      console.error("Failed to fetch flash sales", e);
+    } finally {
+      setIsFlashLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    startTransition(() => {
+      fetchFlashSales();
+    });
   }, []);
+
+  const handleToggleFlashStatus = async (id: string, currentActive: boolean) => {
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/admin/flash-sales/${id}/toggle`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_active: !currentActive }),
+        });
+        if (res.ok) {
+          fetchFlashSales();
+        }
+      } catch (error) {
+        console.error("Failed to toggle flash status", error);
+      }
+    });
+  };
+
+  const handleDeleteFlash = async (sale: FlashSale) => {
+    if (!confirm(`Hapus flash sale "${sale.name}" beserta semua produknya?`)) return;
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/admin/flash-sales/${sale.id}`, { method: "DELETE" });
+        if (res.ok) {
+          fetchFlashSales();
+        }
+      } catch (error) {
+        console.error("Failed to delete flash sale", error);
+      }
+    });
+  };
 
   const handleToggleVoucherStatus = async (id: string, currentActive: boolean) => {
     startTransition(async () => {
@@ -390,9 +674,18 @@ export default function PromotionsPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900">⏰ Flash Sale</h3>
+            <h3 className="font-semibold text-gray-900">🔥 Flash Sale</h3>
             <p className="text-xs text-gray-400">Daftar event flash sale</p>
           </div>
+          <button
+            onClick={() => {
+              setEditingFlash(null);
+              setShowFlashModal(true);
+            }}
+            className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Tambah Flash Sale
+          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -403,13 +696,14 @@ export default function PromotionsPage() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Berakhir</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Produk</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Status</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isFlashLoading ? (
-                <tr><td colSpan={5} className="text-center py-8"><div className="w-6 h-6 border-2 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto" /></td></tr>
+                <tr><td colSpan={6} className="text-center py-8"><div className="w-6 h-6 border-2 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto" /></td></tr>
               ) : flashSales.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-8 text-gray-400">Belum ada flash sale.</td></tr>
+                <tr><td colSpan={6} className="text-center py-8 text-gray-400">Belum ada flash sale.</td></tr>
               ) : (
                 flashSales.map((fs) => (
                   <tr key={fs.id} className="hover:bg-gray-50/50">
@@ -418,9 +712,33 @@ export default function PromotionsPage() {
                     <td className="px-4 py-3.5"><span className="text-xs text-gray-600">{new Date(fs.ends_at).toLocaleDateString("id-ID")}</span></td>
                     <td className="px-4 py-3.5"><span className="text-xs text-gray-600">{fs.flash_sale_products?.length ?? 0} produk</span></td>
                     <td className="px-4 py-3.5">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${fs.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                      <button
+                        onClick={() => handleToggleFlashStatus(fs.id, fs.is_active)}
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full cursor-pointer ${fs.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}
+                      >
                         {fs.is_active ? "Aktif" : "Nonaktif"}
-                      </span>
+                      </button>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => {
+                            setEditingFlash(fs);
+                            setShowFlashModal(true);
+                          }}
+                          className="w-7 h-7 rounded-lg hover:bg-blue-50 flex items-center justify-center text-blue-500"
+                          title="Edit"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteFlash(fs)}
+                          className="w-7 h-7 rounded-lg hover:bg-red-50 flex items-center justify-center text-red-500"
+                          title="Hapus"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -429,6 +747,14 @@ export default function PromotionsPage() {
           </table>
         </div>
       </div>
+
+      {showFlashModal && (
+        <FlashSaleModal
+          sale={editingFlash}
+          onClose={() => setShowFlashModal(false)}
+          onSuccess={fetchFlashSales}
+        />
+      )}
     </div>
   );
 }

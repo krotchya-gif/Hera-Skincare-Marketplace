@@ -1,6 +1,6 @@
 // ─── Admin Data Layer — Supabase queries ─────────────────────────────────────
 import { createClient } from "@/utils/supabase/server";
-import type { Profile, Product, Review, Voucher, DashboardStats, OrderStatus, Category } from "@/types/database";
+import type { Profile, Product, Review, Voucher, DashboardStats, OrderStatus, Category, FlashSale } from "@/types/database";
 
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
 
@@ -394,6 +394,186 @@ export async function softDeleteCategory(id: string): Promise<boolean> {
   const supabase = await createClient();
   const { error } = await supabase.from("categories").update({ is_active: false }).eq("id", id);
   if (error) { console.error("[softDeleteCategory]", error); return false; }
+  return true;
+}
+
+// ─── Admin Flash Sales ──────────────────────────────────────────────────────
+
+export interface FlashSaleItemInput {
+  product_id: string;
+  flash_price: number;
+  flash_stock: number;
+}
+
+export interface FlashSalePayload {
+  name: string;
+  starts_at: string;
+  ends_at: string;
+  banner_url?: string | null;
+  is_active?: boolean;
+  items: FlashSaleItemInput[];
+}
+
+export async function getAllFlashSalesAdmin(): Promise<FlashSale[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("flash_sales")
+    .select(`*, flash_sale_products(id, product_id, flash_price, flash_stock, products(id, name, price, stock))`)
+    .order("created_at", { ascending: false });
+  if (error) { console.error("[getAllFlashSalesAdmin]", error); return []; }
+  return (data as unknown as FlashSale[]) ?? [];
+}
+
+// Validasi item flash sale terhadap DB (T-03 kriteria 2):
+// produk wajib ada & aktif; harga flash harus diskon nyata (0 < flash_price < harga normal);
+// stok flash >= 0. Model DB memakai harga absolut, bukan persen.
+async function validateFlashItems(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  items: FlashSaleItemInput[]
+): Promise<string | null> {
+  if (!Array.isArray(items) || items.length === 0) {
+    return "Minimal satu produk wajib dipilih.";
+  }
+
+  const ids = [...new Set(items.map((i) => i.product_id))];
+  const { data: products, error } = await supabase
+    .from("products")
+    .select("id, name, price, is_active")
+    .in("id", ids);
+
+  if (error || !products) {
+    console.error("[validateFlashItems]", error);
+    return "Gagal memvalidasi produk.";
+  }
+
+  for (const item of items) {
+    const p = products.find((row) => row.id === item.product_id) as
+      | { id: string; name: string; price: number; is_active: boolean }
+      | undefined;
+    if (!p) {
+      return `Produk tidak ditemukan.`;
+    }
+    if (!p.is_active) {
+      return `Produk "${p.name}" sedang nonaktif.`;
+    }
+    const price = Number(item.flash_price);
+    if (!Number.isFinite(price) || price <= 0) {
+      return `Harga flash untuk "${p.name}" harus lebih besar dari 0.`;
+    }
+    if (price >= Number(p.price)) {
+      return `Harga flash "${p.name}" harus lebih murah dari harga normal (${p.price}).`;
+    }
+    const stock = Number(item.flash_stock);
+    if (!Number.isInteger(stock) || stock < 0) {
+      return `Stok flash untuk "${p.name}" harus berupa angka >= 0.`;
+    }
+  }
+  return null;
+}
+
+export async function createFlashSale(
+  payload: FlashSalePayload
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  const itemError = await validateFlashItems(supabase, payload.items);
+  if (itemError) return { ok: false, error: itemError };
+
+  const { data: sale, error: saleError } = await supabase
+    .from("flash_sales")
+    .insert({
+      name: payload.name,
+      starts_at: payload.starts_at,
+      ends_at: payload.ends_at,
+      ...(payload.banner_url ? { banner_url: payload.banner_url } : {}),
+      is_active: payload.is_active ?? true,
+    })
+    .select("id")
+    .single();
+
+  if (saleError || !sale) {
+    console.error("[createFlashSale]", saleError);
+    return { ok: false, error: "Gagal membuat flash sale." };
+  }
+
+  const rows = payload.items.map((i) => ({
+    flash_sale_id: sale.id,
+    product_id: i.product_id,
+    flash_price: i.flash_price,
+    flash_stock: i.flash_stock,
+  }));
+  const { error: itemsError } = await supabase.from("flash_sale_products").insert(rows);
+
+  if (itemsError) {
+    console.error("[createFlashSale] items:", itemsError);
+    // Rollback: hapus sale yang baru dibuat agar tidak yatim
+    await supabase.from("flash_sales").delete().eq("id", sale.id);
+    return { ok: false, error: "Gagal menyimpan produk flash sale." };
+  }
+  return { ok: true };
+}
+
+export async function updateFlashSale(
+  id: string,
+  payload: FlashSalePayload
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  const itemError = await validateFlashItems(supabase, payload.items);
+  if (itemError) return { ok: false, error: itemError };
+
+  const { data: existing } = await supabase.from("flash_sales").select("id").eq("id", id).single();
+  if (!existing) return { ok: false, error: "Flash sale tidak ditemukan." };
+
+  const { error: updateError } = await supabase
+    .from("flash_sales")
+    .update({
+      name: payload.name,
+      starts_at: payload.starts_at,
+      ends_at: payload.ends_at,
+      ...(payload.banner_url !== undefined ? { banner_url: payload.banner_url } : {}),
+      ...(payload.is_active !== undefined ? { is_active: payload.is_active } : {}),
+    })
+    .eq("id", id);
+
+  if (updateError) {
+    console.error("[updateFlashSale]", updateError);
+    return { ok: false, error: "Gagal memperbarui flash sale." };
+  }
+
+  // Ganti seluruh item (delete + insert dalam pola replace)
+  const del = await supabase.from("flash_sale_products").delete().eq("flash_sale_id", id);
+  if (del.error) {
+    console.error("[updateFlashSale] delete items:", del.error);
+    return { ok: false, error: "Gagal memperbarui daftar produk flash sale." };
+  }
+
+  const rows = payload.items.map((i) => ({
+    flash_sale_id: id,
+    product_id: i.product_id,
+    flash_price: i.flash_price,
+    flash_stock: i.flash_stock,
+  }));
+  const { error: itemsError } = await supabase.from("flash_sale_products").insert(rows);
+  if (itemsError) {
+    console.error("[updateFlashSale] items:", itemsError);
+    return { ok: false, error: "Gagal menyimpan produk flash sale." };
+  }
+  return { ok: true };
+}
+
+export async function toggleFlashSaleStatus(id: string, isActive: boolean): Promise<boolean> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("flash_sales").update({ is_active: isActive }).eq("id", id);
+  if (error) { console.error("[toggleFlashSaleStatus]", error); return false; }
+  return true;
+}
+
+export async function deleteFlashSale(id: string): Promise<boolean> {
+  const supabase = await createClient();
+  // flash_sale_products ter-cascade delete di level DB
+  const { error } = await supabase.from("flash_sales").delete().eq("id", id);
+  if (error) { console.error("[deleteFlashSale]", error); return false; }
   return true;
 }
 
