@@ -73,6 +73,7 @@ npm run build       # exit 0
 | [T-08](#t-08--pembaruan-dependencies-ke-versi-stabil) | P1 | Pembaruan dependencies ke versi stabil | DONE |
 | [T-09](#t-09--ganti-navigasi-windowlocation-dengan-router-nextjs) | P1 | Ganti navigasi window.location dengan Router Next.js | DONE |
 | [T-10](#t-10--hardening-fungsi-security-definer-database) | P0 | Hardening fungsi SECURITY DEFINER database | DONE |
+| [T-11](#t-11--sinkronisasi-dokumentasi-dengan-kondisi-aktual) | P1 | Sinkronisasi dokumentasi dengan kondisi aktual | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -497,6 +498,46 @@ Kriteria 1–5 terpenuhi. Status: DONE.
 
 ---
 
+### T-11 — Sinkronisasi Dokumentasi dengan Kondisi Aktual
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
+
+**Tujuan:** Menghapus drift antara dokumentasi dan kondisi riil codebase/database pasca T-08, T-09, T-10, T-01.
+
+**Scope-IN**
+- `README.md` (tracked) — versi stack, jumlah migration, status→pointer plan.md, catatan keamanan RPC
+- `AGENTS.md` (lokal) — isi §20 Project-Specific Configuration yang masih placeholder
+- `.gitignore` — komentar basi "MIGRATE.md"
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- `doc.md`, `Todo.md`, `AGENT.md` (arsip lokal ber-banner ARCHIVED), seluruh kode
+
+**Kriteria Selesai**
+1. README tidak lagi memuat klaim usang (versi lama, "1 migration", tabel Status manual)
+2. AGENTS.md §20 terisi data riil project
+3. Ketiga gerbang tetap hijau (dokumen tidak memengaruhi build)
+4. Bukti tercatat
+
+**Bukti**
+```
+README.md  : stack 16.3.2/TS6, migrations 7 file (tabel lengkap),
+             verifikasi + baseline lint, Status → pointer plan.md,
+             catatan security RPC & client routing.
+AGENTS.md §20 : terisi penuh (project, stack, live systems + aturan
+             verifikasi Supabase/Vercel, SSOT files, commands).
+.gitignore : komentar basi "MIGRATE.md" diperbaiki.
+doc.md / Todo.md / AGENT.md / CLAUDE.md : arsip lokal — banner sudah
+             benar, tidak diubah (Scope-OUT).
+
+Gerbang: lint 22 problems (baseline sama) · typecheck exit 0 · build exit 0
+```
+
+---
+
 ## 🧾 Changelog (APPEND-ONLY — dilarang mengedit/menghapus entri lama)
 
 | Tanggal | ID | Perubahan | Oleh |
@@ -512,3 +553,6 @@ Kriteria 1–5 terpenuhi. Status: DONE.
 | 2026-08-22 | T-10 | Selesai (DONE): 2 migration diterapkan (incl. koreksi grant PUBLIC), advisor security 19→7 (sisa by-design terdokumentasi), search_path fixed, ACL diverifikasi live | ox-alpha |
 | 2026-08-22 | T-10 | Commit `76aa5ea` (plan.md) + `0adb560` (track semua migration + .gitignore) | ox-alpha |
 | 2026-08-22 | T-01 | Dimulai & selesai (DONE): script typecheck ditambahkan, .env.example disinkronkan 8 var, baseline asli tercatat (lint 14err/8warn exit1 pre-existing · typecheck 0 · build 0) | ox-alpha |
+| 2026-08-22 | T-01 | Commit `01ca6b5` | ox-alpha |
+| 2026-08-22 | T-11 | Task T-11 dibuat & dimulai (IN_PROGRESS) instruksi pemilik project: sinkronkan seluruh dokumentasi dengan kondisi aktual | ox-alpha |
+| 2026-08-22 | T-11 | Selesai (DONE): README + AGENTS.md §20 + .gitignore disinkronkan kondisi aktual; gerbang lint/typecheck/build tetap hijau | ox-alpha |

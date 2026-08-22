@@ -4,8 +4,8 @@ Full-stack marketplace untuk produk rumah tangga dan perawatan pribadi. **Next.j
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.2.9 (App Router + Turbopack)
-- **Language**: TypeScript (strict)
+- **Framework**: Next.js 16.3.2 (App Router + Turbopack)
+- **Language**: TypeScript 6.0 (strict)
 - **Styling**: Tailwind CSS 4 + Poppins
 - **Database**: Supabase PostgreSQL + RLS
 - **Auth**: Supabase SSR (cookie-based)
@@ -43,7 +43,7 @@ marketplace/
 │   ├── types/      (database.ts)
 │   └── utils/      (format, storeConfig, order-status, supabase client/server)
 │   └── proxy.ts    # Next.js 16 Proxy (menggantikan middleware.ts)
-├── supabase/migrations/ (1 file — consolidated)
+├── supabase/migrations/ (6 files — ter-track git)
 ```
 
 ## Fitur
@@ -81,10 +81,11 @@ marketplace/
 - **Next.js 16 Proxy** — `src/proxy.ts` (JANGAN buat `middleware.ts`)
 - **Dynamic SEO** — sitemap.xml, robots.txt, meta tags per-page, Meta Pixel & GA4
 - **Web App PWA** — Registrasi manifest PWA dinamis, dynamic favicon generator, dynamic apple touch icon, serta dynamic routes 192px/512px menggunakan Next.js `ImageResponse` (edge runtime).
-- **Security** — CSP + headers di `next.config.ts`, rate limiting, atomic stock, input validation
+- **Security** — CSP + headers di `next.config.ts`, rate limiting, atomic stock, input validation. Fungsi RPC `SECURITY DEFINER` sudah di-hardening: `EXECUTE` dicabut dari `anon`/`PUBLIC` (lihat `supabase/migrations/20260822120000_secure_functions_hardening.sql`).
 - **Auth** — proxy guard admin routes + `verifyAdminRole()` per-handler
 - **Toast Notifications** — Integrasi custom toast menggantikan semua dialog `alert()` bawaan browser.
 - **Payment Redirect** — Setelah konfirmasi bayar, customer otomatis redirect ke halaman pesanan.
+- **Client Routing** — Navigasi internal memakai `useRouter().push()` (bukan `window.location.href`).
 
 ## API Routes (24)
 
@@ -127,7 +128,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 ### 2. Database
 ```bash
-supabase db push    # Jalankan full_schema.sql (schema + seed)
+supabase db push    # menjalankan seluruh file di supabase/migrations/ secara urut
 ```
 
 ### 3. Install & Run
@@ -144,18 +145,26 @@ Login di `/admin/login`.
 
 ## Migration
 
-Hanya **1 file** yang di-commit ke GitHub — sisanya hanya ada di lokal:
+Seluruh file migration **ter-track git** dan dijalankan berurutan oleh `supabase db push`:
 
-| File (tracked) | Deskripsi |
+| File | Deskripsi |
 |------|-----------|
-| `supabase/migrations/20260621000001_full_schema.sql` | Schema + seed data lengkap (tabel, RLS, functions, triggers, storage, kategori, produk, varian, voucher, flash sale, settings). **Ini satu-satunya file migration.** |
+| `20260621000001_full_schema.sql` | Schema lengkap (tabel, RLS, functions, triggers, storage) |
+| `20260621000002_seed_data.sql` | Seed kategori, produk, varian, voucher, flash sale, settings |
+| `20260621000003_notifications.sql` | Tabel + policy notifications |
+| `20260622000001_fix_security.sql` | Perbaikan RLS & SECURITY DEFINER |
+| `20260623000001_additional_fixes.sql` | Fix tambahan (constraint, index) |
+| `20260624000001_voucher_code_order.sql` | Kolom `voucher_code` di orders + index |
+| `20260822120000_secure_functions_hardening.sql` | Revoke EXECUTE anon/PUBLIC pada RPC + search_path fix |
+
+## Verifikasi
+
+| Command | Fungsi |
+|---------|--------|
+| `npm run lint` | ESLint (baseline: 22 problems — 14 error & 8 warning pre-existing) |
+| `npm run typecheck` | `tsc --noEmit`, harus exit 0 |
+| `npm run build` | Production build, harus exit 0 |
 
 ## Status
 
-| Area | Status |
-|------|--------|
-| Customer Pages | ✅ 15/15 |
-| Admin Dashboard | ✅ 12/12 (➕ Blog) |
-| API Routes | ✅ 24/24 |
-| Build | ✅ 43 routes, 0 error |
-| Bugs Fixed | ✅ 77/108 (17 skip, 14 LOW open) |
+Semua pekerjaan aktif dilacak di **[`plan.md`](plan.md)** (single source of truth — protokol task, Definition of Done, changelog). Riwayat audit lama: `doc.md` & `Todo.md` (arsip lokal).
