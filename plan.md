@@ -74,6 +74,7 @@ npm run build       # exit 0
 | [T-09](#t-09--ganti-navigasi-windowlocation-dengan-router-nextjs) | P1 | Ganti navigasi window.location dengan Router Next.js | DONE |
 | [T-10](#t-10--hardening-fungsi-security-definer-database) | P0 | Hardening fungsi SECURITY DEFINER database | DONE |
 | [T-11](#t-11--sinkronisasi-dokumentasi-dengan-kondisi-aktual) | P1 | Sinkronisasi dokumentasi dengan kondisi aktual | DONE |
+| [T-12](#t-12--konsolidasi-migration-menjadi-satu-full-schema) | P0 | Konsolidasi migration menjadi satu full schema | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -538,6 +539,63 @@ Gerbang: lint 22 problems (baseline sama) · typecheck exit 0 · build exit 0
 
 ---
 
+### T-12 — Konsolidasi Migration Menjadi Satu Full Schema
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
+
+**Tujuan:** Satu file migration tunggal (`full_schema`) yang berfungsi sebagai init + seed keseluruhan database, merepresentasikan struktur DB live saat ini (termasuk hardening T-10); file-file migration lama yang terfragmentasi dihapus dari repo.
+
+**Metode (dikunci saat mulai):**
+- Gabungkan 7 migration existing **berurutan kronologis** ke dalam `supabase/migrations/20260822130000_full_schema.sql` — statement belakangan menimpa yang awal sehingga hasil akhir = state final yang identik dengan urutan penerapan historis.
+- Verifikasi inventaris live DB (tabel, fungsi+ACL, trigger, policy, bucket) sebelum & sesudah merge.
+- Catatan data: live DB saat ini 0 baris di semua tabel; bagian seed tetap disertakan agar file bisa menginisialisasi project baru lengkap.
+
+**Scope-IN**
+- `supabase/migrations/` — 7 file lama dihapus, 1 file konsolidasi baru
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Live DB (tidak ada perubahan schema/data), seluruh `src/**`
+
+**Kriteria Selesai**
+1. Repo hanya berisi 1 file migration hasil konsolidasi
+2. Urutan statement mempertahankan dependensi (schema → seed → fix → hardening)
+3. Inventaris objek live DB (fungsi/ACL/trigger/policy/bucket) terverifikasi cocok dengan isi file
+4. Ketiga gerbang hijau + bukti tercatat
+
+**Bukti**
+```
+== Hasil konsolidasi ==
+File: supabase/migrations/20260822130000_full_schema.sql (1314 baris, ~62 KB)
+Repo kini berisi TEPAT 1 file migration ✅ (7 file lama di-git-rm)
+
+== Verifikasi inventaris vs live DB ==
+Tabel          : 14 create table (profiles..store_settings) = live 14 ✅
+Fungsi         : 10 unik, identik daftar live (incl. rls_auto_enable
+                 yang ternyata dibuat manual di luar migration lama —
+                 definisi + event trigger `ensure_rls` diekstrak dari
+                 live DB via pg_event_trigger & ditambahkan ke file)
+Event trigger  : ensure_rls → rls_auto_enable ✅
+Trigger tabel  : on_order_status_change (orders) ✅
+Policy         : replay kronologis 54 create / 4 drop = state final
+                 live (42 policy) ✅
+Hardening      : REVOKE anon/PUBLIC ×9 + search_path='' ada di akhir ✅
+Seed           : categories/products/variants/vouchers/flash_sales/
+                 store_settings/profiles tersertakan ✅
+Storage        : bucket product-images ✅
+
+== Gerbang ==
+lint 22 problems (baseline sama) · typecheck exit 0 · build exit 0
+
+Catatan: live DB tidak diubah (Scope-OUT). File ini adalah init untuk
+project baru; struktur finalnya identik dengan DB live hari ini.
+```
+
+---
+
 ## 🧾 Changelog (APPEND-ONLY — dilarang mengedit/menghapus entri lama)
 
 | Tanggal | ID | Perubahan | Oleh |
@@ -556,3 +614,5 @@ Gerbang: lint 22 problems (baseline sama) · typecheck exit 0 · build exit 0
 | 2026-08-22 | T-01 | Commit `01ca6b5` | ox-alpha |
 | 2026-08-22 | T-11 | Task T-11 dibuat & dimulai (IN_PROGRESS) instruksi pemilik project: sinkronkan seluruh dokumentasi dengan kondisi aktual | ox-alpha |
 | 2026-08-22 | T-11 | Selesai (DONE): README + AGENTS.md §20 + .gitignore disinkronkan kondisi aktual; gerbang lint/typecheck/build tetap hijau | ox-alpha |
+| 2026-08-22 | T-12 | Task T-12 dibuat & dimulai (IN_PROGRESS) instruksi pemilik project: konsolidasi 7 migration → 1 full schema (init+seed) | ox-alpha |
+| 2026-08-22 | T-12 | Selesai (DONE): `20260822130000_full_schema.sql` (1314 baris) menggantikan 7 file lama; inventaris terverifikasi identik live DB (14 tabel, 10 fungsi, ensure_rls, 42 policy final, seed, bucket); gerbang hijau | ox-alpha |
