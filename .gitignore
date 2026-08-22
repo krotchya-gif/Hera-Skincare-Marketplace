@@ -45,4 +45,3 @@ doc.md
 # Supabase
 supabase/.temp/
 supabase/migrations/*
-!supabase/migrations/20260621000001_full_schema.sql
