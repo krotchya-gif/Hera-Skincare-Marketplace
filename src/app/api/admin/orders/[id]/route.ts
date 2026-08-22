@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateOrderStatus, getOrderById } from "@/lib/orders";
+import { sendOrderStatusNotification } from "@/lib/notify";
 import { verifyAdminRole, handleAdminError } from "@/lib/auth-utils";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
@@ -38,6 +39,19 @@ export async function PUT(
     if (!success) {
       return NextResponse.json({ error: "Gagal mengupdate pesanan" }, { status: 400 });
     }
+
+    // T-05: notifikasi customer (fire-and-forget — kegagalan tidak memengaruhi response)
+    const updated = await getOrderById(id);
+    if (updated) {
+      await sendOrderStatusNotification({
+        order_number: updated.order_number,
+        user_id: updated.user_id,
+        status: updated.status,
+        tracking_number: updated.tracking_number,
+        shipping_address: updated.shipping_address,
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return handleAdminError(error);

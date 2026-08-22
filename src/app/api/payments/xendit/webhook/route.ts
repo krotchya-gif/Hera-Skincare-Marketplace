@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { sendOrderStatusNotification } from "@/lib/notify";
 
 // T-02: Callback server-to-server Xendit Invoice.
 // Tidak ada session user di sini -> pakai service-role client (RLS bypass).
@@ -26,7 +27,10 @@ interface OrderRow {
   id: string;
   order_number: string;
   user_id: string | null;
+  status?: string;
+  tracking_number?: string | null;
   payment_status: string;
+  shipping_address?: { phone?: string; name?: string } | null;
 }
 
 export async function POST(request: NextRequest) {
@@ -96,7 +100,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Gagal memperbarui pesanan." }, { status: 500 });
     }
 
-    // 7. Notifikasi (non-fatal)
+    // 7. Notifikasi in-app + Email/WA customer (fire-and-forget)
     if (order.user_id) {
       const { error: notifError } = await supabase.from("notifications").insert({
         user_id: order.user_id,
@@ -107,6 +111,17 @@ export async function POST(request: NextRequest) {
       });
       if (notifError) console.warn("[Xendit Webhook] Notif insert error:", notifError.message);
     }
+
+    await sendOrderStatusNotification(
+      {
+        order_number: order.order_number,
+        user_id: order.user_id,
+        status: order.status ?? "menunggu",
+        tracking_number: null,
+        shipping_address: order.shipping_address,
+      },
+      "paid"
+    );
 
     return NextResponse.json({ received: true, processed: true });
   } catch (error) {

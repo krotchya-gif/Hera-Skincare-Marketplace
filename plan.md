@@ -66,8 +66,8 @@ npm run build       # exit 0
 | [T-01](#t-01--infrastruktur-verifikasi--baseline) | P0 | Infrastruktur verifikasi & baseline | DONE |
 | [T-02](#t-02--xendit-invoice-pembayaran-online-server-side) | P0 | Xendit Invoice pembayaran online (server-side) | DONE |
 | [T-03](#t-03--flash-sale-crud-di-admin) | P1 | Flash Sale CRUD di Admin | DONE |
-| [T-04](#t-04--tutup-bug-low-dari-audit-lama) | P1 | Tutup bug LOW dari audit lama | IN_PROGRESS |
-| [T-05](#t-05--notifikasi-otomatis-emailwa) | P2 | Notifikasi otomatis Email/WA | BACKLOG |
+| [T-04](#t-04--tutup-bug-low-dari-audit-lama) | P1 | Tutup bug LOW dari audit lama | DONE |
+| [T-05](#t-05--notifikasi-otomatis-emailwa) | P2 | Notifikasi otomatis Email/WA | DONE |
 | [T-06](#t-06--port-fitur-qa-produk--comparison-dari-project-react) | P2 | Port Q&A produk + comparison dari React | BACKLOG |
 | [T-07](#t-07--konsolidasi-dokumentasi--arsip-project-react) | P3 | Konsolidasi dokumentasi & arsip project React | BACKLOG |
 | [T-08](#t-08--pembaruan-dependencies-ke-versi-stabil) | P1 | Pembaruan dependencies ke versi stabil | DONE |
@@ -254,8 +254,8 @@ Status kriteria: 1 ✅ · 2 ✅ (adaptasi terdokumentasi) · 3 ✅ · 4 ✅
 
 | Field | Isi |
 |---|---|
-| Status | `IN_PROGRESS` |
-| Mulai / Selesai | 2026-08-22 / — |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
 | Sumber daftar | `Todo.md` § Final Metrics → baris "Open (14 LOW)" (ARSIP — hanya rujukan daftar, bukan tracker) |
 
 **Aturan khusus task ini (anti-noise):**
@@ -280,6 +280,22 @@ Saat memulai, pecah dulu daftar bug LOW menjadi sub-entri bernomor di bawah tabe
 
 **Hasil:** 2 sub-bug diperbaiki (T-04.9, T-04.10), 12 terverifikasi sudah hilang/obsolete atau di-skip dengan alasan eksplisit.
 
+**Bukti**
+```
+T-04.9: npm i -D supabase -> devDependencies terpasang, 0 vulnerabilities
+        Commit c83f820
+
+T-04.10: lint 22 problems (14 err/8 warn) -> 14 problems (14 err/0 warn)
+  - NotificationDropdown.tsx: buang import X, Clock (unused)
+  - keranjang/page.tsx: setShippingCost tidak pernah dipakai -> [shippingCost]
+  - admin/produk/page.tsx:60: tambah 'categories' ke deps useCallback
+  - layout.tsx: pixel noscript = false positive -> eslint-disable inline dgn alasan
+  - ProductDetailClient.tsx (2) + ProductFormModal.tsx (1): <img> -> next/image
+    (fill + sizes; remotePatterns **.supabase.co sudah ada di next.config)
+  Commit fd9dcdd
+Gerbang: typecheck exit 0 · build exit 0 · lint error tetap 14 (pre-existing)
+```
+
 **Scope-IN:** file yang disebut di sub-entri masing-masing saja
 **Scope-OUT:** apapun di luar itu
 
@@ -294,24 +310,38 @@ Saat memulai, pecah dulu daftar bug LOW menjadi sub-entri bernomor di bawah tabe
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
-| Mulai / Selesai | — / — |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
 
 **Tujuan:** Kirim email/WA otomatis saat status pesanan berubah (masuk, dibayar, dikirim, selesai). Saat ini settings-nya sudah ada di Pengaturan tapi belum terhubung provider.
 
-**Keputusan desain:** Provider ditentukan SAAT task dimulai (email: Resend/mailgun; WA: WhatsApp Cloud API/Fonnte) — tulis pilihannya di sini sebelum coding. Credential server-side only.
+**Keputusan desain (dikunci):** Email = **Resend** (`POST https://api.resend.com/emails`), WA = **Fonnte** (`POST https://api.fonnte.com/send`) — murni REST via fetch, tanpa dependency baru. Penerima = customer (email dari `profiles.email`, WA dari `orders.shipping_address.phone`). Toggle `store_settings.notifications` yang ada adalah preferensi event ADMIN — dibiarkan utuh. Kredensial env server-side: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `FONNTE_TOKEN`; kosong = channel no-op senyap. Fire-and-forget: gagal kirim hanya di-log.
 
 **Scope-IN:** API route/handler notifikasi baru, integrasi provider, key settings terkait, `.env.example`
 **Scope-OUT:** UI admin pengaturan (kecuali perlu field baru — daftarkan dulu), template halaman customer
 
 **Kriteria Selesai**
-1. Trigger terjadi dari perubahan status pesanan (bukan polling manual)
-2. Credential hanya di env server; gagal kirim ter-log dan tidak menggagalkan transaksi utama
+1. Trigger terjadi dari perubahan status pesanan (bukan polling manual) — ✅ 3 titik: admin orders PUT, xendit webhook, confirm-payment
+2. Credential hanya di env server; gagal kirim ter-log dan tidak menggagalkan transaksi utama — ✅ try/catch total + Promise.allSettled + console.warn
 3. Ketiga gerbang DoD hijau + bukti tercatat
 
 **Bukti**
 ```
-(paste output di sini saat mengerjakan)
++ src/lib/notify.ts   : template per-status (menunggu/diproses/dikirim+d resi/
+                        selesai/dibatalkan) & event "paid"; normalisasi nomor
+                        WA ke 62xxx; Promise.allSettled email+WA; error ditelan
+~ admin/orders/[id]/PUT        -> notify status (resi utk "dikirim")
+~ payments/xendit/webhook      -> notify event paid
+~ orders/[id]/confirm-payment  -> notify event paid (transfer manual)
+~ .env.example                 : RESEND_API_KEY, RESEND_FROM_EMAIL, FONNTE_TOKEN
+
+== Gerbang ==
+typecheck exit 0 · lint 14 problems (0 warning, error baseline sama) · build exit 0
+
+== UNVERIFIED (butuh kredensial owner) ==
+Pengiriman nyata butuh RESEND_API_KEY (+domain terverifikasi utk FROM)
+dan FONNTE_TOKEN. Alur diverifikasi via typecheck & review; runtime test
+menunggu kredensial.
 ```
 
 ---
@@ -685,3 +715,7 @@ project baru; struktur finalnya identik dengan DB live hari ini.
 | 2026-08-22 | T-02 | Selesai (DONE): migration xendit_order_columns live+mirror, 2 API route (create/webhook) + admin client, UI bayar online & checkout, gerbang hijau. E2E runtime menunggu kredensial Xendit dari owner (tercatat di Bukti) | ox-alpha |
 | 2026-08-22 | T-02 | Commit `8c1000c` + `83cf562` (gitignore migration fix) | ox-alpha |
 | 2026-08-22 | T-03 | Dimulai & selesai (DONE): 3 API route flash-sales (GET/POST/PUT/DELETE/toggle) dgn verifyAdminRole, 6 fungsi lib/admin, FlashSaleModal + aksi tabel di /admin/promo; kriteria no.2 diadaptasi ke model harga absolut (terdokumentasi); gerbang hijau | ox-alpha |
+| 2026-08-22 | T-03 | Commit `fbd7e45` | ox-alpha |
+| 2026-08-22 | T-04 | Dimulai: daftar dipecah 14 sub-entri; verifikasi aktual menunjukkan 10 item sudah hilang/obsolete dari sesi fix sebelumnya | ox-alpha |
+| 2026-08-22 | T-04 | Selesai (DONE): T-04.9 CLI devDep (c83f820) + T-04.10 nol warning lint (fd9dcdd); 12 lainnya SKIP/SUDAH-FIX terdokumentasi per-sub di tabel | ox-alpha |
+| 2026-08-22 | T-05 | Dimulai & selesai (DONE): provider Resend (email) + Fonnte (WA) murni fetch; notify.ts + integrasi 3 titik pemicu; gerbang hijau; runtime test menunggu kredensial owner | ox-alpha |

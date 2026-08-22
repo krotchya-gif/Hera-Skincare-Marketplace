@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { sendOrderStatusNotification } from "@/lib/notify";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 export async function POST(
@@ -85,6 +86,18 @@ export async function POST(
       console.warn("[Confirm Payment] Notif insert error:", notifError.message);
       // Non-fatal — notifikasi gagal, tapi konfirmasi tetap berhasil
     }
+
+    // T-05: Email/WA ke customer (fire-and-forget — tidak memengaruhi response)
+    await sendOrderStatusNotification(
+      {
+        order_number: order.order_number,
+        user_id: order.user_id,
+        status: order.status,
+        tracking_number: order.tracking_number,
+        shipping_address: order.shipping_address,
+      },
+      "paid"
+    );
 
     return NextResponse.json({
       success: true,
