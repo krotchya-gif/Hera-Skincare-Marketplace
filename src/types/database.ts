@@ -90,6 +90,8 @@ export interface Order {
   total: number;
   notes: string | null;
   voucher_code: string | null;
+  xendit_invoice_id: string | null;
+  xendit_invoice_url: string | null;
   created_at: string;
   updated_at: string;
   // joined

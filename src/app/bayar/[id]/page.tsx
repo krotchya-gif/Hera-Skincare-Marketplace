@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import ConfirmPaymentButton from "./ConfirmPaymentButton";
+import XenditPaySection from "./XenditPaySection";
 
 export default async function BayarPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -64,6 +65,10 @@ export default async function BayarPage({ params }: { params: Promise<{ id: stri
               <span className="font-bold text-green-700 text-lg">Rp {order.total.toLocaleString("id-ID")}</span>
             </div>
           </div>
+
+          {!sudahLunas && (
+            <XenditPaySection orderId={order.id} orderNumber={order.order_number} />
+          )}
 
           {!sudahLunas && bankAccount && (
             <div className="border-t border-gray-100 pt-4">

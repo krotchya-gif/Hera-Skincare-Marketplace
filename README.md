@@ -31,7 +31,7 @@ marketplace/
 │   │   ├── bayar/[id]/, voucher/
 │   │   ├── admin/ (login + 12 dashboard pages)
 │   │   ├── sitemap.xml/, robots.txt/
-│   │   └── api/ (24 route handlers)
+│   │   └── api/ (26 route handlers)
 │   │   ├── admin/blog/     # Blog CRUD (terpisah dari Pengaturan)
 │   ├── components/
 │   │   ├── Navbar.tsx, Footer.tsx, Toast.tsx, ErrorBoundary.tsx
@@ -87,10 +87,12 @@ marketplace/
 - **Payment Redirect** — Setelah konfirmasi bayar, customer otomatis redirect ke halaman pesanan.
 - **Client Routing** — Navigasi internal memakai `useRouter().push()` (bukan `window.location.href`).
 
-## API Routes (24)
+## API Routes (26)
 
 | Route | Method | Auth | Deskripsi |
 |-------|--------|------|-----------|
+| `/api/payments/xendit/create` | POST | Required | Buat/pakai-ulang Xendit Invoice untuk order milik user |
+| `/api/payments/xendit/webhook` | POST | Callback token | Callback status pembayaran Xendit (server-to-server) |
 | `/api/products` | GET | Public | List produk (filter, sort, pagination) |
 | `/api/orders` | POST | Required | Buat pesanan + validasi |
 | `/api/orders/[id]/confirm-payment` | POST | Required | Konfirmasi bayar |

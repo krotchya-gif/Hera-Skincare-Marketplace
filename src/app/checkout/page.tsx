@@ -138,11 +138,18 @@ export default function CheckoutPage() {
             const methods = [{
               group: "Pembayaran",
               icon: "💳",
-              options: payment.methods.map((name: string) => ({
-                code: name.toLowerCase().replace(/[\s()]/g, "-"),
-                name,
-                logo: name.charAt(0)
-              }))
+              options: [
+                {
+                  code: "xendit",
+                  name: "Bayar Online via Xendit (QRIS/E-Wallet/VA)",
+                  logo: "⚡"
+                },
+                ...payment.methods.map((name: string) => ({
+                  code: name.toLowerCase().replace(/[\s()]/g, "-"),
+                  name,
+                  logo: name.charAt(0)
+                }))
+              ]
             }];
             startTransition(() => {
               setPaymentMethods(methods);

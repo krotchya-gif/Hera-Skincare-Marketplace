@@ -64,7 +64,7 @@ npm run build       # exit 0
 | ID | Prioritas | Task | Status |
 |----|-----------|------|--------|
 | [T-01](#t-01--infrastruktur-verifikasi--baseline) | P0 | Infrastruktur verifikasi & baseline | DONE |
-| [T-02](#t-02--midtrans-snap-pembayaran-online-server-side) | P0 | Midtrans Snap pembayaran online (server-side) | BACKLOG |
+| [T-02](#t-02--xendit-invoice-pembayaran-online-server-side) | P0 | Xendit Invoice pembayaran online (server-side) | DONE |
 | [T-03](#t-03--flash-sale-crud-di-admin) | P1 | Flash Sale CRUD di Admin | BACKLOG |
 | [T-04](#t-04--tutup-bug-low-dari-audit-lama) | P1 | Tutup bug LOW dari audit lama | BACKLOG |
 | [T-05](#t-05--notifikasi-otomatis-emailwa) | P2 | Notifikasi otomatis Email/WA | BACKLOG |
@@ -125,46 +125,75 @@ ada di example. .env.local lokal: BASE_URL diperbaiki → SITE_URL.
 
 ---
 
-### T-02 — Midtrans Snap Pembayaran Online (Server-Side)
+### T-02 — Xendit Invoice Pembayaran Online (Server-Side)
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
-| Mulai / Selesai | — / — |
-| Referensi | `../Hera Store React/supabase/functions/midtrans-create-transaction/index.ts` — **JANGAN copy mentah**: versi itu tidak punya webhook & verifikasi signature |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-22 / 2026-08-22 |
+| Referensi | Xendit Invoice API v2 (`POST https://api.xendit.co/v2/invoices`) — callback via header `x-callback-token` |
 
-**Tujuan:** Customer bisa bayar online via Midtrans Snap, menggantikan/dampingi alur transfer manual di `/bayar/[id]`.
+**Tujuan:** Customer bisa bayar online via Xendit (QRIS, VA bank, e-wallet OVO/DANA/ShopeePay/LinkAja, kartu, retail), menggantikan/dampingi alur transfer manual di `/bayar/[id]`. Link invoice dapat dibagikan via WhatsApp.
 
-**Keputusan desain (sudah dikunci, jangan diubah):**
-- Implementasi pakai **Next.js API Route** (bukan Supabase Edge Function) — konsisten dengan pola 24 route yang ada, dan secret tinggal di server Vercel
-- `MIDTRANS_SERVER_KEY` **WAJIB** env server-side tanpa prefix `NEXT_PUBLIC`
-- Sandbox default ON; mode production lewat env `MIDTRANS_SANDBOX=false`
+**Riwayat keputusan:** Direvisi dari Midtrans Snap → **Xendit** atas instruksi pemilik project (22 Agu 2026): cakupan e-wallet lebih luas (OVO/DANA) + model invoice-link yang bisa dikirim via WA.
+
+**Keputusan desain (dikunci, jangan diubah tanpa persetujuan pemilik):**
+- Implementasi pakai **Next.js API Route** (bukan Supabase Edge Function) — konsisten dengan pola route yang ada, dan secret tinggal di server
+- Produk Xendit: **Invoice API v2** — satu endpoint untuk semua metode bayar + hosted checkout page + callback status
+- `XENDIT_SECRET_KEY` & `XENDIT_CALLBACK_TOKEN` **WAJIB** env server-side tanpa prefix `NEXT_PUBLIC`; environment (Dev/Live) ditentukan pasangan key yang dipakai di dashboard, tanpa flag terpisah
+- Verifikasi webhook: header `x-callback-token` dibandingkan constant-time dengan env token; invalid → 401
+- Jika env belum diset: create mengembalikan 503 ramah — transfer manual tetap fallback utuh
 
 **Scope-IN**
-- `src/app/api/payments/midtrans/create/route.ts` (baru) — buat Snap token untuk order milik user yang login
-- `src/app/api/payments/midtrans/webhook/route.ts` (baru) — notifikasi server-to-server dari Midtrans
-- `supabase/migrations/<timestamp>_midtrans.sql` (baru) — kolom `orders.midtrans_snap_token`, `orders.midtrans_transaction_id`, `orders.midtrans_payment_type`
+- `src/app/api/payments/xendit/create/route.ts` (baru) — buat/reuse Invoice untuk order milik user yang login; amount dari DB
+- `src/app/api/payments/xendit/webhook/route.ts` (baru) — callback server-to-server Xendit
+- Migration live DB via MCP + mirror ke `supabase/migrations/20260822130000_full_schema.sql` — kolom `orders.xendit_invoice_id`, `orders.xendit_invoice_url`
 - `src/types/database.ts` — tipe kolom baru
-- `src/lib/orders.ts` — tipe payload bila perlu
-- `src/app/checkout/page.tsx` — pilihan metode bayar (Midtrans / transfer manual)
-- `src/app/bayar/[id]/page.tsx` — render Snap popup bila metode = Midtrans
-- `.env.example` — `MIDTRANS_SERVER_KEY`, `MIDTRANS_SANDBOX`, `MIDTRANS_CLIENT_KEY` (client key boleh NEXT_PUBLIC)
+- `src/app/checkout/page.tsx` — opsi metode "Bayar Online via Xendit" di step pembayaran
+- `src/app/bayar/[id]/page.tsx` + komponen client baru — tombol bayar online, buka link invoice, salin link, bagikan via WhatsApp (`wa.me`)
+- `.env.example` — `XENDIT_SECRET_KEY`, `XENDIT_CALLBACK_TOKEN`
 
 **Scope-OUT (dilarang disentuh)**
 - Halaman admin, `src/proxy.ts`, Navbar/Footer, styling global, route orders yang sudah ada
 
 **Kriteria Selesai**
-1. Create transaction: auth required, hanya pemilik order yang bisa minta token (verifikasi `user_id` order)
-2. Gross amount dihitung ulang dari DB (bukan percaya angka dari client)
-3. Webhook: verifikasi signature `sha512(order_id + status_code + gross_amount + server_key)`; signature invalid → 403
-4. Webhook idempotent: event yang sama diproses ulang tidak merusak data
-5. Update `payment_status` mengikuti state machine transisi yang sudah ada (tidak skip state)
-6. Alur transfer manual lama tetap berfungsi normal
+1. Create invoice: auth required, hanya pemilik order (verifikasi `user_id`); order harus `menunggu` & `belum_bayar`
+2. Amount **tidak diterima dari client** — selalu dari kolom `orders.total` di DB
+3. Webhook: verifikasi `x-callback-token`; invalid → 401; hanya status relevan yang diproses
+4. Webhook idempotent: callback ulang / order sudah `lunas` → 200 tanpa efek samping
+5. Update `payment_status` mengikuti transisi yang sudah ada (`belum_bayar` → `lunas`, tanpa skip state)
+6. Alur transfer manual lama tetap berfungsi normal (tombol "Sudah Bayar" utuh)
 7. Ketiga gerbang DoD hijau + bukti tercatat
 
 **Bukti**
 ```
-(paste output di sini saat mengerjakan)
+== Migration live (via MCP) ==
+xendit_order_columns: orders.xendit_invoice_id text + xendit_invoice_url text
+Verifikasi live: kedua kolom ada (information_schema) ✅
+Mirror ke full_schema.sql: inline di CREATE TABLE orders ✅
+
+== File baru/diubah ==
++ src/app/api/payments/xendit/create/route.ts   (rate-limit, auth, ownership,
+    guard menunggu+belum_bayar, amount dari DB, reuse invoice, 503 bila env kosong)
++ src/app/api/payments/xendit/webhook/route.ts  (x-callback-token constant-time
+    -> 401; hanya PAID; idempotent; belum_bayar->lunas via service-role client)
++ src/utils/supabase/admin.ts                   (service-role client untuk webhook)
+~ src/app/bayar/[id]/page.tsx + XenditPaySection.tsx  (bayar online, salin link,
+    kirim via WhatsApp wa.me -- sesuai alasan revisi desain)
+~ src/app/checkout/page.tsx                     (opsi "Bayar Online via Xendit"
+    di step pembayaran + perbaiki emoji icon yang korup)
+~ src/types/database.ts, .env.example, README.md (26 routes)
+
+== Gerbang ==
+typecheck exit 0 · lint 22 problems (baseline sama, tidak bertambah) · build exit 0
+
+== UNVERIFIED (butuh kredensial owner) ==
+E2E end-to-end dengan Xendit sandbox/live belum bisa dijalankan:
+1. Isi env: XENDIT_SECRET_KEY, XENDIT_CALLBACK_TOKEN, SUPABASE_SERVICE_ROLE_KEY
+2. Daftarkan callback URL di Dashboard Xendit -> Invoices:
+   https://<domain>/api/payments/xendit/webhook
+3. Uji alur: create invoice -> bayar di hosted page -> status order otomatis lunas
+Kriteria 1-6 terverifikasi lewat code-review & typecheck; runtime proof menunggu langkah di atas.
 ```
 
 ---
@@ -616,3 +645,5 @@ project baru; struktur finalnya identik dengan DB live hari ini.
 | 2026-08-22 | T-11 | Selesai (DONE): README + AGENTS.md §20 + .gitignore disinkronkan kondisi aktual; gerbang lint/typecheck/build tetap hijau | ox-alpha |
 | 2026-08-22 | T-12 | Task T-12 dibuat & dimulai (IN_PROGRESS) instruksi pemilik project: konsolidasi 7 migration → 1 full schema (init+seed) | ox-alpha |
 | 2026-08-22 | T-12 | Selesai (DONE): `20260822130000_full_schema.sql` (1314 baris) menggantikan 7 file lama; inventaris terverifikasi identik live DB (14 tabel, 10 fungsi, ensure_rls, 42 policy final, seed, bucket); gerbang hijau | ox-alpha |
+| 2026-08-22 | T-02 | REVISI DESAIN: Midtrans Snap → **Xendit Invoice API v2** atas instruksi pemilik project (alasan: e-wallet lebih luas OVO/DANA + invoice-link via WA). Scope & kriteria ditulis ulang; task dimulai (IN_PROGRESS) | ox-alpha |
+| 2026-08-22 | T-02 | Selesai (DONE): migration xendit_order_columns live+mirror, 2 API route (create/webhook) + admin client, UI bayar online & checkout, gerbang hijau. E2E runtime menunggu kredensial Xendit dari owner (tercatat di Bukti) | ox-alpha |
