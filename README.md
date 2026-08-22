@@ -43,7 +43,7 @@ marketplace/
 │   ├── types/      (database.ts)
 │   └── utils/      (format, storeConfig, order-status, supabase client/server)
 │   └── proxy.ts    # Next.js 16 Proxy (menggantikan middleware.ts)
-├── supabase/migrations/ (6 files — ter-track git)
+├── supabase/migrations/ (1 file — full schema konsolidasi)
 ```
 
 ## Fitur
@@ -145,17 +145,13 @@ Login di `/admin/login`.
 
 ## Migration
 
-Seluruh file migration **ter-track git** dan dijalankan berurutan oleh `supabase db push`:
+**Satu file konsolidasi** — init + seed keseluruhan database, merepresentasikan DB live:
 
 | File | Deskripsi |
 |------|-----------|
-| `20260621000001_full_schema.sql` | Schema lengkap (tabel, RLS, functions, triggers, storage) |
-| `20260621000002_seed_data.sql` | Seed kategori, produk, varian, voucher, flash sale, settings |
-| `20260621000003_notifications.sql` | Tabel + policy notifications |
-| `20260622000001_fix_security.sql` | Perbaikan RLS & SECURITY DEFINER |
-| `20260623000001_additional_fixes.sql` | Fix tambahan (constraint, index) |
-| `20260624000001_voucher_code_order.sql` | Kolom `voucher_code` di orders + index |
-| `20260822120000_secure_functions_hardening.sql` | Revoke EXECUTE anon/PUBLIC pada RPC + search_path fix |
+| `supabase/migrations/20260822130000_full_schema.sql` | Tabel + RLS + fungsi + trigger + storage + seed + hardening RPC (hasil konsolidasi 7 migration lama, T-12) |
+
+Jalankan dengan `supabase db push` pada project baru.
 
 ## Verifikasi
 
