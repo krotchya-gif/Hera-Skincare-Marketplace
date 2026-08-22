@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -206,6 +207,7 @@ interface ProfilClientProps {
 }
 
 export default function ProfilClient({ initialUser, initialProfile, orders }: ProfilClientProps) {
+  const router = useRouter();
   const { toast } = useToast();
   const [user] = useState(initialUser);
   const [profile, setProfile] = useState(initialProfile);
@@ -768,7 +770,7 @@ export default function ProfilClient({ initialUser, initialProfile, orders }: Pr
                                           });
                                           localStorage.setItem("hera_cart", JSON.stringify(cart));
                                           window.dispatchEvent(new Event("cart-updated"));
-                                          window.location.href = "/keranjang";
+                                          router.push("/keranjang");
                                         } catch (e) { console.error(e); }
                                       }
                                     }}
@@ -792,7 +794,7 @@ export default function ProfilClient({ initialUser, initialProfile, orders }: Pr
                                         });
                                         localStorage.setItem("hera_cart", JSON.stringify(cart));
                                         window.dispatchEvent(new Event("cart-updated"));
-                                        window.location.href = "/keranjang";
+                                        router.push("/keranjang");
                                       } catch (e) { console.error(e); }
                                     }
                                   }}

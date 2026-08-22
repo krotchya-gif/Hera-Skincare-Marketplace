@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search, Menu } from "lucide-react";
 import { STORE_NAME } from "@/utils/storeConfig";
@@ -25,6 +25,7 @@ interface AdminTopbarProps {
 
 export default function AdminTopbar({ onMenuToggle }: AdminTopbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
   const page = Object.entries(pageTitles).find(
@@ -93,7 +94,7 @@ export default function AdminTopbar({ onMenuToggle }: AdminTopbarProps) {
             onKeyDown={(e) => {
               if (e.key === "Enter" && searchQuery.trim()) {
                 // Redirect to search results if needed
-                window.location.href = `/admin/produk?search=${encodeURIComponent(searchQuery.trim())}`;
+                router.push(`/admin/produk?search=${encodeURIComponent(searchQuery.trim())}`);
               }
             }}
             className="bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 w-40 lg:w-48"
@@ -106,7 +107,7 @@ export default function AdminTopbar({ onMenuToggle }: AdminTopbarProps) {
           onClick={() => {
             const q = prompt("Cari sesuatu di admin...");
             if (q && q.trim()) {
-              window.location.href = `/admin/produk?search=${encodeURIComponent(q.trim())}`;
+              router.push(`/admin/produk?search=${encodeURIComponent(q.trim())}`);
             }
           }}
         >

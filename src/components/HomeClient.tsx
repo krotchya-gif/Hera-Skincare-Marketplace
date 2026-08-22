@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { STORE_NAME } from "@/utils/storeConfig";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/components/Toast";
@@ -182,6 +183,7 @@ function ProductCard({
   showDiscount?: boolean;
   stats?: { average: number; count: number; sold: number };
 }) {
+  const router = useRouter();
   const { toast } = useToast();
   const [wished, setWished] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -202,7 +204,7 @@ function ProductCard({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast("info", "Silakan masuk (login) terlebih dahulu untuk berbelanja.");
-        window.location.href = "/profil";
+        router.push("/profil");
         return;
       }
 
@@ -247,7 +249,7 @@ function ProductCard({
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
                   toast("info", "Silakan masuk (login) terlebih dahulu untuk menambahkan wishlist.");
-                  window.location.href = "/profil";
+                  router.push("/profil");
                   return;
                 }
 

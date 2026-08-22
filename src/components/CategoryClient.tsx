@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/components/Toast";
@@ -24,6 +25,7 @@ const sortOptions = [
 
 
 function ProductCard({ product }: { product: Product }) {
+  const router = useRouter();
   const { toast } = useToast();
   const [wished, setWished] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -44,7 +46,7 @@ function ProductCard({ product }: { product: Product }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast("info", "Silakan masuk (login) terlebih dahulu untuk berbelanja.");
-        window.location.href = "/profil";
+        router.push("/profil");
         return;
       }
 
@@ -75,7 +77,7 @@ function ProductCard({ product }: { product: Product }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast("info", "Silakan masuk (login) terlebih dahulu untuk menambahkan wishlist.");
-        window.location.href = "/profil";
+        router.push("/profil");
         return;
       }
 

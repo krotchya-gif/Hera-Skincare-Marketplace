@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import {
   LayoutDashboard,
@@ -59,6 +59,7 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [adminName, setAdminName] = useState("Super Admin");
   const [adminEmail, setAdminEmail] = useState("");
@@ -118,7 +119,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = "/admin/login";
+    router.push("/admin/login");
   };
 
   const isActive = (href: string) => {
