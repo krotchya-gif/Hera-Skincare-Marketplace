@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -156,7 +157,13 @@ export default function ProductDetailClient({
           <div>
             <div className="bg-white rounded-2xl border border-gray-100 aspect-square flex items-center justify-center mb-3 relative overflow-hidden shadow-sm">
               {imageList[activeImage].startsWith("http") ? (
-                <img src={imageList[activeImage]} alt={product.name} className="max-w-full max-h-full object-contain" />
+                <Image
+                  src={imageList[activeImage]}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-contain"
+                />
               ) : (
                 <span className="text-8xl md:text-9xl">{imageList[activeImage]}</span>
               )}
@@ -197,12 +204,12 @@ export default function ProductDetailClient({
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
-                  className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center text-2xl bg-white overflow-hidden transition-all ${
+                  className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center text-2xl bg-white overflow-hidden transition-all relative ${
                     activeImage === i ? "border-green-500 shadow-sm" : "border-gray-200 hover:border-green-300"
                   }`}
                 >
                   {img.startsWith("http") ? (
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <Image src={img} alt="" fill sizes="64px" className="object-cover" />
                   ) : (
                     img
                   )}

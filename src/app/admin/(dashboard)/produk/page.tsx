@@ -57,7 +57,7 @@ export default function ProductsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, search, selectedCategory, selectedStatus]);
+  }, [currentPage, search, selectedCategory, selectedStatus, categories]);
 
   const fetchCategories = useCallback(async () => {
     const res = await fetch("/api/admin/categories");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, CheckCheck, X, Clock, Package, CreditCard, MessageSquare, Info } from "lucide-react";
+import { Bell, CheckCheck, Package, CreditCard, MessageSquare, Info } from "lucide-react";
 import Link from "next/link";
 
 interface Notification {

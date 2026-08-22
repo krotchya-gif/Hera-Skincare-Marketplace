@@ -50,6 +50,7 @@ export default async function RootLayout({
               `}
             </Script>
             <noscript>
+              {/* eslint-disable-next-line @next/next/no-img-element -- tracking pixel di dalam noscript; next/image tidak bisa dipakai tanpa JS */}
               <img
                 height="1" width="1" style={{ display: "none" }}
                 src={`https://www.facebook.com/tr?id=${seo.meta_pixel_id}&ev=PageView&noscript=1`}

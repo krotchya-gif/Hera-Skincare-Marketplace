@@ -66,8 +66,7 @@ npm run build       # exit 0
 | [T-01](#t-01--infrastruktur-verifikasi--baseline) | P0 | Infrastruktur verifikasi & baseline | DONE |
 | [T-02](#t-02--xendit-invoice-pembayaran-online-server-side) | P0 | Xendit Invoice pembayaran online (server-side) | DONE |
 | [T-03](#t-03--flash-sale-crud-di-admin) | P1 | Flash Sale CRUD di Admin | DONE |
-| [T-03](#t-03--flash-sale-crud-di-admin) | P1 | Flash Sale CRUD di Admin | BACKLOG |
-| [T-04](#t-04--tutup-bug-low-dari-audit-lama) | P1 | Tutup bug LOW dari audit lama | BACKLOG |
+| [T-04](#t-04--tutup-bug-low-dari-audit-lama) | P1 | Tutup bug LOW dari audit lama | IN_PROGRESS |
 | [T-05](#t-05--notifikasi-otomatis-emailwa) | P2 | Notifikasi otomatis Email/WA | BACKLOG |
 | [T-06](#t-06--port-fitur-qa-produk--comparison-dari-project-react) | P2 | Port Q&A produk + comparison dari React | BACKLOG |
 | [T-07](#t-07--konsolidasi-dokumentasi--arsip-project-react) | P3 | Konsolidasi dokumentasi & arsip project React | BACKLOG |
@@ -255,8 +254,8 @@ Status kriteria: 1 ✅ · 2 ✅ (adaptasi terdokumentasi) · 3 ✅ · 4 ✅
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
-| Mulai / Selesai | — / — |
+| Status | `IN_PROGRESS` |
+| Mulai / Selesai | 2026-08-22 / — |
 | Sumber daftar | `Todo.md` § Final Metrics → baris "Open (14 LOW)" (ARSIP — hanya rujukan daftar, bukan tracker) |
 
 **Aturan khusus task ini (anti-noise):**
@@ -264,7 +263,22 @@ Saat memulai, pecah dulu daftar bug LOW menjadi sub-entri bernomor di bawah tabe
 
 | Sub-ID | Bug (ringkas) | Status |
 |--------|---------------|--------|
-| (diisi saat mulai task) | | |
+| T-04.1 | L2 — `router` sebagai dependency useEffect | SKIP (verifikasi 22 Agu: tidak ada lagi di kode) |
+| T-04.2 | N29 — CSS universal `*` transition | SKIP (sudah scoped `.transition-premium`; `*` hanya box-sizing) |
+| T-04.3 | N30 — Floating WhatsApp `animate-pulse` terus-menerus | SKIP (tombol WA kini hover-only; pulse tersisa = skeleton loading sah) |
+| T-04.4 | N38 — `revalidate = 0` mematikan cache | SKIP (desain data real-time utk stok/harga e-commerce; halaman ber-cookie sudah dynamic natural) |
+| T-04.5 | N43 — Halaman profil tanpa guard session server-side | SKIP (sudah ada getUser server-side; UI menampilkan form auth utk guest) |
+| T-04.6 | N46 — Public search `/api/products` tanpa rate limit | SKIP (sudah ada checkRateLimit 120/menit) |
+| T-04.7 | N49 — Deskripsi produk tanpa sanitasi HTML | SKIP (tidak ada dangerouslySetInnerHTML; React auto-escape default) |
+| T-04.8 | L13 — Related products query tanpa limit | SKIP (sudah `pageSize: 7` + `.slice(0, 6)`) |
+| T-04.9 | L9 — Supabase CLI tidak ada di devDependencies | DONE |
+| T-04.10 | Linter warnings — 8 warning baseline (img ×4, unused-vars ×3, deps ×1) | DONE |
+| T-04.11 | H8 — `console.error` di catch blok | SKIP (intentional — logging terkontrol untuk debug produksi) |
+| T-04.12 | P15 — Custom modal → native `<dialog>` | SKIP (refactor besar lintas komponen; modal custom berfungsi baik) |
+| T-04.13 | N40 — CSP `'unsafe-inline'` untuk scripts | SKIP (butuh infrastruktur nonce + risiko merusak Meta Pixel/GA4; mitigasi: domain whitelist ketat) |
+| T-04.14 | N33/N34/L1 — metadata statis / dropdown kategori by-name / sisa `confirm()` | SKIP (metadata statis by design dgn fallback SEO DB; confirm() utk aksi destruktif adalah pola UX sengaja dipertahankan) |
+
+**Hasil:** 2 sub-bug diperbaiki (T-04.9, T-04.10), 12 terverifikasi sudah hilang/obsolete atau di-skip dengan alasan eksplisit.
 
 **Scope-IN:** file yang disebut di sub-entri masing-masing saja
 **Scope-OUT:** apapun di luar itu

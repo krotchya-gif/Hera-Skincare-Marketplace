@@ -41,7 +41,7 @@ export default function KeranjangPage() {
   const [mounted, setMounted] = useState(false);
   const [freeShippingMin, setFreeShippingMin] = useState(50000);
   const [freeShippingActive, setFreeShippingActive] = useState(true);
-  const [shippingCost, setShippingCost] = useState(12000);
+  const [shippingCost] = useState(12000);
   const [, startTransition] = useTransition();
 
   // Load cart and settings on mount

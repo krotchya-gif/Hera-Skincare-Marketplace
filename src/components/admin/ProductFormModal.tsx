@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import { X, Upload, RefreshCw, Check, AlertCircle } from "lucide-react";
 import { STORE_NAME } from "@/utils/storeConfig";
 import type { Product, Category } from "@/types/database";
@@ -284,7 +285,7 @@ export default function ProductFormModal({
               <div className="flex gap-2 mb-3 flex-wrap">
                 {uploadedImages.map((url, i) => (
                   <div key={i} className="w-16 h-16 bg-green-50 rounded-xl border border-gray-200 overflow-hidden relative">
-                    <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                    <Image src={url} alt={`Foto ${i + 1}`} fill sizes="64px" className="object-cover" />
                   </div>
                 ))}
               </div>
