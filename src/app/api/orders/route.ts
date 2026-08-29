@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       payment_method?: string;
       notes?: string;
       voucher_code?: string;
+      utm_source?: string;
     };
 
     const supabase = await createClient();
@@ -170,6 +171,8 @@ export async function POST(request: NextRequest) {
       total: expectedTotal,
       notes: body.notes || "",
       voucher_code: body.voucher_code || undefined,
+      // T-41: utm_source dari campaign (disimpan ke order utk conversion report)
+      utm_source: typeof body.utm_source === "string" && body.utm_source.trim() ? body.utm_source.trim().slice(0, 100) : undefined,
       items: body.items!.map((item) => ({
         product_id: item.product_id,
         variant_id: item.variant_id,

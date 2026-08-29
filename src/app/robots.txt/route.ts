@@ -27,6 +27,8 @@ function isValidRobotsContent(content: string): boolean {
 export async function GET(request: Request) {
   const BASE_URL = getBaseUrl(request);
 
+  let aiBlocked: string[] = [];
+
   try {
     const supabase = await createClient();
     const { data } = await supabase
@@ -36,6 +38,9 @@ export async function GET(request: Request) {
       .single();
 
     const customContent = (data?.value as Record<string, unknown>)?.robots_txt_content as string | null;
+    aiBlocked = Array.isArray((data?.value as Record<string, unknown>)?.ai_crawlers_block)
+      ? ((data?.value as Record<string, unknown>)?.ai_crawlers_block as unknown[]).filter((x): x is string => typeof x === "string")
+      : [];
 
     if (customContent?.trim() && isValidRobotsContent(customContent)) {
       return new NextResponse(customContent, {
@@ -46,10 +51,16 @@ export async function GET(request: Request) {
     // Fall through to default
   }
 
+  // T-42: AI crawler block (GEO) — Disallow per bot yang dicentang
+  const aiLines = aiBlocked.length > 0
+    ? [...aiBlocked.map((bot) => `User-agent: ${bot}\nDisallow: /`), ""]
+    : [];
+
   const defaultContent = [
     "User-agent: *",
     "Allow: /",
     "",
+    ...aiLines,
     `Sitemap: ${BASE_URL}/sitemap.xml`,
   ].join("\n");
 

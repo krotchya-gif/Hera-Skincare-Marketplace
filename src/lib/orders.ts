@@ -95,6 +95,7 @@ export interface CreateOrderPayload {
   total: number;
   notes?: string;
   voucher_code?: string;
+  utm_source?: string;
   items: {
     product_id: string;
     variant_id?: string;
@@ -129,6 +130,7 @@ export async function createOrder(payload: CreateOrderPayload): Promise<Order | 
       total: payload.total,
       notes: payload.notes ?? null,
       voucher_code: payload.voucher_code ?? null,
+      utm_source: payload.utm_source ?? null,
     })
     .select()
     .single();

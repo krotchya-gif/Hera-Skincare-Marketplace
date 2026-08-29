@@ -92,11 +92,36 @@ export interface Order {
   voucher_code: string | null;
   xendit_invoice_id: string | null;
   xendit_invoice_url: string | null;
+  utm_source: string | null;
   created_at: string;
   updated_at: string;
   // joined
   profiles?: Pick<Profile, "id" | "name" | "email" | "phone"> | null;
   order_items?: OrderItem[];
+}
+
+// T-40: Event log marketing (pola docs seo.md)
+export interface EventLog {
+  id: string;
+  event_name: string;
+  label: string | null;
+  page: string | null;
+  value: Record<string, unknown> | null;
+  status: "sent" | "pending" | "failed";
+  provider: string | null;
+  created_at: string;
+}
+
+// T-41: Kunjungan UTM (pola docs seo.md)
+export interface UtmVisit {
+  id: string;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  landing_url: string | null;
+  referrer: string | null;
+  session_id: string | null;
+  created_at: string;
 }
 
 export interface ShippingAddress {

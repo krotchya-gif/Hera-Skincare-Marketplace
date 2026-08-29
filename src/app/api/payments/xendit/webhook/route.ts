@@ -122,6 +122,20 @@ export async function POST(request: NextRequest) {
       if (notifError) console.warn("[Xendit Webhook] Notif insert error:", notifError.message);
     }
 
+    // T-40: event payment_success (fire-and-forget, service-role client)
+    try {
+      await supabase.from("event_logs").insert({
+        event_name: "payment_success",
+        label: order.order_number,
+        page: "/bayar",
+        value: { payment_status: "lunas", amount: Number(order.total) },
+        status: "sent",
+        provider: "xendit",
+      });
+    } catch (eventErr) {
+      console.warn("[Xendit Webhook] Event log error:", eventErr);
+    }
+
     await sendOrderStatusNotification(
       {
         order_number: order.order_number,

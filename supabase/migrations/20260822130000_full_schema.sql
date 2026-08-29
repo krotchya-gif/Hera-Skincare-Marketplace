@@ -1557,3 +1557,66 @@ grant execute on function public.get_product_sales_summary() to anon, authentica
 create index if not exists idx_categories_parent_id on public.categories(parent_id);
 create index if not exists idx_product_qna_user_id on public.product_qna(user_id);
 create index if not exists idx_reviews_order_id on public.reviews(order_id);
+
+-- ============================================================
+-- [TAMBAHAN T-40/T-41] Event Monitor & UTM Campaign (2026-08-29)
+-- Diterapkan via MCP sebagai migration `20260829180000_marketing_features`.
+-- Pola mengacu docs seo.md (project lain): event_logs + utm_visits.
+-- ============================================================
+
+-- T-40: EVENT LOGS — riwayat event konversi marketing
+create table if not exists public.event_logs (
+  id uuid primary key default uuid_generate_v4(),
+  event_name text not null,
+  label text,
+  page text,
+  value jsonb,
+  status text not null default 'sent' check (status in ('sent', 'pending', 'failed')),
+  provider text default 'internal',
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_event_logs_created_at on public.event_logs(created_at desc);
+
+alter table public.event_logs enable row level security;
+
+create policy "Public can insert event logs"
+  on public.event_logs for insert to anon, authenticated
+  with check (true);
+
+create policy "Admins can read event logs"
+  on public.event_logs for select to authenticated
+  using (public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text, 'operator'::text, 'finance'::text]));
+
+create policy "Admins can update event logs"
+  on public.event_logs for update to authenticated
+  using (public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text, 'operator'::text]))
+  with check (public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text, 'operator'::text]));
+
+-- T-41: UTM VISITS — kunjungan dengan parameter UTM
+create table if not exists public.utm_visits (
+  id uuid primary key default uuid_generate_v4(),
+  utm_source text,
+  utm_medium text,
+  utm_campaign text,
+  landing_url text,
+  referrer text,
+  session_id text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_utm_visits_created_at on public.utm_visits(created_at desc);
+
+alter table public.utm_visits enable row level security;
+
+create policy "Public can insert utm visits"
+  on public.utm_visits for insert to anon, authenticated
+  with check (true);
+
+create policy "Admins can read utm visits"
+  on public.utm_visits for select to authenticated
+  using (public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text, 'operator'::text, 'finance'::text]));
+
+-- T-41: ORDERS — simpan utm_source dari campaign
+alter table public.orders add column if not exists utm_source text;
+create index if not exists idx_orders_utm_source on public.orders(utm_source);

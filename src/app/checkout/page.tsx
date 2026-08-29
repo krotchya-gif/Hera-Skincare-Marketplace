@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import { useToast } from "@/components/Toast";
 import { createClient } from "@/utils/supabase/client";
 import { formatRp } from "@/utils/format";
+import { getStoredUtm, clearStoredUtm } from "@/lib/utm";
+import { trackEvent } from "@/lib/tracking";
 import {
   ChevronRight,
   MapPin,
@@ -94,6 +96,9 @@ export default function CheckoutPage() {
   const [savingAddress, setSavingAddress] = useState(false);
 
   useEffect(() => {
+    // T-40: event checkout_start (non-blocking, sekali di mount)
+    trackEvent("checkout_start", undefined, { utm_source: getStoredUtm().utm_source || undefined });
+
     startTransition(() => {
       setMounted(true);
     });
@@ -289,6 +294,8 @@ export default function CheckoutPage() {
         subtotal,
         discount,
         total,
+        // T-41: UTM dari campaign (localStorage) — dilaporkan sebagai order conversion
+        utm_source: getStoredUtm().utm_source || null,
         items: checkoutItems.map((item) => ({
           product_id: item.id, // REAL Supabase Product UUID!
           variant_id: item.variantId || null,
@@ -308,6 +315,11 @@ export default function CheckoutPage() {
       if (!res.ok) throw new Error("Gagal membuat pesanan");
       const order = await res.json();
       setOrderNumber(order.order_number);
+
+      // T-40: event order_created (non-blocking)
+      trackEvent("order_created", order.order_number, { utm_source: payload.utm_source || undefined });
+      // T-41: UTM sudah terpakai untuk order ini — bersihkan
+      clearStoredUtm();
 
       // Clean local storage cart items
       try {

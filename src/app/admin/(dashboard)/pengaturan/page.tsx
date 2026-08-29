@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { Plus, Loader2, Upload } from "lucide-react";
 import { useToast } from "@/components/Toast";
+import { AI_CRAWLERS } from "@/lib/ai-crawlers";
 import {
   STORE_NAME,
   STORE_EMAIL,
@@ -98,6 +99,16 @@ export default function SettingsPage() {
   // --- States for SEO ---
   const [seoMetaPixelId, setSeoMetaPixelId] = useState("");
   const [seoGa4Id, setSeoGa4Id] = useState("");
+  const [seoGtmId, setSeoGtmId] = useState("");
+  const [seoClarityId, setSeoClarityId] = useState("");
+  const [seoAdsId, setSeoAdsId] = useState("");
+  const [seoTiktokId, setSeoTiktokId] = useState("");
+  const [seoAiBlocked, setSeoAiBlocked] = useState<string[]>([]);
+  const [seoGeoLat, setSeoGeoLat] = useState("");
+  const [seoGeoLng, setSeoGeoLng] = useState("");
+  const [seoGaServiceAccount, setSeoGaServiceAccount] = useState("");
+  const [seoGa4PropertyId, setSeoGa4PropertyId] = useState("");
+  const [seoGscSiteUrl, setSeoGscSiteUrl] = useState("");
   const [seoDefaultTitle, setSeoDefaultTitle] = useState("");
   const [seoDefaultDescription, setSeoDefaultDescription] = useState("");
   const [seoDefaultKeywords, setSeoDefaultKeywords] = useState("");
@@ -191,6 +202,20 @@ export default function SettingsPage() {
       if (settings.seo) {
         setSeoMetaPixelId(settings.seo.meta_pixel_id || "");
         setSeoGa4Id(settings.seo.ga4_measurement_id || "");
+        setSeoGtmId(settings.seo.gtm_id || "");
+        setSeoClarityId(settings.seo.clarity_id || "");
+        setSeoAdsId(settings.seo.ads_id || "");
+        setSeoTiktokId(settings.seo.tiktok_id || "");
+        setSeoAiBlocked(Array.isArray(settings.seo.ai_crawlers_block) ? settings.seo.ai_crawlers_block : []);
+        setSeoGeoLat(settings.seo.geo_lat || "");
+        setSeoGeoLng(settings.seo.geo_lng || "");
+        setSeoGaServiceAccount(
+          settings.seo.ga_service_account && typeof settings.seo.ga_service_account === "object"
+            ? JSON.stringify(settings.seo.ga_service_account, null, 2)
+            : ""
+        );
+        setSeoGa4PropertyId(settings.seo.tracking_ga4_property_id || "");
+        setSeoGscSiteUrl(settings.seo.tracking_gsc_site_url || "");
         setSeoDefaultTitle(settings.seo.default_title || "");
         setSeoDefaultDescription(settings.seo.default_description || "");
         setSeoDefaultKeywords(settings.seo.default_keywords || "");
@@ -416,6 +441,20 @@ export default function SettingsPage() {
   const saveSeoSettings = async () => {
     try {
       setSaving(true);
+
+      // T-43: parse JSON service account (validasi format — jangan simpan garbage)
+      let gaServiceAccount: Record<string, unknown> | null = null;
+      if (seoGaServiceAccount.trim()) {
+        try {
+          const parsed = JSON.parse(seoGaServiceAccount);
+          if (!parsed || typeof parsed !== "object") throw new Error("invalid");
+          gaServiceAccount = parsed;
+        } catch {
+          toast("error", "Service account harus berupa JSON yang valid.");
+          return;
+        }
+      }
+
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -424,6 +463,16 @@ export default function SettingsPage() {
           value: {
             meta_pixel_id: seoMetaPixelId,
             ga4_measurement_id: seoGa4Id,
+            gtm_id: seoGtmId,
+            clarity_id: seoClarityId,
+            ads_id: seoAdsId,
+            tiktok_id: seoTiktokId,
+            ai_crawlers_block: seoAiBlocked,
+            geo_lat: seoGeoLat || null,
+            geo_lng: seoGeoLng || null,
+            ga_service_account: gaServiceAccount,
+            tracking_ga4_property_id: seoGa4PropertyId || null,
+            tracking_gsc_site_url: seoGscSiteUrl || null,
             default_title: seoDefaultTitle,
             default_description: seoDefaultDescription,
             default_keywords: seoDefaultKeywords,
@@ -1008,6 +1057,137 @@ export default function SettingsPage() {
                 placeholder="G-XXXXXXXXXX"
               />
               <p className="text-[10px] text-gray-400 mt-1">ID dari Google Analytics 4</p>
+            </div>
+            {/* T-42: GTM / Clarity / Ads / TikTok */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Google Tag Manager ID</label>
+              <input
+                value={seoGtmId}
+                onChange={(e) => setSeoGtmId(e.target.value)}
+                type="text"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                placeholder="GTM-XXXXXXX"
+              />
+              <p className="text-[10px] text-gray-400 mt-1">ID dari Google Tag Manager</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Microsoft Clarity ID</label>
+              <input
+                value={seoClarityId}
+                onChange={(e) => setSeoClarityId(e.target.value)}
+                type="text"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                placeholder="abcdefghij"
+              />
+              <p className="text-[10px] text-gray-400 mt-1">Project ID dari Microsoft Clarity</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Google Ads ID</label>
+              <input
+                value={seoAdsId}
+                onChange={(e) => setSeoAdsId(e.target.value)}
+                type="text"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                placeholder="AW-XXXXXXXXX"
+              />
+              <p className="text-[10px] text-gray-400 mt-1">Conversion ID dari Google Ads</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">TikTok Pixel ID</label>
+              <input
+                value={seoTiktokId}
+                onChange={(e) => setSeoTiktokId(e.target.value)}
+                type="text"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                placeholder="ABCDEFGHIJKLMNOP123"
+              />
+              <p className="text-[10px] text-gray-400 mt-1">Pixel ID dari TikTok Ads Manager</p>
+            </div>
+          </div>
+
+          {/* T-42: AI Crawler Block (GEO) */}
+          <div className="border-t border-gray-100 pt-5 mb-6">
+            <h3 className="font-semibold text-gray-800 mb-1 text-sm">AI Crawler Block (GEO)</h3>
+            <p className="text-[10px] text-gray-400 mb-3">Blokir bot AI tertentu di robots.txt — centang bot yang ingin diblokir</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {AI_CRAWLERS.map((bot) => (
+                <label key={bot} className="flex items-center gap-2 text-xs text-gray-600 border border-gray-100 rounded-lg px-3 py-2 cursor-pointer hover:border-green-300">
+                  <input
+                    type="checkbox"
+                    checked={seoAiBlocked.includes(bot)}
+                    onChange={(e) => {
+                      setSeoAiBlocked((prev) =>
+                        e.target.checked ? [...prev, bot] : prev.filter((b) => b !== bot)
+                      );
+                    }}
+                    className="accent-green-600"
+                  />
+                  <span className="font-mono">{bot}</span>
+                </label>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-5 mt-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Latitude (GEO)</label>
+                <input
+                  value={seoGeoLat}
+                  onChange={(e) => setSeoGeoLat(e.target.value)}
+                  type="text"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                  placeholder="-6.2088"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Longitude (GEO)</label>
+                <input
+                  value={seoGeoLng}
+                  onChange={(e) => setSeoGeoLng(e.target.value)}
+                  type="text"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                  placeholder="106.8456"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-2">Koordinat dipakai untuk JSON-LD LocalBusiness (SEO lokal / GEO)</p>
+          </div>
+
+          {/* T-43: Google API — angka real */}
+          <div className="border-t border-gray-100 pt-5 mb-6">
+            <h3 className="font-semibold text-gray-800 mb-1 text-sm">Google API — Angka Real (GA4 & Search Console)</h3>
+            <p className="text-[10px] text-gray-400 mb-3">Isi service account (JSON) untuk menampilkan angka analytics real di halaman Marketing. Kredensial tetap di server.</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Service Account JSON</label>
+                <textarea
+                  value={seoGaServiceAccount}
+                  onChange={(e) => setSeoGaServiceAccount(e.target.value)}
+                  rows={5}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 resize-none font-mono"
+                  placeholder='{"type":"service_account","client_email":"...","private_key":"...","token_uri":"https://oauth2.googleapis.com/token"}'
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">GA4 Property ID</label>
+                  <input
+                    value={seoGa4PropertyId}
+                    onChange={(e) => setSeoGa4PropertyId(e.target.value)}
+                    type="text"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                    placeholder="123456789"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">GSC Site URL</label>
+                  <input
+                    value={seoGscSiteUrl}
+                    onChange={(e) => setSeoGscSiteUrl(e.target.value)}
+                    type="text"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+                    placeholder="sc-domain:heraskincare.com"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

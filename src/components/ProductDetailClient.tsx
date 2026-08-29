@@ -29,6 +29,7 @@ import ProductQnA from "@/components/ProductQnA";
 import { formatRp } from "@/utils/format";
 import { addToCart, getWishlist, toggleWishlist } from "@/lib/cart-utils";
 import { toggleCompare, isInCompare, MAX_COMPARE } from "@/lib/comparison-utils";
+import { trackEvent } from "@/lib/tracking";
 import { useToast } from "@/components/Toast";
 
 interface ProductDetailClientProps {
@@ -75,6 +76,8 @@ export default function ProductDetailClient({
   const [compared, setCompared] = useState(false);
 
   useEffect(() => {
+    // T-40: event view_product (non-blocking, sekali per load)
+    trackEvent("view_product", product.name, { product_id: product.id });
     const refreshCompare = () => setCompared(isInCompare(product.id));
     window.addEventListener("compare-updated", refreshCompare);
     // defer agar tidak setState sinkron di dalam effect (react-hooks rule)
@@ -83,6 +86,7 @@ export default function ProductDetailClient({
       window.removeEventListener("compare-updated", refreshCompare);
       clearTimeout(t);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- trackEvent sekali per load produk
   }, [product.id]);
 
   const handleToggleCompare = () => {
@@ -164,6 +168,8 @@ export default function ProductDetailClient({
 
       setAddedToCart(true);
       toast("success", `Berhasil menambahkan ${product.name} ke keranjang.`);
+      // T-40: event add_to_cart (non-blocking)
+      trackEvent("add_to_cart", product.name, { product_id: product.id });
       setTimeout(() => setAddedToCart(false), 2000);
     } catch (err) {
       console.error(err);
