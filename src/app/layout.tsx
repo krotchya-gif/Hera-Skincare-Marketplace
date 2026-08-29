@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const seo = await getSeoSettings();
 
   return {
-    title: seo.default_title || `${STORE_NAME} — Marketplace Produk Rumah Tangga`,
+    title: seo.default_title || `${STORE_NAME} — Marketplace Skincare & Perawatan Pribadi`,
     description: seo.default_description || STORE_DESCRIPTION,
     keywords: seo.default_keywords || undefined,
   };

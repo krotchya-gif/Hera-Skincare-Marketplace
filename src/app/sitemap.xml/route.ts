@@ -81,11 +81,9 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
+    // T-56.2: halaman privat/transaksional tidak masuk sitemap
     const staticPages = [
       { url: BASE_URL, lastModified: new Date(), changeFrequency: "weekly", priority: 1.0 },
-      { url: `${BASE_URL}/keranjang`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
-      { url: `${BASE_URL}/checkout`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
-      { url: `${BASE_URL}/profil`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
     ];
 
     const [{ data: categories }, { data: products }] = await Promise.all([

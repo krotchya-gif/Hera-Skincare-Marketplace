@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     "",
     "## Halaman utama",
     `- [Beranda](${BASE_URL})`,
-    `- [Kategori](${BASE_URL}/kategori)`,
+    // T-56.2: /kategori (index) tidak ada — daftar kategori hanya di bawah
     `- [Tentang Kami](${BASE_URL}/tentang-kami)`,
     `- [Cara Belanja](${BASE_URL}/cara-belanja)`,
     `- [FAQ](${BASE_URL}/faq)`,
