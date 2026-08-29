@@ -133,6 +133,9 @@ npm run build       # exit 0
 | T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | DONE |
 | T-71 | P2 | Hero beranda mendukung gambar latar dari admin (settings key hero) | BACKLOG |
 | T-72 | P1 | Homepage: section "Semua Produk" setelah Produk Terlaris (+ link /kategori/semua) | DONE |
+| T-73 | P2 | Catatan "Promo Terbatas" pada kolom diskon produk (revisi owner — panel dibatalkan) | DONE |
+| T-74 | P1 | Lonceng notifikasi customer (dropdown panel, bukan link) | DONE |
+| T-75 | P1 | Banner: dua layout gambar (desktop & mobile) + catatan ukuran | DONE |
 | T-73 | P1 | Admin: panel "Promo Terbatas" di /admin/promo (kelola diskon produk) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
@@ -869,6 +872,9 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-70 | Selesai (DONE): upload banner pakai jalur "temp" (tanpa referensi product_images) — fix FK violation "Gagal menyimpan referensi gambar"; file yatim lama di Storage opsional dibersihkan via dashboard | zcode |
 | 2026-08-30 | T-67 | Addendum revisi owner: link hamburger dicabut → quick-nav strip beranda (Flash Sale/Promo Terbatas/Semua Produk); footer+sitemap+llms tetap | zcode |
 | 2026-08-30 | T-72 | Selesai (DONE): section "Semua Produk" di beranda setelah Terlaris — 8 produk terbaru (getProducts sort newest) + "Lihat Semua →" /kategori/semua; gerbang hijau; verifikasi live menyusul | zcode |
+| 2026-08-30 | T-73 | Selesai (DONE, revisi owner — panel dibatalkan): catatan di bawah kolom Harga Diskon form produk (diskon = masuk Promo Terbatas beranda); gerbang hijau | zcode |
+| 2026-08-30 | T-74 | Selesai (DONE): lonceng notifikasi customer jadi dropdown panel (badge unread poll 60 dtk, tandai dibaca, klik item navigasi; guest ke /profil) — memakai API customer existing; gerbang hijau; E2E browser menyusul | zcode |
+| 2026-08-30 | T-75 | Selesai (DONE): banner dua layout — migration banners_mobile_image live+mirror, dual upload di form (catatan ukuran Desktop ±1600×500 / Mobile ±800×400), carousel responsive per breakpoint; gerbang hijau | zcode |
 | 2026-08-30 | T-65/T-66 | Selesai (DONE) & terverifikasi live: CSP connect-src += endpoint regional GA4; error API per-section di tab Analytics; GA4 config + GTM loader kini di <head> (gtag config @2.224, GTM @2.595 — sebelumnya di body @84rb) — syarat verifikasi GSC terpenuhi | zcode |
 | 2026-08-30 | T-64 | Selesai (DONE): fitur push notification Web Push VAPID — deps web-push, VAPID keys digenerate ke env, migration push_subscriptions_table live+mirror (2 policy), public/sw.js, /api/push/subscribe + /api/admin/push, PushOptIn homepage + PushComposer tab Push; 503 graceful tanpa env; gerbang hijau; E2E runtime menunggu VAPID di Vercel + redeploy | zcode |
 | 2026-08-30 | T-59 | Selesai (DONE): tab bar detail produk overflow-x-auto no-scrollbar (tombol nowrap shrink-0, px-4 mobile); gerbang hijau | zcode |
@@ -2110,7 +2116,8 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P2 |
 | Sumber | Revisi owner 2026-08-30: panel Promo Terbatas TIDAK PERLU — cukup catatan bahwa mengisi diskon = masuk section Promo Terbatas beranda |
 
@@ -2122,13 +2129,22 @@ tampil di section Promo Terbatas beranda."*
 **Scope-OUT:** panel admin, endpoint, DB.
 **Kriteria:** catatan terlihat di form tambah & edit; 3 gerbang hijau + bukti.
 
+**Bukti**
+```
+~ ProductFormModal — catatan di bawah kolom Harga Diskon: "Isi harga
+  diskon → produk otomatis tampil di section Promo Terbatas pada beranda.
+  Kosongkan untuk mengikuti Harga Normal."
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
 ---
 
 ### T-74 — Lonceng notifikasi customer (dropdown panel, bukan link)
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Pertanyaan owner 2026-08-30: "tombol lonceng kenapa link ke profil? bukannya untuk menampilkan notifikasi progres/activity?" |
 
@@ -2146,13 +2162,26 @@ seperti sebelumnya). Dipasang menggantikan kedua Link lonceng (top bar
 **Kriteria:** login → lonceng menampilkan panel notifikasi + badge unread +
 tandai dibaca berfungsi; guest tetap ke /profil; 3 gerbang + bukti.
 
+**Bukti**
+```
++ src/components/NotificationBell.tsx — tombol lonceng + badge unread
+  (poll 60 dtk) + panel dropdown (list 20 terbaru, dot unread, waktu
+  relatif, klik item = tandai dibaca + navigasi ke link notifikasi,
+  "Tandai semua dibaca" via PUT read-all, empty state)
+~ Navbar ×2 — top bar & drawer memakai komponen (ganti Link lama)
+API memakai endpoint customer existing (GET notifications, PUT read-all).
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+E2E runtime via browser menyusul di changelog.
+```
+
 ---
 
 ### T-75 — Banner: dua layout gambar (desktop + mobile) + catatan ukuran
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Revisi owner 2026-08-30: banner wajib 2 layout (desktop & mobile) + catatan ukuran agar user membuat gambar sesuai arahan |
 
@@ -2172,6 +2201,20 @@ mobile (<640px) menampilkan gambar mobile, ≥640px gambar desktop.
 **Scope-OUT:** penempatan carousel, fitur banner lain.
 **Kriteria:** banner dengan 2 gambar tampil sesuai breakpoint; tanpa
 gambar mobile = fallback desktop; 3 gerbang + bukti.
+
+**Bukti**
+```
+== Migration live (via MCP) ==
+banners_mobile_image: banners.image_url_mobile text — mirror full_schema
+(parse OK 276 statement, libpg_query PG17)
+~ types/database.ts · api/admin/banners POST/PUT (http(s) bila diisi,
+  kosong = null = fallback desktop)
+~ BannerManager — dua field upload + catatan ukuran + preview
+~ PromoBannerCarousel — mobile (<640px): gambar mobile fallback desktop;
+  desktop (≥640px): gambar desktop
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+E2E visual dual-layout menyusul bila owner upload 2 gambar.
+```
 
 **Bukti**
 ```
