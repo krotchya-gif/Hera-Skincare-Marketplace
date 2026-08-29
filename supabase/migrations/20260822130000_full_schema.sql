@@ -1329,6 +1329,8 @@ create event trigger ensure_rls
 -- ============================================================
 
 -- T-19: RPC lapor pembayaran manual (customer TIDAK self-mark lunas)
+-- T-55.4: notifikasi "Pembayaran Dilaporkan" utk customer dibuat DI DALAM RPC
+-- (policy INSERT notifications = admin-only; insert dari client pasti ditolak RLS)
 create or replace function public.request_payment_confirmation(p_order_id uuid)
 returns boolean
 language plpgsql
@@ -1343,6 +1345,15 @@ begin
   if v_order.user_id is distinct from auth.uid() then return false; end if;
   if v_order.payment_status <> 'belum_bayar' then return false; end if;
 
+  -- notifikasi utk pemilik order
+  if v_order.user_id is not null then
+    insert into public.notifications (user_id, type, title, message, link)
+    values (v_order.user_id, 'payment', 'Pembayaran Dilaporkan',
+            'Pembayaran untuk pesanan ' || v_order.order_number || ' telah dilaporkan dan sedang diverifikasi admin.',
+            '/profil?tab=pesanan');
+  end if;
+
+  -- notifikasi verifikasi utk admin
   insert into public.notifications (user_id, type, title, message, link)
   select p.id, 'payment', 'Verifikasi Pembayaran',
          'Pesanan ' || v_order.order_number || ' menunggu verifikasi pembayaran manual.',

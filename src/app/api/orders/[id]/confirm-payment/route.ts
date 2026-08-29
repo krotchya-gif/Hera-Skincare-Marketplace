@@ -68,20 +68,9 @@ export async function POST(
       );
     }
 
-    // 5. Notifikasi in-app ke customer (non-fatal bila gagal)
-    const { error: notifError } = await supabase
-      .from("notifications")
-      .insert({
-        user_id: user.id,
-        type: "payment",
-        title: "Pembayaran Dilaporkan",
-        message: `Pembayaran untuk pesanan #${order.order_number} telah dilaporkan dan sedang diverifikasi admin.`,
-        link: `/profil?tab=pesanan`,
-      });
-
-    if (notifError) {
-      console.warn("[Confirm Payment] Notif insert error:", notifError.message);
-    }
+    // 5. Notifikasi in-app (customer + admin) dibuat DI DALAM RPC
+    // request_payment_confirmation (T-55.4) — insert dari client user pasti
+    // ditolak policy INSERT notifications (admin-only).
 
     // 6. Email/WA ke customer (fire-and-forget — tidak memengaruhi response)
     await sendOrderStatusNotification(

@@ -115,7 +115,7 @@ npm run build       # exit 0
 | T-52 | P0 | Perbaiki syntax error full_schema.sql (store_settings terpotong) | DONE |
 | T-53 | P1 | Newsletter via API route (RLS-safe, tanpa success palsu) | DONE |
 | T-54 | P1 | Integrasi RajaOngkir V2 (Komerce) — cek ongkir real + satukan logika ongkir | DONE |
-| T-55 | P1 | Konsistensi order & stok (4 sub-bug hasil audit) | BACKLOG |
+| T-55 | P1 | Konsistensi order & stok (4 sub-bug hasil audit) | DONE |
 | T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
@@ -1254,8 +1254,8 @@ build     : EXIT 0
 
 | Field | Isi |
 |---|---|
-| Status | `IN_PROGRESS` |
-| Mulai / Selesai | 2026-08-29 / - |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
 | Prioritas | P1 |
 | Sumber | Audit 2026-08-29 — temuan MEDIUM terverifikasi kode + live DB |
 
@@ -1266,7 +1266,7 @@ build     : EXIT 0
 | T-55.1 | Rollback `createOrder` delete orders/order_items via client user — RLS-ditolak (tidak ada policy DELETE) → order yatim tertinggal; cleanup via service-role; sekalian: addresses PUT/DELETE cek baris terdampak (bukan success palsu) | DONE |
 | T-55.2 | `flash_stock` tidak divalidasi server di `/api/orders` (hanya `products.stock`) — kuota flash bisa ditembus | DONE |
 | T-55.3 | Whitelist status: admin orders PUT (transisi valid via `updateOrderStatus`) & customers PUT (`aktif\|nonaktif\|diblokir`) | DONE |
-| T-55.4 | Notifikasi customer "Pembayaran Dilaporkan" dibuat di dalam RPC `request_payment_confirmation` (SECURITY DEFINER) — insert client pasti ditolak policy INSERT notifications admin-only | BACKLOG |
+| T-55.4 | Notifikasi customer "Pembayaran Dilaporkan" dibuat di dalam RPC `request_payment_confirmation` (SECURITY DEFINER) — insert client pasti ditolak policy INSERT notifications admin-only | DONE |
 
 **Kriteria Selesai (per sub)**
 1. Perilaku terverifikasi (uji manual / review SQL); tidak menambah parallel write path
@@ -1296,6 +1296,18 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
   arbitrer → throw 400 "Status pesanan tidak valid."
 ~ api/admin/customers/[id]           — type guard CustomerStatus (aktif|
   nonaktif|diblokir) → 400 bila di luar daftar; TS narrowing aman
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+**Bukti T-55.4**
+```
+Migration live (via MCP): payment_report_customer_notification — RPC
+  request_payment_confirmation kini insert 2 notifikasi (customer
+  "Pembayaran Dilaporkan" + admin "Verifikasi Pembayaran")
+Verifikasi live: prosrc mengandung kedua notifikasi ✅
+Mirror: full_schema.sql definisi RPC diganti (identik)
+~ api/orders/[id]/confirm-payment — insert notifications via client DIHAPUS
+  (parallel write path yang RLS-ditolak tidak disisakan)
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```
 
