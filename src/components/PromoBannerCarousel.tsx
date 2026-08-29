@@ -22,8 +22,22 @@ export default function PromoBannerCarousel({ banners }: { banners: Banner[] }) 
 
   const content = (
     <>
+      {/* T-75: dua layout — mobile (<640px) memakai gambar mobile bila ada,
+          desktop (≥640px) memakai gambar desktop */}
       {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
-      <img src={banner.image_url} alt={banner.title} className="w-full h-40 sm:h-56 object-cover" loading="lazy" />
+      <img
+        src={banner.image_url_mobile || banner.image_url}
+        alt={banner.title}
+        className="w-full h-40 object-cover sm:hidden"
+        loading="lazy"
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
+      <img
+        src={banner.image_url}
+        alt={banner.title}
+        className="w-full h-40 sm:h-56 object-cover hidden sm:block"
+        loading="lazy"
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
         <h3 className="text-base sm:text-lg font-bold drop-shadow">{banner.title}</h3>

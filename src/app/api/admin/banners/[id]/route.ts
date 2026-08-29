@@ -38,6 +38,10 @@ export async function PUT(
       }
       update.image_url = imageUrl;
     }
+    if (body.image_url_mobile !== undefined) {
+      const m = typeof body.image_url_mobile === "string" ? body.image_url_mobile.trim() : "";
+      update.image_url_mobile = /^https?:\/\//i.test(m) ? m : null; // T-75
+    }
     if (body.link_url !== undefined) update.link_url = cleanString(body.link_url, 300);
     if (body.placement !== undefined) {
       if (!PLACEMENTS.includes(String(body.placement))) {

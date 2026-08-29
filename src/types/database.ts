@@ -142,6 +142,7 @@ export interface Banner {
   title: string;
   subtitle: string | null;
   image_url: string;
+  image_url_mobile: string | null;
   link_url: string | null;
   placement: "hero" | "strip";
   sort_order: number;

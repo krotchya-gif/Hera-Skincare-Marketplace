@@ -10,6 +10,7 @@ interface BannerPayload {
   title?: unknown;
   subtitle?: unknown;
   image_url?: unknown;
+  image_url_mobile?: unknown;
   link_url?: unknown;
   placement?: unknown;
   sort_order?: unknown;
@@ -38,6 +39,11 @@ function sanitize(body: BannerPayload): Record<string, unknown> | { error: strin
         ? body.subtitle.trim().slice(0, 200)
         : null,
     image_url: imageUrl,
+    // T-75: layout mobile opsional — kosong = fallback gambar desktop
+    image_url_mobile:
+      typeof body.image_url_mobile === "string" && /^https?:\/\//i.test(body.image_url_mobile.trim())
+        ? body.image_url_mobile.trim()
+        : null,
     link_url:
       typeof body.link_url === "string" && body.link_url.trim()
         ? body.link_url.trim().slice(0, 300)

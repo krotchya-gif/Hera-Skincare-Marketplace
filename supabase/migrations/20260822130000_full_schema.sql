@@ -1814,6 +1814,7 @@ create table if not exists public.banners (
   title text not null,
   subtitle text,
   image_url text not null,
+  image_url_mobile text,
   link_url text,
   placement text not null default 'hero' check (placement in ('hero', 'strip')),
   sort_order int not null default 0,

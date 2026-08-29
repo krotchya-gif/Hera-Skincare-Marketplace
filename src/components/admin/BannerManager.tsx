@@ -12,6 +12,7 @@ interface Banner {
   title: string;
   subtitle: string | null;
   image_url: string;
+  image_url_mobile: string | null;
   link_url: string | null;
   placement: "hero" | "strip";
   sort_order: number;
@@ -22,6 +23,7 @@ interface BannerForm {
   title: string;
   subtitle: string;
   image_url: string;
+  image_url_mobile: string;
   link_url: string;
   placement: "hero" | "strip";
   sort_order: number;
@@ -32,6 +34,7 @@ const EMPTY_FORM: BannerForm = {
   title: "",
   subtitle: "",
   image_url: "",
+  image_url_mobile: "",
   link_url: "",
   placement: "hero",
   sort_order: 0,
@@ -78,6 +81,7 @@ export default function BannerManager() {
       title: b.title,
       subtitle: b.subtitle || "",
       image_url: b.image_url,
+      image_url_mobile: b.image_url_mobile || "",
       link_url: b.link_url || "",
       placement: b.placement,
       sort_order: b.sort_order,
@@ -86,7 +90,7 @@ export default function BannerManager() {
     setShowForm(true);
   };
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file: File, target: "desktop" | "mobile") => {
     setUploading(true);
     try {
       const fd = new FormData();
@@ -97,7 +101,8 @@ export default function BannerManager() {
       if (!res.ok || !data?.url) {
         throw new Error(data?.error || "Gagal upload gambar");
       }
-      setForm((f) => ({ ...f, image_url: data.url }));
+      if (target === "mobile") setForm((f) => ({ ...f, image_url_mobile: data.url }));
+      else setForm((f) => ({ ...f, image_url: data.url }));
       toast("success", "Gambar terunggah.");
     } catch (e) {
       toast("error", e instanceof Error ? e.message : "Gagal upload gambar");
@@ -240,7 +245,9 @@ export default function BannerManager() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Gambar *</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Gambar Desktop * <span className="text-gray-400 font-normal">— ±1600×500 px (rasio 16:5)</span>
+                </label>
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-1.5 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50">
                     {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
@@ -251,17 +258,45 @@ export default function BannerManager() {
                       className="hidden"
                       onChange={(e) => {
                         const f = e.target.files?.[0];
-                        if (f) handleUpload(f);
+                        if (f) handleUpload(f, "desktop");
                         e.target.value = "";
                       }}
                     />
                   </label>
                   {form.image_url && (
                     // eslint-disable-next-line @next/next/no-img-element -- preview dari storage/cdn
-                    <img src={form.image_url} alt="preview" className="w-16 h-10 rounded-lg object-cover" />
+                    <img src={form.image_url} alt="preview desktop" className="w-16 h-10 rounded-lg object-cover" />
                   )}
                 </div>
                 {form.image_url && <p className="text-[10px] text-gray-400 mt-1 truncate">{form.image_url}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Gambar Mobile <span className="text-gray-400 font-normal">— ±800×400 px (rasio 2:1)</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1.5 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50">
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                    Pilih Gambar
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleUpload(f, "mobile");
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {form.image_url_mobile && (
+                    // eslint-disable-next-line @next/next/no-img-element -- preview dari storage/cdn
+                    <img src={form.image_url_mobile} alt="preview mobile" className="w-16 h-10 rounded-lg object-cover" />
+                  )}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Opsional — kosongkan untuk memakai gambar desktop di semua perangkat.
+                </p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Link Tujuan (opsional)</label>
