@@ -1881,28 +1881,30 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 
 ---
 
-### T-67 — Storefront: halaman katalog semua produk `/produk`
+### T-67 — Storefront: link "Semua Produk" (`/kategori/semua`) — discoverability
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `IN_PROGRESS` |
+| Mulai / Selesai | 2026-08-30 / - |
 | Prioritas | P1 |
 | Sumber | Keluh owner 2026-08-30: "16 produk aktif, yang tampil hanya 6, tidak bisa lihat keseluruhan" |
 
-**Temuan investigasi:** admin /admin/produk sudah benar ("Menampilkan 16 dari 16" — terverifikasi live). Masalahnya di STOREFRONT: tidak ada halaman semua-produk; produk terpecah per kategori (Skincare 6, Makeup 4, Rambut 3, Parfum 1, Perawatan Tubuh 2) dan `/kategori` tanpa slug 404.
+**Revisi setelah investigasi lanjutan:** halaman semua-produk **sudah ada** — `/kategori/semua` (virtual category, mendukung pencarian; terverifikasi live menampilkan 16 produk). Masalahnya adalah **discoverability**: tidak ada link menuju halaman itu (hanya terjadi lewat pencarian navbar). Membuat halaman `/produk` baru = implementasi paralel yang dilarang.
 
-**Scope-IN**
-- Halaman `src/app/produk/page.tsx` + `src/components/AllProductsClient.tsx` — grid semua produk aktif via `/api/products` (tanpa filter kategori), pencarian, sort (sesuai dukungan API), filter kategori chips, pagination
-- Link "Semua Produk" di navbar (drawer Menu Utama) + footer Layanan
-- sitemap.xml += `/produk`; llms.txt += link
+**Scope-IN (revisi)**
+- `src/components/Navbar.tsx` — drawer Menu Utama: link "Semua Produk" → `/kategori/semua`
+- `src/components/Footer.tsx` — kolom Layanan: link "Semua Produk"
+- `src/app/sitemap.xml/route.ts` — staticPages += `/kategori/semua`
+- `src/app/llms.txt/route.ts` — link "Semua Produk"
 - Entri plan.md ini + Changelog
 
 **Scope-OUT (dilarang disentuh)**
-- Halaman kategori existing, logika keranjang
+- Halaman `/produk` baru (parallel implementation — dilarang), halaman kategori existing
 
 **Kriteria Selesai**
-1. `/produk` menampilkan 16 produk (semua aktif) dengan pagination
-2. Filter kategori & sort berfungsi; link navbar/footer aktif
+1. `/kategori/semua` menampilkan semua produk aktif (16) + bisa dicari/disort dari UI yang ada
+2. Link terlihat di navbar drawer & footer
 3. Ketiga gerbang DoD hijau + bukti tercatat
 
 ---

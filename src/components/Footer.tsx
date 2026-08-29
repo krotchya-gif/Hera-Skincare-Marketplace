@@ -7,6 +7,7 @@ export default function Footer() {
     {
       title: "Layanan",
       links: [
+        { label: "Semua Produk", href: "/kategori/semua" },
         { label: "Tentang Kami", href: "/tentang-kami" },
         { label: "Karir", href: "/karir" },
         { label: "Blog", href: "/blog" },

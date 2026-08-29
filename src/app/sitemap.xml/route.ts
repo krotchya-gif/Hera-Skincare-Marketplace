@@ -83,8 +83,10 @@ export async function GET(request: Request) {
     const supabase = await createClient();
 
     // T-56.2: halaman privat/transaksional tidak masuk sitemap
+    // T-67: /kategori/semua = katalog semua produk
     const staticPages = [
       { url: BASE_URL, lastModified: new Date(), changeFrequency: "weekly", priority: 1.0 },
+      { url: `${BASE_URL}/kategori/semua`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     ];
 
     const [{ data: categories }, { data: products }] = await Promise.all([

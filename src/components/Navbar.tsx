@@ -574,6 +574,23 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
               <ChevronRight className="w-3.5 h-3.5 opacity-60" />
             </Link>
 
+            {/* T-67: katalog semua produk */}
+            <Link
+              href="/kategori/semua"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center justify-between px-3 py-3 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                pathname === "/kategori/semua"
+                  ? "bg-emerald-50 text-emerald-700 shadow-sm"
+                  : "text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Package className="w-4 h-4 text-emerald-600" />
+                <span>Semua Produk</span>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+            </Link>
+
             {navLinks.map((link) => {
               const Icon = link.label === "Flash Sale" ? Flame : link.label === "Promo" ? Tag : Leaf;
               const isActive = pathname === link.href;
