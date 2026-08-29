@@ -855,6 +855,9 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-62 | Selesai (DONE): audit admin 11 halaman (login super_admin) + checkout end-to-end customer (login user.md) di 375px — SEMUA 0 overflow, tidak ada perbaikan dibutuhkan; bonus verifikasi live: AreaPicker sugesti API asli ✓, gratis-ongkir 0-hit ✓, fallback flat ✓; action item operasional: owner isi origin_area_id + alamat lama pilih area | zcode |
 | 2026-08-30 | T-63 | Selesai (DONE): fitur banner promosi — migration banners_table live+mirror (2 policy), 3 API admin route, tab Banner di marketing (BannerManager + upload), carousel auto-rotate di homepage; gerbang hijau | zcode |
 | 2026-08-30 | T-64 | Selesai (DONE): fitur push notification Web Push VAPID — deps web-push, VAPID keys digenerate ke env, migration push_subscriptions_table live+mirror (2 policy), public/sw.js, /api/push/subscribe + /api/admin/push, PushOptIn homepage + PushComposer tab Push; 503 graceful tanpa env; gerbang hijau; E2E runtime menunggu VAPID di Vercel + redeploy | zcode |
+| 2026-08-30 | T-59 | Selesai (DONE): tab bar detail produk overflow-x-auto no-scrollbar (tombol nowrap shrink-0, px-4 mobile); gerbang hijau | zcode |
+| 2026-08-30 | T-61 | Selesai (DONE): kartu item keranjang direstrukturisasi — hapus pindah ke kanan nama, nama full-width line-clamp-2, harga+stepper satu baris nowrap; gerbang hijau | zcode |
+| 2026-08-30 | T-59/T-61 | Verifikasi live post-deploy (browser 375×812): halaman detail docW 370 (sebelumnya 448) 0 overflow, tab bar scrollable; keranjang nama tampil penuh & harga 1 baris — kedua temuan keluhan owner tertutup. Roadmap T-01..T-64 semuanya DONE | zcode |
 
 ---
 
