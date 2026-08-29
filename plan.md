@@ -119,6 +119,10 @@ npm run build       # exit 0
 | T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | DONE |
 | T-57 | P0 | RajaOngkir kuota 100 hit/hari — cache persisten DB + short-circuit gratis ongkir | DONE |
 | T-58 | P1 | Normalisasi NEXT_PUBLIC_SITE_URL (double slash di sitemap/robots/llms.txt) | DONE |
+| T-59 | P0 | Mobile: tab bar detail produk overflow → halaman melebar 448px (bisa geser horizontal) | BACKLOG |
+| T-60 | P0 | Mobile: galeri gambar detail produk rusak (next/image × picsum tidak di-whitelist) | BACKLOG |
+| T-61 | P1 | Mobile keranjang: nama produk terpotong parah + harga patah 2 baris | BACKLOG |
+| T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -844,6 +848,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-54 | Addendum E2E upstream: key RajaOngkir owner diuji langsung — search & cost 200 OK, shape asli terkonfirmasi (label/*_name, {service,description,cost,etd}); gosend tidak didukung; normalisasi lib/shipping.ts disesuaikan + filter tier cargo band; gerbang hijau | zcode |
 | 2026-08-29 | T-57 | Selesai (DONE): kuota RajaOngkir 100 hit/hari — migration shipping_cache (server-only, RLS tanpa policy) live+mirror; cache persisten per kurier (TTL 24 jam) & pencarian area (TTL 7 hari); gratis-ongkir = 0 hit API di cost+order route; AGENTS.md Live Systems diperbarui; gerbang hijau | zcode |
 | 2026-08-29 | T-58 | Selesai (DONE): strip trailing slash NEXT_PUBLIC_SITE_URL di 3 route SEO — perbaiki double slash terdeteksi di deployment live marketplace.calysta.fun; gerbang hijau | zcode |
+| 2026-08-30 | — | Audit UI/UX mobile live (browser 375×812, 12 halaman) → 4 task didaftarkan BACKLOG: T-59 tab bar detail produk overflow 448px (P0) · T-60 galeri gambar rusak next/image×picsum (P0) · T-61 keranjang nama terpotong & harga patah baris (P1) · T-62 audit lanjutan admin+checkout butuh akses (P1). Halaman lain bersih 0 overflow | zcode |
 
 ---
 
@@ -1490,3 +1495,119 @@ lint 13 (baseline) · typecheck 0 · build 0 · full_schema parse OK (266 stmt)
   NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "")
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```
+
+---
+
+### T-59..T-62 — Perbaikan tampilan mobile (hasil audit visual marketplace.calysta.fun, 2026-08-29)
+
+> Metode audit: browser nyata viewport 375×812 + pengukuran `scrollWidth` per halaman
+> + identifikasi elemen pelaku via getBoundingClientRect. Halaman dialami: /,
+> /kategori/skincare, /produk/gentle-cleansing-foam, /keranjang (dengan item
+> simulasi localStorage), /checkout, /voucher, /blog, /faq, /cara-belanja,
+> /perbandingan, /profil, /admin/login.
+> ⚠️ Catatan artefak: screenshot fullPage IAB menggambar navbar/bottom-bar
+> berulang — BUKAN bug DOM (body height normal ±3.826px); jangan ditindaklanjuti.
+
+#### Hasil audit
+
+| # | Temuan | Bukti | Halaman lain |
+|---|---|---|---|
+| T-59 | Detail produk: `document.scrollWidth` = **448px vs viewport 375** → seluruh halaman bisa digeser horizontal. Pelaku: row tab `Deskripsi/Spesifikasi/Ulasan (0)/Tanya Jawab (0)` — tombol terakhir `px-6 py-4 border-b-2` tepat di right=448; row tidak wrap & tidak scrollable | getBoundingClientRect elemen | halaman lain 0 overflow (docW 370) |
+| T-60 | Detail produk: 3 gambar galeri **broken** — `next/image` memanggil `/_next/image?url=https://picsum.photos/...&w=3840` → gagal. `next.config.ts images.remotePatterns` hanya `**.supabase.co` (seed T-47 memakai picsum). Home/kategori tampil normal karena memakai `<img>` biasa | img.naturalWidth === 0 pada main image + 2 thumbnail | — |
+| T-61 | Keranjang terisi: nama produk terpotong agresif ("Gentle Clea…", "Vitami… C…") meski ada ruang kosong; harga patah 2 baris ("Rp" turun baris sendiri) | screenshot /keranjang dengan 2 item | — |
+| T-62 | Belum ter-audit: admin dashboard 12 halaman (butuh login admin) & checkout step 2–4 dengan alamat/kurir nyata (butuh akun customer). Keluhan "banyak yang melebar" kemungkinan juga menyasar tabel/tulisannya | — | — |
+
+---
+
+### T-59 — Mobile: tab bar detail produk overflow (halaman melebar 448px)
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P0 |
+| Sumber | Audit visual mobile 2026-08-29 — persis keluhan owner "kolom melebar" |
+
+**Tujuan:** Row tab deskripsi/spesifikasi/ulasan/tanya-jawab di `ProductDetailClient` melebihi viewport dan tidak bisa discroll → seluruh halaman melebar 448px dan bisa digeser horizontal di SEMUA halaman detail.
+
+**Scope-IN**
+- `src/components/ProductDetailClient.tsx` — row tab: jadikan scrollable-horizontal (`overflow-x-auto` + `whitespace-nowrap` + sembunyikan scrollbar) ATAU rapatkan padding + izinkan wrap — pilih yang paling alami; pastikan `scrollWidth` halaman ≤ viewport pada 375px
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Konten/logika tab, halaman lain
+
+**Kriteria Selesai**
+1. 375px: `document.scrollWidth ≤ viewport` di halaman detail (semua 4 tab terjangkau — scroll horizontal hanya di dalam row tab)
+2. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-60 — Mobile: galeri gambar detail produk rusak (next/image × picsum)
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P0 |
+| Sumber | Audit visual mobile 2026-08-29 — gambar utama + 2 thumbnail broken di SEMUA halaman detail |
+
+**Tujuan:** Gambar galeri detail rusak karena optimizer `next/image` menolak domain picsum.photos (tidak terdaftar di `images.remotePatterns`). Seed DB T-47 memakai picsum — domain harus di-whitelist, dan `w=3840` menandakan atribut `sizes` terlalu besar (boros bandwidth).
+
+**Scope-IN**
+- `next.config.ts` — tambah `images.remotePatterns` untuk `picsum.photos` (+ host redirect bila ada)
+- `src/components/ProductDetailClient.tsx` — set atribut `sizes` wajar untuk galeri (mis. `(max-width: 768px) 100vw, 50vw`) agar optimizer tidak meminta w=3840
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Gambar home/kategori (sudah tampil), DB seed
+
+**Kriteria Selesai**
+1. Halaman detail: main image + semua thumbnail tampil (img.naturalWidth > 0)
+2. URL optimizer memakai width wajar (tidak ada w=3840)
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-61 — Mobile keranjang: nama produk terpotong & harga patah baris
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Audit visual mobile 2026-08-29 (keranjang dengan 2 item simulasi) |
+
+**Tujuan:** Kartu item keranjang: (1) kolom nama terlalu sempit → nama terpotong "Gentle Clea…" meski ada ruang kosong; (2) harga patah 2 baris ("Rp" sendiri, angka di bawah). Perbaiki layout flex kartu item.
+
+**Scope-IN**
+- `src/app/keranjang/page.tsx` — `min-w-0` pada kolom nama + `line-clamp-2`/wrap wajar; harga `whitespace-nowrap` satu baris; pastikan stepper qty tidak menekan nama
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Logika cart (T-49/T-55.1 sudah stabil), checkout
+
+**Kriteria Selesai**
+1. 375px: nama produk terbaca (min. 2 baris penuh sebelum ellipsis), harga 1 baris
+2. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-62 — Mobile audit lanjutan: admin dashboard & checkout terisi
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Audit visual mobile 2026-08-29 — cakupan terbatas karena butuh akses |
+
+**Tujuan:** Melanjutkan audit ke area yang butuh akses: 12 halaman admin (tabel, chart Recharts, modal — kandidat kuat "kolom melebar" di ponsel) dan checkout step 2–4 dengan alamat + kurir nyata. Temuan didaftarkan sebagai sub-entri (pola T-04/T-55).
+
+**Scope-IN**
+- Audit mobile semua halaman admin dengan akun admin dari owner + checkout end-to-end dengan akun customer
+- Fix per temuan: umumnya tabel perlu wrapper `overflow-x-auto`, chart perlu `ResponsiveContainer` + min-width, modal perlu max-w + scroll dalam
+- Entri sub-entri + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Data/DB, logika admin
+
+**Kriteria Selesai**
+1. Semua halaman admin & checkout: `scrollWidth ≤ viewport` di 375px (tabel/chart di dalam container scroll sendiri)
+2. Per sub-temuan: gerbang DoD hijau + commit terpisah
