@@ -2,6 +2,7 @@
 
 > **File ini adalah SATU-SATUNYA tracker pekerjaan project ini.**
 > `Todo.md`, `doc.md`, dan bagian "Status" di README.md sudah **ARCHIVED** dan TIDAK BOLEH dipakai sebagai instruksi kerja aktif.
+> (Catatan 2026-08-29: `Todo.md`, `doc.md`, `AGENT.md`, `CLAUDE.md` sudah DIHAPUS dari repo — lihat T-15.)
 > Setiap agent/kontributor **WAJIB** membaca bagian [Protokol](#-protokol-source-of-truth) sebelum menyentuh kode.
 >
 > Terakhir diperbarui: 2026-08-22
@@ -76,6 +77,9 @@ npm run build       # exit 0
 | [T-11](#t-11--sinkronisasi-dokumentasi-dengan-kondisi-aktual) | P1 | Sinkronisasi dokumentasi dengan kondisi aktual | DONE |
 | [T-12](#t-12--konsolidasi-migration-menjadi-satu-full-schema) | P0 | Konsolidasi migration menjadi satu full schema | DONE |
 | T-13 | P2 | Sinkronisasi dokumentasi pasca-roadmap | DONE |
+| [T-14](#t-14--sinkronisasi-db-live-ke-full-schema) | P0 | Sinkronisasi DB live ke full schema | DONE |
+| [T-15](#t-15--konsolidasi-dokumentasi--satu-migration) | P0 | Konsolidasi dokumentasi & satu file migration | DONE |
+| [T-16](#t-16--sinkronisasi-env-dan-project-ref-live) | P0 | Sinkronisasi env & project ref live | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -774,3 +778,84 @@ Gerbang   : lint 14 err/0 warn Â· typecheck exit 0 Â· build exit 0
 `
 
 ---| 2026-08-22 | T-13 | Dimulai & selesai (DONE): README (tree/fitur/API 33/verifikasi/env table) + AGENTS.md §20 disinkronkan kondisi akhir; gerbang hijau | ox-alpha |
+| 2026-08-29 | T-14 | Dimulai & selesai (DONE): sinkronisasi DB live ke 20260822130000_full_schema.sql via MCP — migration `20260829120000_sync_full_schema` (product_qna + kolom xendit orders + hardening T-10 revoke EXECUTE + storage bucket 2MB/mime + policy DELETE storage); terverifikasi live: 15 tabel, 43 policy, ACL fungsi sesuai hardening, bucket 2MB jpg/png/webp; advisor hanya by-design WARN (has_role & fungsi stok authenticated) | ox-alpha |
+| 2026-08-29 | T-15 | Dimulai & selesai (DONE): konsolidasi dokumentasi — hapus migration sync (sisa 1: full_schema), hapus AGENT.md/CLAUDE.md/doc.md/Todo.md, AGENTS.md satu-satunya dokumen agent + aturan DB-SYNC-1/2/3 (full_schema = DB live = codebase; wajib MCP, dilarang CLI) | ox-alpha |
+| 2026-08-29 | T-16 | Dimulai & selesai (DONE): env disinkronkan ke proyek live leocryckwezmxusrorhm (.env.local URL + AGENTS.md §20/§22 AUTH-NOTE-1); konfirmasi super_admin ada & remote git origin ter-set | ox-alpha |
+
+---
+
+### T-14 — Sinkronisasi DB Live ke Full Schema
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
+| Referensi | `supabase/migrations/20260822130000_full_schema.sql`, `20260829120000_sync_full_schema.sql` |
+
+**Tujuan:** Menyamakan DB live (proyek yang terhubung ke MCP Supabase) dengan full schema + codebase. Ditemukan live DB ketinggalan: tanpa tabel `product_qna`, tanpa kolom `orders.xendit_invoice_*`, tanpa hardening T-10, bucket storage tanpa limit/mime, tanpa policy DELETE storage.
+
+**Bukti**
+```
+Migration : 20260829120000_sync_full_schema diterapkan via MCP (success)
+Live      : 15 tabel (product_qna ada, RLS on) · orders.xendit_invoice_id/url ada
+ACL       : stok/voucher = postgres+authenticated+service_role (PUBLIC/anon revoked);
+            trigger fns = postgres+service_role; has_role dipertahankan (by design)
+Storage   : bucket 2MB, mime jpg/png/webp, policy INSERT/SELECT/DELETE lengkap
+Advisor   : hanya WARN by-design (has_role anon/authenticated + fungsi stok authenticated)
+Codebase  : tidak ada perubahan kode — product_qna dipakai via string literal,
+            xendit_invoice_* sudah ada di types/database.ts
+Gerbang   : tidak ada perubahan src → lint/typecheck/build tidak dijalankan ulang
+```
+
+---
+
+### T-15 — Konsolidasi Dokumentasi & Satu File Migration
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
+
+**Tujuan:** Menyisakan satu file migration sebagai pedoman skema (`20260822130000_full_schema.sql`) dan satu dokumen agent (`AGENTS.md`); menuliskan aturan sync full schema = DB live = codebase serta kewajiban MCP (dilarang CLI).
+
+**Scope-IN**
+- Hapus `supabase/migrations/20260829120000_sync_full_schema.sql` (konsolidasi → full schema)
+- Hapus `AGENT.md`, `CLAUDE.md`, `doc.md`, `Todo.md`
+- `AGENTS.md` §20 disinkronkan (hapus referensi doc lama, satu file migration) + §22 aturan DB-SYNC-1/2/3
+- `.gitignore`, `README.md`, `plan.md` header disinkronkan
+
+**Bukti**
+```
+Migration : 1 file tersisa (20260822130000_full_schema.sql) — isinya identik live DB
+Docs      : AGENT.md, CLAUDE.md, doc.md, Todo.md dihapus; AGENTS.md satu-satunya dokumen agent
+AGENTS.md : §20 (Source of Truth Files, Live Systems) + §22 DB-SYNC-1/2/3 ditulis
+            DB-SYNC-1: full_schema = DB live = actual codebase
+            DB-SYNC-2: wajib MCP, DILARANG supabase CLI
+            DB-SYNC-3: migration ≠ bukti live; apply via MCP lalu verifikasi
+Gerbang   : tidak ada perubahan src → lint/typecheck/build tidak dijalankan ulang
+```
+
+---
+
+### T-16 — Sinkronisasi Env & Project Ref Live
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
+
+**Tujuan:** Menyamakan env app dengan DB live yang benar (proyek MCP = `leocryckwezmxusrorhm`; env lama menunjuk `pvvjfnabrywvnoolipji` yang salah). Publishable key sudah cocok dengan proyek live.
+
+**Scope-IN**
+- `.env.local` — `NEXT_PUBLIC_SUPABASE_URL` → `https://leocryckwezmxusrorhm.supabase.co` (key sudah benar)
+- `AGENTS.md` §20 — Live Systems Supabase project ref = leocryckwezmxusrorhm; §22 tambah AUTH-NOTE-1 (leaked password protection = fitur Pro, bukan bug, jangan di-notice)
+- Konfirmasi: role `super_admin` sudah ada di live (infocyber001@gmail.com); remote git origin sudah ter-set
+
+**Bukti**
+```
+Env       : .env.local URL = leocryckwezmxusrorhm (key sb_publishable__VTdM36... = cocok live)
+Live      : get_project_url = https://leocryckwezmxusrorhm.supabase.co
+Profiles  : 1 super_admin (infocyber001@gmail.com), 2 customer — role admin sudah ada
+Git remote: origin https://github.com/krotchya-gif/Hera-Skincare-Marketplace.git (sudah ada)
+Gerbang   : tidak ada perubahan src → lint/typecheck/build tidak dijalankan ulang
+```

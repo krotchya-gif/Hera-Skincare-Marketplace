@@ -187,4 +187,4 @@ Jalankan dengan `supabase db push` pada project baru.
 
 ## Status
 
-Semua pekerjaan aktif dilacak di **[`plan.md`](plan.md)** (single source of truth — protokol task, Definition of Done, changelog). Riwayat audit lama: `doc.md` & `Todo.md` (arsip lokal).
+Semua pekerjaan aktif dilacak di **[`plan.md`](plan.md)** (single source of truth — protokol task, Definition of Done, changelog). Riwayat audit lama: `doc.md` & `Todo.md` (arsip lokal — sudah dihapus 2026-08-29, lihat T-15).

@@ -35,12 +35,8 @@ yarn-error.log*
 # Claude
 .claude/
 AGENTS.md
-CLAUDE.md
 
 # Project docs (lokal saja; tracker aktif = plan.md yang ter-track)
-Todo.md
-AGENT.md
-doc.md
 
 # Supabase
 supabase/.temp/
