@@ -155,10 +155,12 @@ export async function getAllProductsAdmin(filters: { search?: string; categoryId
 
   let query = supabase
     .from("products")
-    // T-68 addendum: sertakan product_images (urut sort_order) agar form edit
-    // menampilkan foto yang sudah aktif — tanpa ini uploadedImages selalu kosong
-    .select(`*, categories!products_category_id_fkey(id, name, slug), product_images(order=sort_order)`, { count: "exact" })
-    .order("created_at", { ascending: false });
+    // T-76: embed polos + order via referencedTable — `product_images(order=…)`
+    // (addendum T-68) bukan syntax PostgREST yang valid: parse error terserap
+    // sehingga seluruh list admin/produk kembali kosong.
+    .select(`*, categories!products_category_id_fkey(id, name, slug), product_images(*)`, { count: "exact" })
+    .order("created_at", { ascending: false })
+    .order("sort_order", { referencedTable: "product_images", ascending: true });
 
   if (search) query = query.ilike("name", `%${search}%`);
   if (categoryId) query = query.eq("category_id", categoryId);
