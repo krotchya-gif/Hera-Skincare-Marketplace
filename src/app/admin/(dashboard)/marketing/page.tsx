@@ -22,14 +22,16 @@ import {
   ShoppingBag,
   UserPlus,
   Image as ImageIcon,
+  Bell,
 } from "lucide-react";
 import type { Voucher, EventLog, UtmVisit } from "@/types/database";
 import { getEventLabel } from "@/lib/tracking";
 import { buildUtmLink } from "@/lib/utm";
 import BannerManager from "@/components/admin/BannerManager";
+import PushComposer from "@/components/admin/PushComposer";
 
-// T-39/T-63: Halaman Marketing — tab (Ringkasan / Analytics / Event Monitor / UTM / Banner; Push menyusul T-64)
-type TabKey = "ringkasan" | "analytics" | "events" | "utm" | "banner";
+// T-39/T-63/T-64: Halaman Marketing — tab (Ringkasan / Analytics / Event Monitor / UTM / Banner / Push)
+type TabKey = "ringkasan" | "analytics" | "events" | "utm" | "banner" | "push";
 
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "ringkasan", label: "Ringkasan", icon: <Gift className="w-3.5 h-3.5" /> },
@@ -37,6 +39,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "events", label: "Event Monitor", icon: <Activity className="w-3.5 h-3.5" /> },
   { key: "utm", label: "UTM Campaign", icon: <Link2 className="w-3.5 h-3.5" /> },
   { key: "banner", label: "Banner", icon: <ImageIcon className="w-3.5 h-3.5" /> },
+  { key: "push", label: "Push", icon: <Bell className="w-3.5 h-3.5" /> },
 ];
 
 interface FinanceData {
@@ -691,6 +694,11 @@ export default function MarketingPage() {
       {/* ─── TAB: BANNER PROMOSI (T-63) ─────────────────────────── */}
       {tab === "banner" && (
         <BannerManager />
+      )}
+
+      {/* ─── TAB: PUSH NOTIFICATION (T-64) ──────────────────────── */}
+      {tab === "push" && (
+        <PushComposer />
       )}
     </div>
   );

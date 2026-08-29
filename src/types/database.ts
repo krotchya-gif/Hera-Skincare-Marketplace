@@ -152,6 +152,17 @@ export interface Banner {
   updated_at: string;
 }
 
+// T-64: langganan Web Push (VAPID)
+export interface PushSubscription {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  user_agent: string | null;
+  created_at: string;
+}
+
 export interface OrderItem {
   id: string;
   order_id: string;

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PromoBannerCarousel from "@/components/PromoBannerCarousel";
+import PushOptIn from "@/components/PushOptIn";
 import type { Banner } from "@/types/database";
 import { useToast } from "@/components/Toast";
 import { createClient } from "@/utils/supabase/client";
@@ -393,6 +394,9 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
 
       {/* T-63: carousel banner promosi (tidak dirender bila tidak ada banner) */}
       <PromoBannerCarousel banners={banners} />
+
+      {/* T-64: opt-in push notification (hanya user login + browser mendukung) */}
+      <PushOptIn />
 
       <TrustBar />
 

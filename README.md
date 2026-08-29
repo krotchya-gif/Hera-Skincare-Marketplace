@@ -31,7 +31,7 @@ marketplace/
 │   │   ├── bayar/[id]/, voucher/, perbandingan/          # perbandingan = T-06.2
 │   │   ├── admin/ (login + 12 dashboard pages)
 │   │   ├── llms.txt/, sitemap.xml/, robots.txt/
-│   │   └── api/ (39 route handlers)
+│   │   └── api/ (44 route handlers)
 │   │   ├── admin/blog/     # Blog CRUD (terpisah dari Pengaturan)
 │   ├── components/
 │   │   ├── Navbar.tsx, Footer.tsx, Toast.tsx, ErrorBoundary.tsx
@@ -44,7 +44,8 @@ marketplace/
 │   │                ProductFormModal, OrderDetailModal, NotificationDropdown)
 │   ├── lib/        (products, orders, admin, auth-utils, vouchers, rate-limit,
 │   │                cart-utils, comparison-utils, notify, seo, tracking,
-│   │                utm, google-analytics, product-image, ai-crawlers, shipping)
+│   │                utm, google-analytics, product-image, ai-crawlers,
+│   │                shipping, banners, push)
 │   ├── types/      (database.ts)
 │   └── utils/      (format, storeConfig, order-status, supabase client/server/admin)
 │   └── proxy.ts    # Next.js 16 Proxy (menggantikan middleware.ts)
@@ -80,7 +81,7 @@ marketplace/
 - **Keuangan** — Filter period + BarChart + PieChart
 - **Promo** — Voucher CRUD + **Flash Sale CRUD penuh** (create/edit/delete/toggle + items)
 - **Ulasan** — Rating summary + progress bar + toggle + **panel jawab pertanyaan produk (Q&A)**
-- **Marketing (4 tab)** — Ringkasan (KPI + performa voucher) · Analytics (pendapatan 7 hari, status pesanan, **angka real GA4 & Search Console**) · Event Monitor (100 event + retry) · UTM Campaign (builder link + laporan kunjungan/order/revenue per source)
+- **Marketing (6 tab)** — Ringkasan (KPI + performa voucher) · Analytics (pendapatan 7 hari, status pesanan, **angka real GA4 & Search Console**) · Event Monitor (100 event + retry) · UTM Campaign (builder link + laporan kunjungan/order/revenue per source) · Banner (CRUD banner promosi) · Push (broadcast Web Push)
 - **Pengaturan** — 7 tabs: Info, Pengiriman, Pembayaran, Notifikasi, Admin, SEO (Meta Pixel, GA4, GTM, Clarity, Google Ads, TikTok, AI crawler block, GEO/JSON-LD, service account Google API), Halaman Statis
 - **Login Admin Bento Grid** — Redesain premium bermotif bento grid dengan live server status metrics dan terminal logs.
 
@@ -95,10 +96,12 @@ marketplace/
 - **Client Routing** — Navigasi internal memakai `useRouter().push()` (bukan `window.location.href`).
 - **Pembayaran Online** — Xendit Invoice API v2 (QRIS/e-wallet/VA/kartu/retail) via route server-side; webhook `x-callback-token` verified + idempotent + cek `paid_amount`; alur transfer manual tetap utuh (customer lapor → admin verifikasi).
 - **Notifikasi Otomatis** — Email (Resend) & WhatsApp (Fonnte) ke customer saat status pesanan berubah; fire-and-forget, nonaktif bila env kosong.
+- **Push Notification (T-64)** — Web Push VAPID: opt-in di homepage (user login), service worker `public/sw.js`, broadcast dari tab Marketing → Push; prune langganan mati otomatis; nonaktif bila env kosong.
+- **Banner Promosi (T-63)** — CRUD banner di tab Marketing → Banner, tampil sebagai carousel auto-rotate di homepage.
 - **Event Tracking & UTM** — event_logs (5 pemicu) + utm_visits + orders.utm_source untuk atribusi kampanye.
 - **Ikon** — Semua UI memakai icon Lucide (termasuk kategori — nama icon disimpan di DB, dirender via `CategoryIcon`).
 
-## API Routes (39)
+## API Routes (44)
 
 | Route | Method | Auth | Deskripsi |
 |-------|--------|------|-----------|
@@ -141,6 +144,11 @@ marketplace/
 | `/api/newsletter` | POST | Public (rate-limit) | Simpan subscriber newsletter (server-side, RLS-safe — T-53) |
 | `/api/shipping/destination` | GET | Required | Pencarian area tujuan RajaOngkir V2 (proxy server — T-54) |
 | `/api/shipping/cost` | POST | Required | Ongkir per kurir utk alamat+item; berat dari DB; fallback flat (T-54) |
+| `/api/admin/banners` | GET/POST | Admin | CRUD banner promosi (T-63) |
+| `/api/admin/banners/[id]` | PUT/DELETE | Admin | Update/hapus banner |
+| `/api/admin/banners/[id]/toggle` | PATCH | Admin | Toggle status banner |
+| `/api/push/subscribe` | GET/POST/DELETE | Required | Web Push: public key, simpan & hapus langganan (T-64) |
+| `/api/admin/push` | GET/POST | Admin | Jumlah langganan + kirim broadcast push (T-64) |
 
 ## Cara Menjalankan
 
@@ -199,6 +207,7 @@ Terapkan pada project baru via **Supabase MCP** (`apply_migration`) — DILARANG
 | `XENDIT_SECRET_KEY` / `XENDIT_CALLBACK_TOKEN` | opsional | Pembayaran online Xendit |
 | `RESEND_API_KEY` / `RESEND_FROM_EMAIL` / `FONNTE_TOKEN` | opsional | Notifikasi Email/WA |
 | `RAJAONGKIR_API_KEY` | opsional | Ongkir real RajaOngkir V2/Komerce (T-54); kosong = tarif flat |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | opsional | Web Push notification (T-64); kosong = fitur nonaktif |
 | `NEXT_PUBLIC_STORE_*` (5 var) | opsional | Fallback di `storeConfig.ts` |
 
 ## Status

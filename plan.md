@@ -124,7 +124,7 @@ npm run build       # exit 0
 | T-61 | P1 | Mobile keranjang: nama produk terpotong parah + harga patah 2 baris | BACKLOG |
 | T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | DONE |
 | T-63 | P1 | Fitur banner promosi: tabel banners + admin CRUD (tab Banner di marketing) + carousel storefront | DONE |
-| T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | BACKLOG |
+| T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -853,6 +853,8 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | — | Audit UI/UX mobile live (browser 375×812, 12 halaman) → 4 task didaftarkan BACKLOG: T-59 tab bar detail produk overflow 448px (P0) · T-60 galeri gambar rusak next/image×picsum (P0) · T-61 keranjang nama terpotong & harga patah baris (P1) · T-62 audit lanjutan admin+checkout butuh akses (P1). Halaman lain bersih 0 overflow | zcode |
 | 2026-08-30 | T-60 | Prioritas diturunkan P0→P2 (keputusan owner: foto masih placeholder; galeri self-heal saat foto asli di-upload ke Supabase Storage) | zcode |
 | 2026-08-30 | T-62 | Selesai (DONE): audit admin 11 halaman (login super_admin) + checkout end-to-end customer (login user.md) di 375px — SEMUA 0 overflow, tidak ada perbaikan dibutuhkan; bonus verifikasi live: AreaPicker sugesti API asli ✓, gratis-ongkir 0-hit ✓, fallback flat ✓; action item operasional: owner isi origin_area_id + alamat lama pilih area | zcode |
+| 2026-08-30 | T-63 | Selesai (DONE): fitur banner promosi — migration banners_table live+mirror (2 policy), 3 API admin route, tab Banner di marketing (BannerManager + upload), carousel auto-rotate di homepage; gerbang hijau | zcode |
+| 2026-08-30 | T-64 | Selesai (DONE): fitur push notification Web Push VAPID — deps web-push, VAPID keys digenerate ke env, migration push_subscriptions_table live+mirror (2 policy), public/sw.js, /api/push/subscribe + /api/admin/push, PushOptIn homepage + PushComposer tab Push; 503 graceful tanpa env; gerbang hijau; E2E runtime menunggu VAPID di Vercel + redeploy | zcode |
 
 ---
 
@@ -1723,7 +1725,8 @@ Catatan: 3 temuan lint baru saat pengerjaan (import Bell belum terpakai +
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Instruksi owner 2026-08-30 (bersama T-63) |
 
@@ -1746,3 +1749,51 @@ Catatan: 3 temuan lint baru saat pengerjaan (import Bell belum terpakai +
 3. Tanpa env VAPID → 503 graceful; langganan mati (404/410) ter-prune
 4. Migration live terverifikasi via MCP + full_schema sinkron
 5. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Dependency & VAPID ==
+npm i web-push + @types/web-push (dev) — stabil
+VAPID keys digenerate (node web-push.generateVAPIDKeys) → .env.local
+  (VAPID_PUBLIC_KEY/PUBLIC dilihat aman, PRIVATE tidak ditampilkan) +
+  .env.example placeholder + instruksi Vercel
+
+== Migration live (via MCP) ==
+push_subscriptions_table: tabel push_subscriptions (endpoint unique,
+  idx user_id) + 2 policy — terverifikasi live: "Users manage own push
+  subscriptions (ALL)" + "Admins can view (SELECT)" ✓; mirror full_schema
+  (parse OK 276 statement, libpg_query PG17)
+
+== File baru ==
++ public/sw.js                    — SW: push handler (title/body/url, icon
+  dinamis /icon-192.png) + notificationclick (fokus tab / buka URL)
++ src/lib/push.ts                 — isPushConfigured, getVapidPublicKey,
+  sendPushToAll (service-role baca langganan → web-push per endpoint →
+  prune 404/410 via service-role)
++ src/app/api/push/subscribe      — GET public-key / POST upsert langganan
+  (auth, validasi endpoint https + keys) / DELETE (own endpoint, RLS)
++ src/app/api/admin/push          — GET {configured, subscribers} /
+  POST broadcast (super_admin/admin seperti settings PUT, rate-limit 5/menit,
+  validasi title ≤100 body ≤300 url path/http)
++ src/components/PushOptIn.tsx    — kartu opt-in homepage (user login +
+  dukungan browser; izin → register /sw.js → subscribe → POST; unsubscribe)
++ src/components/admin/PushComposer.tsx — tab Push: statistik pelanggan +
+  composer judul/isi/link + hasil kirim (sent/failed/pruned)
+
+== File diubah ==
+~ full_schema.sql (mirror) · types/database.ts (PushSubscription)
+~ /admin/marketing — tab "Push" ke-6 (Bell)
+~ HomeClient — PushOptIn di bawah carousel banner
+~ .env.example · README (44 routes, marketing 6 tab, env VAPID) · AGENTS.md
+  (44 routes + Live Systems Web Push)
+
+== Gerbang ==
+lint 13 (baseline) · typecheck 0 · build 0 · full_schema parse OK (276 stmt)
+Catatan: 3 issue saat pengerjaan diperbaiki (state subscribed + tipe
+applicationServerKey + catch binding sw.js) sampai baseline kembali.
+
+== UNVERIFIED (runtime) ==
+E2E subscribe + notifikasi muncul di browser butuh env VAPID terpasang di
+Vercel + redeploy (env .env.local sudah berisi key). Alur kirim broadcast
+menunggu ≥1 perangkat subscribe.
+```
