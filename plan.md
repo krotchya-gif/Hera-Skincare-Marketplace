@@ -2106,29 +2106,72 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 
 ---
 
-### T-73 — Admin: panel "Promo Terbatas" di /admin/promo
+### T-73 — Catatan "Promo Terbatas" pada kolom diskon produk (revisi owner)
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P2 |
+| Sumber | Revisi owner 2026-08-30: panel Promo Terbatas TIDAK PERLU — cukup catatan bahwa mengisi diskon = masuk section Promo Terbatas beranda |
+
+**Desain (revisi):** di form produk (tambah/edit), di bawah kolom
+"Harga Diskon" diberi catatan kecil: *"Isi harga diskon → produk otomatis
+tampil di section Promo Terbatas beranda."*
+
+**Scope-IN:** ProductFormModal (catatan helper).
+**Scope-OUT:** panel admin, endpoint, DB.
+**Kriteria:** catatan terlihat di form tambah & edit; 3 gerbang hijau + bukti.
+
+---
+
+### T-74 — Lonceng notifikasi customer (dropdown panel, bukan link)
 
 | Field | Isi |
 |---|---|
 | Status | `BACKLOG` |
 | Prioritas | P1 |
-| Sumber | Keluh owner 2026-08-30: "tidak ada UI untuk input promo terbatas di dashboard admin" |
+| Sumber | Pertanyaan owner 2026-08-30: "tombol lonceng kenapa link ke profil? bukannya untuk menampilkan notifikasi progres/activity?" |
 
-**Temuan:** section homepage "Promo Terbatas" = produk dengan `discount_price`
-terisi (getPromoProducts). Belum ada UI admin khusus — diskon hanya bisa
-diatur satu-per-satu lewat form produk.
+**Temuan:** kedua lonceng di Navbar (top bar & drawer) hanyalah `<Link href="/profil">`. API customer sudah siap: GET /api/notifications (list + unreadCount) & PUT /api/notifications/read-all; RLS user miliknya sendiri.
 
-**Desain:** /admin/promo dapat panel "Promo Terbatas": daftar produk
-(dengan/ tanpa diskon, search), aksi: set/ubah harga diskon (input inline,
-validasi 0 < diskon < harga — pola T-29) & "Hapus Diskon" (set null),
-semua via PUT /api/admin/products/[id] yang sudah ada. Statistik ringkas
-(jumlah produk berdiskon).
+**Desain:** komponen `NotificationBell` (client): tombol lonceng + badge
+unread + panel dropdown (list 20 notifikasi terbaru, dot unread, waktu
+relatif, klik item → tandai dibaca + navigasi ke link notifikasi;
+"Tandai semua dibaca"; kosong = empty state; guest = link ke /profil
+seperti sebelumnya). Dipasang menggantikan kedua Link lonceng (top bar
+& drawer). Poll badge tiap 60 detik.
 
-**Scope-IN:** panel di /admin/promo + fetch produk + aksi diskon via PUT
-existing; Entri plan.md + Changelog.
-**Scope-OUT:** endpoint baru, tabel/DB, section homepage.
-**Kriteria:** set/ubah/hapus diskon dari panel; homepage Promo Terbatas
-mengikuti; 3 gerbang hijau + bukti.
+**Scope-IN:** komponen + integrasi Navbar ×2; Entri plan.md + Changelog.
+**Scope-OUT:** endpoint baru (API sudah ada), sistem push (T-64).
+**Kriteria:** login → lonceng menampilkan panel notifikasi + badge unread +
+tandai dibaca berfungsi; guest tetap ke /profil; 3 gerbang + bukti.
+
+---
+
+### T-75 — Banner: dua layout gambar (desktop + mobile) + catatan ukuran
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Revisi owner 2026-08-30: banner wajib 2 layout (desktop & mobile) + catatan ukuran agar user membuat gambar sesuai arahan |
+
+**Desain:** kolom baru `banners.image_url_mobile` (opsional — kosong =
+pakai gambar desktop). Form Banner: dua field upload ("Desktop *" dan
+"Mobile (opsional)") + catatan ukuran: **Desktop ±1600×500 px (rasio 16:5),
+Mobile ±800×400 px (rasio 2:1)** — JPG/PNG/WebP ≤2MB. Carousel storefront:
+mobile (<640px) menampilkan gambar mobile, ≥640px gambar desktop.
+
+**Scope-IN**
+- Migration via MCP + mirror full_schema + types: `banners.image_url_mobile`
+- API banners POST/PUT menerima `image_url_mobile` (http(s) bila diisi)
+- BannerManager: dua upload + preview + catatan ukuran
+- Carousel: `<picture>`/dua img (mobile <640px, desktop ≥640px)
+- Entri plan.md + Changelog
+
+**Scope-OUT:** penempatan carousel, fitur banner lain.
+**Kriteria:** banner dengan 2 gambar tampil sesuai breakpoint; tanpa
+gambar mobile = fallback desktop; 3 gerbang + bukti.
 
 **Bukti**
 ```

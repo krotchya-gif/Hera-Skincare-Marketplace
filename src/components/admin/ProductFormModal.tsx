@@ -234,6 +234,10 @@ export default function ProductFormModal({
                     placeholder="20000"
                   />
                 </div>
+                {/* T-73: catatan keterkaitan dengan section beranda */}
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Isi harga diskon → produk otomatis tampil di section <span className="font-semibold">Promo Terbatas</span> pada beranda. Kosongkan untuk mengikuti Harga Normal.
+                </p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Stok *</label>
