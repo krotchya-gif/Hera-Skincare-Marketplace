@@ -11,7 +11,8 @@ export interface VoucherValidationResult {
 
 export async function validateVoucher(
   code: string,
-  cartTotal: number
+  cartTotal: number,
+  userId?: string
 ): Promise<VoucherValidationResult> {
   const supabase = await createClient();
   const now = new Date().toISOString();
@@ -46,6 +47,21 @@ export async function validateVoucher(
     return { valid: false, message: "Kuota voucher sudah habis." };
   }
 
+  // T-21: Check per-user limit
+  if (userId && (voucher.per_user_limit ?? 1) > 0) {
+    const { data: usage } = await supabase
+      .from("voucher_usage")
+      .select("used_count")
+      .eq("voucher_id", voucher.id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const usedByUser = (usage?.used_count ?? 0);
+    if (usedByUser >= (voucher.per_user_limit ?? 1)) {
+      return { valid: false, message: "Kamu sudah menggunakan voucher ini. Batas pemakaian per pengguna tercapai." };
+    }
+  }
+
   // Calculate discount
   let discount = 0;
   if (voucher.type === "percent") {
@@ -67,27 +83,13 @@ export async function validateVoucher(
 
 export async function redeemVoucher(voucherId: string): Promise<boolean> {
   const supabase = await createClient();
-  // Try atomic increment via RPC
-  const { error } = await supabase.rpc("increment_voucher_usage", { voucher_id: voucherId });
+  // T-21: RPC atomic — quota + per-user limit + catat usage per user
+  const { data: success, error } = await supabase.rpc("redeem_voucher", {
+    p_voucher_id: voucherId,
+  });
   if (error) {
     console.error("[redeemVoucher RPC]", error);
-    // Fallback: atomic update with quota guard + optimistic locking
-    const { data: voucher } = await supabase
-      .from("vouchers")
-      .select("used_count, quota")
-      .eq("id", voucherId)
-      .single();
-    if (!voucher) return false;
-    if (voucher.quota !== null && (voucher.used_count ?? 0) >= voucher.quota) return false;
-    const { error: updateError } = await supabase
-      .from("vouchers")
-      .update({ used_count: (voucher.used_count ?? 0) + 1 })
-      .eq("id", voucherId)
-      .eq("used_count", voucher.used_count ?? 0); // optimistic lock — prevents race
-    if (updateError) {
-      console.error("[redeemVoucher fallback update failed]", updateError);
-      return false;
-    }
+    return false;
   }
-  return true;
+  return success === true;
 }

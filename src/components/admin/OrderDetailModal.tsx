@@ -63,6 +63,25 @@ export default function OrderDetailModal({
     });
   };
 
+  // T-19: Verifikasi pembayaran manual (admin menandai lunas setelah customer lapor)
+  const handleVerifyPayment = async (paymentStatus: "lunas" | "gagal") => {
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/admin/orders/${orderId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ payment_status: paymentStatus }),
+        });
+        if (res.ok) {
+          fetchOrderDetail();
+          onUpdateSuccess();
+        }
+      } catch (error) {
+        console.error("Failed to verify payment", error);
+      }
+    });
+  };
+
   if (isLoading || !order) {
     return (
       <div className="fixed inset-0 z-50 flex items-start justify-end">
@@ -185,8 +204,18 @@ export default function OrderDetailModal({
             <div className="bg-gray-50 rounded-2xl p-4">
               <p className="text-xs font-semibold text-gray-700 mb-2">Pembayaran</p>
               <p className="text-xs text-gray-900 font-medium">{order.payment_method || "Transfer"}</p>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full inline-block mt-1 ${order.payment_status === "lunas" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                {order.payment_status === "lunas" ? "Lunas" : "Belum Bayar"}
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full inline-block mt-1 ${
+                order.payment_status === "lunas"
+                  ? "bg-green-100 text-green-700"
+                  : order.payment_status === "gagal"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-yellow-100 text-yellow-700"
+              }`}>
+                {order.payment_status === "lunas"
+                  ? "Lunas"
+                  : order.payment_status === "gagal"
+                    ? "Gagal"
+                    : "Belum Bayar"}
               </span>
             </div>
             <div className="bg-gray-50 rounded-2xl p-4">
@@ -222,6 +251,25 @@ export default function OrderDetailModal({
           </div>
 
           <div className="flex gap-2 pt-2">
+            {/* T-19: Verifikasi pembayaran manual — hanya saat status belum lunas */}
+            {order.payment_status !== "lunas" && order.payment_status !== "gagal" && (
+              <button
+                disabled={isPending}
+                onClick={() => handleVerifyPayment("lunas")}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs disabled:opacity-50"
+              >
+                ✓ Verifikasi Pembayaran
+              </button>
+            )}
+            {order.payment_status !== "lunas" && order.payment_status !== "gagal" && (
+              <button
+                disabled={isPending}
+                onClick={() => handleVerifyPayment("gagal")}
+                className="px-4 border border-red-200 text-red-600 font-semibold py-2.5 rounded-xl text-xs hover:bg-red-50 disabled:opacity-50"
+              >
+                Tolak
+              </button>
+            )}
             {order.status === "menunggu" && (
               <button
                 disabled={isPending}

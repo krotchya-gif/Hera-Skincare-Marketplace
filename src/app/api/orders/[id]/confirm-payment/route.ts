@@ -3,6 +3,9 @@ import { createClient } from "@/utils/supabase/server";
 import { sendOrderStatusNotification } from "@/lib/notify";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
+// T-19: Customer TIDAK menandai payment_status = 'lunas' sendiri.
+// Melapor "sudah bayar" via RPC -> notifikasi admin -> admin yang verifikasi.
+// RPC SECURITY DEFINER memvalidasi kepemilikan order & status di sisi DB.
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -24,7 +27,7 @@ export async function POST(
       );
     }
 
-    // 2. Ambil data order
+    // 2. Validasi kepemilikan order (via SELECT dengan policy user)
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select("*")
@@ -38,7 +41,6 @@ export async function POST(
       );
     }
 
-    // 3. Validasi kepemilikan order
     if (order.user_id !== user.id) {
       return NextResponse.json(
         { error: "Pesanan tidak ditemukan." },
@@ -46,7 +48,7 @@ export async function POST(
       );
     }
 
-    // 4. Validasi status pembayaran
+    // 3. Validasi status pembayaran
     if (order.payment_status === "lunas") {
       return NextResponse.json(
         { error: "Pembayaran pesanan ini sudah dikonfirmasi sebelumnya." },
@@ -54,40 +56,34 @@ export async function POST(
       );
     }
 
-    // 5. Update payment_status = "lunas"
-    const { error: updateError } = await supabase
-      .from("orders")
-      .update({
-        payment_status: "lunas",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
+    // 4. Lapor ke admin via RPC (bukan self-mark lunas)
+    const { data: reported, error: rpcError } = await supabase
+      .rpc("request_payment_confirmation", { p_order_id: id });
 
-    if (updateError) {
-      console.error("[Confirm Payment] Update error:", updateError);
+    if (rpcError || !reported) {
+      console.error("[Confirm Payment RPC]", rpcError);
       return NextResponse.json(
-        { error: "Gagal mengonfirmasi pembayaran. Silakan coba lagi." },
+        { error: "Gagal melaporkan pembayaran. Silakan coba lagi." },
         { status: 500 }
       );
     }
 
-    // 6. Trigger notifikasi
+    // 5. Notifikasi in-app ke customer (non-fatal bila gagal)
     const { error: notifError } = await supabase
       .from("notifications")
       .insert({
         user_id: user.id,
         type: "payment",
-        title: "Pembayaran Dikonfirmasi",
-        message: `Pembayaran untuk pesanan #${order.order_number} telah dikonfirmasi. Pesanan akan segera diproses.`,
+        title: "Pembayaran Dilaporkan",
+        message: `Pembayaran untuk pesanan #${order.order_number} telah dilaporkan dan sedang diverifikasi admin.`,
         link: `/profil?tab=pesanan`,
       });
 
     if (notifError) {
       console.warn("[Confirm Payment] Notif insert error:", notifError.message);
-      // Non-fatal — notifikasi gagal, tapi konfirmasi tetap berhasil
     }
 
-    // T-05: Email/WA ke customer (fire-and-forget — tidak memengaruhi response)
+    // 6. Email/WA ke customer (fire-and-forget — tidak memengaruhi response)
     await sendOrderStatusNotification(
       {
         order_number: order.order_number,
@@ -101,7 +97,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Pembayaran berhasil dikonfirmasi. Pesanan akan segera diproses.",
+      message: "Pembayaran berhasil dilaporkan. Admin akan memverifikasi pembayaran Anda.",
     });
   } catch (error) {
     console.error("[API POST Confirm Payment]", error);

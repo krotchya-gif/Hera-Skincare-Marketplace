@@ -20,15 +20,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File dan productId wajib diisi" }, { status: 400 });
     }
 
-    // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    // T-24: Verifikasi tipe via magic bytes — jangan percaya file.type client
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: "Tipe file tidak didukung. Gunakan JPEG, PNG, WebP, atau GIF." }, { status: 400 });
+      return NextResponse.json({ error: "Tipe file tidak didukung. Gunakan JPEG, PNG, atau WebP." }, { status: 400 });
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       return NextResponse.json({ error: "Ukuran file maksimal 2MB" }, { status: 400 });
+    }
+
+    // Magic bytes: pastikan konten sesuai deklarasi (cegah polyglot/mismatch)
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const isJpeg = buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+    const isPng = buffer.length >= 8 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+    const isWebp = buffer.length >= 12 && buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP";
+
+    const declaredIsJpeg = file.type === "image/jpeg" && isJpeg;
+    const declaredIsPng = file.type === "image/png" && isPng;
+    const declaredIsWebp = file.type === "image/webp" && isWebp;
+    if (!declaredIsJpeg && !declaredIsPng && !declaredIsWebp) {
+      return NextResponse.json({ error: "Konten file tidak sesuai dengan tipe yang dideklarasikan." }, { status: 400 });
     }
 
     const supabase = await createClient();

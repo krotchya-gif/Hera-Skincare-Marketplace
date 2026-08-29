@@ -159,8 +159,8 @@ export async function createOrder(payload: CreateOrderPayload): Promise<Order | 
   }
 
   // Kurangi stock untuk setiap item (atomic via RPC)
-  // Rollback: restore product stock if decrement fails
-  const decrementedProducts: { product_id: string; qty: number }[] = [];
+  // Rollback: restore hanya item yang BENAR-BENAR ter-decrement
+  const decremented: { product_id: string; variant_id?: string; qty: number }[] = [];
   try {
     for (const item of payload.items) {
       const { data: success, error: stockError } = await supabase
@@ -169,27 +169,24 @@ export async function createOrder(payload: CreateOrderPayload): Promise<Order | 
       if (stockError || !success) {
         throw new Error(`Stok tidak mencukupi untuk ${item.product_name}`);
       }
-      decrementedProducts.push({ product_id: item.product_id, qty: item.qty });
+      decremented.push({ product_id: item.product_id, variant_id: item.variant_id, qty: item.qty });
 
       // Decrement variant stock if variant_id is present
       if (item.variant_id) {
-        const { error: varStockError } = await supabase
+        const { data: varSuccess, error: varStockError } = await supabase
           .rpc("decrement_variant_stock", { vid: item.variant_id, qty: item.qty });
-        if (varStockError) {
+        if (varStockError || !varSuccess) {
           throw new Error(`Gagal mengurangi stok varian untuk ${item.product_name}`);
         }
       }
     }
   } catch (stockErr) {
     console.error("[createOrder] Stock decrement failed, rolling back:", stockErr);
-    // Rollback decremented product & variant stock
-    for (const dp of decrementedProducts) {
+    // Rollback hanya item yang sudah ter-decrement (hindari stok phantom)
+    for (const dp of decremented) {
       await supabase.rpc("increment_product_stock", { pid: dp.product_id, qty: dp.qty });
-    }
-    // Also rollback variant stock (save variant IDs that were decremented)
-    for (const item of payload.items) {
-      if (item.variant_id) {
-        await supabase.rpc("increment_variant_stock", { vid: item.variant_id, qty: item.qty });
+      if (dp.variant_id) {
+        await supabase.rpc("increment_variant_stock", { vid: dp.variant_id, qty: dp.qty });
       }
     }
     // Delete orphaned order & items
@@ -198,9 +195,9 @@ export async function createOrder(payload: CreateOrderPayload): Promise<Order | 
     return null;
   }
 
-  // Panggil useVoucher jika ada voucher_code
+  // Redeem voucher via RPC atomic (quota + per-user limit) — gagal tidak membatalkan order
   if (payload.voucher_code && payload.discount > 0) {
-    const voucherResult = await validateVoucher(payload.voucher_code, payload.subtotal);
+    const voucherResult = await validateVoucher(payload.voucher_code, payload.subtotal, payload.user_id);
     if (voucherResult.valid && voucherResult.voucher) {
       await redeemVoucher(voucherResult.voucher.id);
     }

@@ -12,7 +12,7 @@ Full-stack marketplace untuk produk rumah tangga dan perawatan pribadi. **Next.j
 - **Storage**: Supabase Storage (bucket `product-images`)
 - **Charts**: Recharts
 - **Icons**: Lucide React
-- **CLI**: Supabase CLI
+- **DB Tooling**: Supabase MCP (DILARANG pakai supabase CLI — DB-SYNC-2)
 
 ## Struktur Project
 
@@ -84,7 +84,7 @@ marketplace/
 - **Next.js 16 Proxy** — `src/proxy.ts` (JANGAN buat `middleware.ts`)
 - **Dynamic SEO** — sitemap.xml, robots.txt, meta tags per-page, Meta Pixel & GA4
 - **Web App PWA** — Registrasi manifest PWA dinamis, dynamic favicon generator, dynamic apple touch icon, serta dynamic routes 192px/512px menggunakan Next.js `ImageResponse` (edge runtime).
-- **Security** — CSP + headers di `next.config.ts`, rate limiting, atomic stock, input validation. Fungsi RPC `SECURITY DEFINER` sudah di-hardening: `EXECUTE` dicabut dari `anon`/`PUBLIC` (lihat `supabase/migrations/20260822120000_secure_functions_hardening.sql`).
+- **Security** — CSP + headers di `next.config.ts`, rate limiting, atomic stock, input validation. Fungsi RPC `SECURITY DEFINER` sudah di-hardening: `EXECUTE` dicabut dari `anon`/`PUBLIC` (lihat bagian Hardening di `supabase/migrations/20260822130000_full_schema.sql`).
 - **Auth** — proxy guard admin routes + `verifyAdminRole()` per-handler
 - **Toast Notifications** — Integrasi custom toast menggantikan semua dialog `alert()` bawaan browser.
 - **Payment Redirect** — Setelah konfirmasi bayar, customer otomatis redirect ke halaman pesanan.
@@ -141,7 +141,10 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 ### 2. Database
 ```bash
-supabase db push    # menjalankan seluruh file di supabase/migrations/ secara urut
+# DILARANG pakai supabase CLI. Perubahan skema WAJIB via Supabase MCP:
+#   - apply_migration  → terapkan migration
+#   - list_tables / execute_sql / get_advisors → verifikasi live
+# Pedoman skema SATU-SATUNYA: supabase/migrations/20260822130000_full_schema.sql
 ```
 
 ### 3. Install & Run
@@ -162,9 +165,9 @@ Login di `/admin/login`.
 
 | File | Deskripsi |
 |------|-----------|
-| `supabase/migrations/20260822130000_full_schema.sql` | Tabel + RLS + fungsi + trigger + storage + seed + hardening RPC (hasil konsolidasi 7 migration lama, T-12) |
+| `supabase/migrations/20260822130000_full_schema.sql` | SATU-SATUNYA pedoman skema: tabel + RLS + fungsi + trigger + storage + seed + hardening RPC (hasil konsolidasi 7 migration lama, T-12). Harus sinkron dengan live DB (DB-SYNC-1) |
 
-Jalankan dengan `supabase db push` pada project baru.
+Terapkan pada project baru via **Supabase MCP** (`apply_migration`) — DILARANG `supabase db push`/CLI (DB-SYNC-2).
 
 ## Verifikasi
 

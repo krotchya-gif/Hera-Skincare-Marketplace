@@ -132,10 +132,18 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: "Email dan Role wajib diisi" }, { status: 400 });
       }
 
+      // T-23: Whitelist role — jangan percaya input bebas
+      const allowedRoles = ["super_admin", "admin", "operator", "finance"];
+      let dbRole = role.toLowerCase().replace(" ", "_");
+      if (dbRole === "finance_(readonly)") dbRole = "finance";
+      if (!allowedRoles.includes(dbRole)) {
+        return NextResponse.json({ error: "Role tidak valid." }, { status: 400 });
+      }
+
       // Check if profile exists
       const { data: targetProfile, error: getProfileError } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, role")
         .eq("email", email)
         .maybeSingle();
 
@@ -143,9 +151,16 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: "Email tidak terdaftar sebagai customer di Hera Skincare. Minta mereka untuk mendaftar akun terlebih dahulu." }, { status: 400 });
       }
 
-      // Map role display values to database keys if needed
-      let dbRole = role.toLowerCase().replace(" ", "_");
-      if (dbRole === "finance_(readonly)") dbRole = "finance";
+      // T-23: Guard — jangan turunkan super_admin terakhir
+      if (targetProfile.role === "super_admin" && dbRole !== "super_admin") {
+        const { count: superAdminCount } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("role", "super_admin");
+        if ((superAdminCount ?? 0) <= 1) {
+          return NextResponse.json({ error: "Tidak dapat menurunkan role super_admin terakhir." }, { status: 400 });
+        }
+      }
 
       const { error } = await supabase
         .from("profiles")
@@ -163,6 +178,23 @@ export async function PUT(request: NextRequest) {
       const { id } = body;
       if (!id) {
         return NextResponse.json({ error: "ID admin wajib diisi" }, { status: 400 });
+      }
+
+      // T-23: Guard — jangan hapus super_admin terakhir
+      const { data: target } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (target?.role === "super_admin") {
+        const { count: superAdminCount } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("role", "super_admin");
+        if ((superAdminCount ?? 0) <= 1) {
+          return NextResponse.json({ error: "Tidak dapat menghapus super_admin terakhir." }, { status: 400 });
+        }
       }
 
       // Revert role back to 'customer'

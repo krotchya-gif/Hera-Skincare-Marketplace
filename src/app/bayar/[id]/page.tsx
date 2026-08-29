@@ -88,7 +88,7 @@ export default async function BayarPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
               <p className="text-xs text-gray-400 mt-2">
-                Setelah transfer, klik tombol &quot;Sudah Bayar&quot; untuk konfirmasi.
+                Setelah transfer, klik tombol &quot;Sudah Bayar&quot; untuk melaporkan. Admin akan memverifikasi pembayaran Anda.
               </p>
             </div>
           )}

@@ -56,10 +56,10 @@ export default function ConfirmPaymentButton({ orderId, orderNumber }: ConfirmPa
         {status === "loading" ? (
           <>
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Mengonfirmasi...
+            Melaporkan...
           </>
         ) : status === "success" ? (
-          "✓ Pembayaran Dikonfirmasi"
+          "✓ Pembayaran Dilaporkan"
         ) : (
           "Sudah Bayar"
         )}

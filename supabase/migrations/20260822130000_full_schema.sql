@@ -13,7 +13,8 @@
 --   6. voucher_code     : kolom orders.voucher_code + index
 --   7. hardening        : revoke EXECUTE anon/PUBLIC + search_path fix
 -- Statement belakangan menimpa yang awal -> hasil akhir = state live.
--- Jalankan dengan: supabase db push
+-- Terapkan via Supabase MCP (apply_migration) — DILARANG pakai supabase CLI (DB-SYNC-2).
+-- Verifikasi live: list_tables / execute_sql / get_advisors.
 -- ============================================================================
 
 
@@ -22,9 +23,9 @@
 -- ============================================================
 
 -- =============================================
--- HERA SKINCARE MARKETPLACE â€” Full Schema
+-- HERA SKINCARE MARKETPLACE — Full Schema
 -- Consolidated migration: tables, RLS, functions, triggers, storage, seed
--- Includes all fixes from migrations 2â€“6 merged into a single file
+-- Includes all fixes from migrations 2–6 merged into a single file
 -- =============================================
 
 -- Enable UUID extension
@@ -70,10 +71,23 @@ create policy "Users can view own profile" on public.profiles
   for select to authenticated
   using (id = auth.uid());
 
-create policy "Users can update own profile" on public.profiles
+-- T-18: User hanya boleh mengubah kolom aman (name/phone/avatar_url/updated_at).
+-- role/status/email tidak bisa diubah sendiri (subquery membaca nilai lama).
+create policy "Users can update own profile (safe fields)" on public.profiles
   for update to authenticated
   using (id = auth.uid())
-  with check (id = auth.uid());
+  with check (
+    id = auth.uid()
+    and role = (select role from public.profiles where id = auth.uid())
+    and status = (select status from public.profiles where id = auth.uid())
+    and email is not distinct from (select email from public.profiles where id = auth.uid())
+  );
+
+-- T-18: Admin (super_admin/admin) boleh update penuh (blokir customer, ubah role)
+create policy "Admins can update profiles" on public.profiles
+  for update to authenticated
+  using (public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text]))
+  with check (public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text]));
 
 -- Auto-create profile on signup
 create or replace function public.handle_new_user()
@@ -615,7 +629,11 @@ create policy "Authenticated users can ask questions"
   with check (auth.uid() = user_id);
 
 create policy "Admins can answer questions"
-  on public.product_qna for update using (
+  on public.product_qna for update to authenticated
+  using (
+    public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text, 'operator'::text])
+  )
+  with check (
     public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text, 'operator'::text])
   );
 
@@ -669,12 +687,12 @@ using (
 -- =============================================
 
 insert into public.categories (name, slug, icon, sort_order) values
-  ('Perawatan Tubuh', 'perawatan-tubuh', 'ðŸ§´', 1),
-  ('Perawatan Rumah', 'perawatan-rumah', 'ðŸ§¹', 2),
-  ('Kesehatan', 'kesehatan', 'ðŸ’Š', 3),
-  ('Kecantikan', 'kecantikan', 'ðŸ’„', 4),
-  ('Elektronik', 'elektronik', 'ðŸ”Œ', 5),
-  ('Lainnya', 'lainnya', 'ðŸ“¦', 6)
+  ('Perawatan Tubuh', 'perawatan-tubuh', '🧴', 1),
+  ('Perawatan Rumah', 'perawatan-rumah', '🧹', 2),
+  ('Kesehatan', 'kesehatan', '💊', 3),
+  ('Kecantikan', 'kecantikan', '💄', 4),
+  ('Elektronik', 'elektronik', '🔌', 5),
+  ('Lainnya', 'lainnya', '📦', 6)
 on conflict (slug) do nothing;
 
 WITH main_cats AS (SELECT id, slug FROM public.categories WHERE parent_id IS NULL)
@@ -682,40 +700,40 @@ INSERT INTO public.categories (name, slug, icon, parent_id, sort_order)
 SELECT sub.name, sub.slug, sub.icon, main_cats.id, sub.sort_order
 FROM main_cats
 CROSS JOIN (VALUES
-  ('perawatan-tubuh', 'Sabun Mandi', 'sabun-mandi', 'ðŸ§¼', 1),
-  ('perawatan-tubuh', 'Shampoo', 'shampoo', 'ðŸ§´', 2),
-  ('perawatan-tubuh', 'Kondisioner', 'kondisioner', 'ðŸ’†', 3),
-  ('perawatan-tubuh', 'Losion', 'losion', 'ðŸ§´', 4),
-  ('perawatan-tubuh', 'Parfum', 'parfum', 'âœ¨', 5),
-  ('perawatan-tubuh', 'Deodoran', 'deodoran', 'ðŸ’¨', 6),
-  ('perawatan-rumah', 'Pembersih Lantai', 'pembersih-lantai', 'ðŸ§¹', 1),
-  ('perawatan-rumah', 'Pembersih Dapur', 'pembersih-dapur', 'ðŸ½ï¸', 2),
-  ('perawatan-rumah', 'Pembersih Kaca', 'pembersih-kaca', 'ðŸªŸ', 3),
-  ('perawatan-rumah', 'Pewangi', 'pewangi', 'ðŸŒ¸', 4),
-  ('perawatan-rumah', 'Deterjen', 'deterjen', 'ðŸ‘•', 5),
-  ('perawatan-rumah', 'Pel & Sapu', 'pel-sapu', 'ðŸ§¹', 6),
-  ('kesehatan', 'Vitamin', 'vitamin', 'ðŸ’Š', 1),
-  ('kesehatan', 'Suplemen', 'suplemen', 'ðŸŒ¿', 2),
-  ('kesehatan', 'P3K', 'p3k', 'ðŸ©¹', 3),
-  ('kesehatan', 'Masker', 'masker', 'ðŸ˜·', 4),
-  ('kesehatan', 'Hand Sanitizer', 'hand-sanitizer', 'ðŸ§¼', 5),
-  ('kesehatan', 'Termometer', 'termometer', 'ðŸŒ¡ï¸', 6),
-  ('kecantikan', 'Skincare', 'skincare', 'ðŸ§´', 1),
-  ('kecantikan', 'Sunscreen', 'sunscreen', 'â˜€ï¸', 2),
-  ('kecantikan', 'Serum', 'serum', 'ðŸ§ª', 3),
-  ('kecantikan', 'Pelembap', 'pelembap', 'ðŸ§´', 4),
-  ('kecantikan', 'Masker Wajah', 'masker-wajah', 'ðŸŽ­', 5),
-  ('kecantikan', 'Pembersih Wajah', 'pembersih-wajah', 'ðŸ§¼', 6),
-  ('elektronik', 'Charger', 'charger', 'ðŸ”Œ', 1),
-  ('elektronik', 'Kabel', 'kabel', 'ðŸ”Œ', 2),
-  ('elektronik', 'Power Bank', 'power-bank', 'ðŸ”‹', 3),
-  ('elektronik', 'Speaker', 'speaker', 'ðŸ”Š', 4),
-  ('elektronik', 'Lampu', 'lampu', 'ðŸ’¡', 5),
-  ('elektronik', 'Baterai', 'baterai', 'ðŸ”‹', 6),
-  ('lainnya', 'Alat Tulis', 'alat-tulis', 'âœï¸', 1),
-  ('lainnya', 'Perlengkapan Bayi', 'perlengkapan-bayi', 'ðŸ¼', 2),
-  ('lainnya', 'Hewan Peliharaan', 'hewan-peliharaan', 'ðŸ±', 3),
-  ('lainnya', 'Olahraga', 'olahraga', 'âš½', 4)
+  ('perawatan-tubuh', 'Sabun Mandi', 'sabun-mandi', '🧼', 1),
+  ('perawatan-tubuh', 'Shampoo', 'shampoo', '🧴', 2),
+  ('perawatan-tubuh', 'Kondisioner', 'kondisioner', '💆', 3),
+  ('perawatan-tubuh', 'Losion', 'losion', '🧴', 4),
+  ('perawatan-tubuh', 'Parfum', 'parfum', '✨', 5),
+  ('perawatan-tubuh', 'Deodoran', 'deodoran', '💨', 6),
+  ('perawatan-rumah', 'Pembersih Lantai', 'pembersih-lantai', '🧹', 1),
+  ('perawatan-rumah', 'Pembersih Dapur', 'pembersih-dapur', '🍽️', 2),
+  ('perawatan-rumah', 'Pembersih Kaca', 'pembersih-kaca', '🪟', 3),
+  ('perawatan-rumah', 'Pewangi', 'pewangi', '🌸', 4),
+  ('perawatan-rumah', 'Deterjen', 'deterjen', '👕', 5),
+  ('perawatan-rumah', 'Pel & Sapu', 'pel-sapu', '🧹', 6),
+  ('kesehatan', 'Vitamin', 'vitamin', '💊', 1),
+  ('kesehatan', 'Suplemen', 'suplemen', '🌿', 2),
+  ('kesehatan', 'P3K', 'p3k', '🩹', 3),
+  ('kesehatan', 'Masker', 'masker', '😷', 4),
+  ('kesehatan', 'Hand Sanitizer', 'hand-sanitizer', '🧼', 5),
+  ('kesehatan', 'Termometer', 'termometer', '🌡️', 6),
+  ('kecantikan', 'Skincare', 'skincare', '🧴', 1),
+  ('kecantikan', 'Sunscreen', 'sunscreen', '☀️', 2),
+  ('kecantikan', 'Serum', 'serum', '🧪', 3),
+  ('kecantikan', 'Pelembap', 'pelembap', '🧴', 4),
+  ('kecantikan', 'Masker Wajah', 'masker-wajah', '🎭', 5),
+  ('kecantikan', 'Pembersih Wajah', 'pembersih-wajah', '🧼', 6),
+  ('elektronik', 'Charger', 'charger', '🔌', 1),
+  ('elektronik', 'Kabel', 'kabel', '🔌', 2),
+  ('elektronik', 'Power Bank', 'power-bank', '🔋', 3),
+  ('elektronik', 'Speaker', 'speaker', '🔊', 4),
+  ('elektronik', 'Lampu', 'lampu', '💡', 5),
+  ('elektronik', 'Baterai', 'baterai', '🔋', 6),
+  ('lainnya', 'Alat Tulis', 'alat-tulis', '✏️', 1),
+  ('lainnya', 'Perlengkapan Bayi', 'perlengkapan-bayi', '🍼', 2),
+  ('lainnya', 'Hewan Peliharaan', 'hewan-peliharaan', '🐱', 3),
+  ('lainnya', 'Olahraga', 'olahraga', '⚽', 4)
 ) AS sub(parent_slug, name, slug, icon, sort_order)
 WHERE main_cats.slug = sub.parent_slug
 ON CONFLICT (slug) DO NOTHING;
@@ -805,7 +823,7 @@ ON CONFLICT (key) DO NOTHING;
 -- ============================================================
 
 -- =============================================
--- HERA STORE MARKETPLACE â€” Seed Data
+-- HERA STORE MARKETPLACE — Seed Data
 -- Consolidated seed: categories, products, variants, vouchers, flash sales, settings
 -- =============================================
 
@@ -813,12 +831,12 @@ ON CONFLICT (key) DO NOTHING;
 -- 1. MAIN CATEGORIES (6 parent categories)
 -- =============================================
 insert into public.categories (name, slug, icon, sort_order) values
-  ('Perawatan Tubuh', 'perawatan-tubuh', 'ðŸ§´', 1),
-  ('Perawatan Rumah', 'perawatan-rumah', 'ðŸ§¹', 2),
-  ('Kesehatan', 'kesehatan', 'ðŸ’Š', 3),
-  ('Kecantikan', 'kecantikan', 'ðŸ’„', 4),
-  ('Elektronik', 'elektronik', 'ðŸ”Œ', 5),
-  ('Lainnya', 'lainnya', 'ðŸ“¦', 6)
+  ('Perawatan Tubuh', 'perawatan-tubuh', '🧴', 1),
+  ('Perawatan Rumah', 'perawatan-rumah', '🧹', 2),
+  ('Kesehatan', 'kesehatan', '💊', 3),
+  ('Kecantikan', 'kecantikan', '💄', 4),
+  ('Elektronik', 'elektronik', '🔌', 5),
+  ('Lainnya', 'lainnya', '📦', 6)
 on conflict (slug) do nothing;
 
 -- =============================================
@@ -829,9 +847,9 @@ INSERT INTO public.categories (name, slug, icon, parent_id, sort_order)
 SELECT sub.name, sub.slug, sub.icon, parent.id, sub.sort_order
 FROM public.categories parent
 CROSS JOIN (VALUES
-  ('Sabun Mandi', 'sabun-mandi', 'ðŸ§¼', 1), ('Shampoo', 'shampoo', 'ðŸ§´', 2),
-  ('Kondisioner', 'kondisioner', 'ðŸ’†', 3), ('Losion', 'losion', 'ðŸ§´', 4),
-  ('Parfum', 'parfum', 'âœ¨', 5), ('Deodoran', 'deodoran', 'ðŸ’¨', 6)
+  ('Sabun Mandi', 'sabun-mandi', '🧼', 1), ('Shampoo', 'shampoo', '🧴', 2),
+  ('Kondisioner', 'kondisioner', '💆', 3), ('Losion', 'losion', '🧴', 4),
+  ('Parfum', 'parfum', '✨', 5), ('Deodoran', 'deodoran', '💨', 6)
 ) AS sub(name, slug, icon, sort_order)
 WHERE parent.slug = 'perawatan-tubuh'
 ON CONFLICT (slug) DO NOTHING;
@@ -841,9 +859,9 @@ INSERT INTO public.categories (name, slug, icon, parent_id, sort_order)
 SELECT sub.name, sub.slug, sub.icon, parent.id, sub.sort_order
 FROM public.categories parent
 CROSS JOIN (VALUES
-  ('Pembersih Lantai', 'pembersih-lantai', 'ðŸ§¹', 1), ('Pembersih Dapur', 'pembersih-dapur', 'ðŸ½ï¸', 2),
-  ('Pembersih Kaca', 'pembersih-kaca', 'ðŸªŸ', 3), ('Pewangi', 'pewangi', 'ðŸŒ¸', 4),
-  ('Deterjen', 'deterjen', 'ðŸ‘•', 5), ('Pel & Sapu', 'pel-sapu', 'ðŸ§¹', 6)
+  ('Pembersih Lantai', 'pembersih-lantai', '🧹', 1), ('Pembersih Dapur', 'pembersih-dapur', '🍽️', 2),
+  ('Pembersih Kaca', 'pembersih-kaca', '🪟', 3), ('Pewangi', 'pewangi', '🌸', 4),
+  ('Deterjen', 'deterjen', '👕', 5), ('Pel & Sapu', 'pel-sapu', '🧹', 6)
 ) AS sub(name, slug, icon, sort_order)
 WHERE parent.slug = 'perawatan-rumah'
 ON CONFLICT (slug) DO NOTHING;
@@ -853,9 +871,9 @@ INSERT INTO public.categories (name, slug, icon, parent_id, sort_order)
 SELECT sub.name, sub.slug, sub.icon, parent.id, sub.sort_order
 FROM public.categories parent
 CROSS JOIN (VALUES
-  ('Vitamin', 'vitamin', 'ðŸ’Š', 1), ('Suplemen', 'suplemen', 'ðŸŒ¿', 2),
-  ('P3K', 'p3k', 'ðŸ©¹', 3), ('Masker', 'masker', 'ðŸ˜·', 4),
-  ('Hand Sanitizer', 'hand-sanitizer', 'ðŸ§¼', 5), ('Termometer', 'termometer', 'ðŸŒ¡ï¸', 6)
+  ('Vitamin', 'vitamin', '💊', 1), ('Suplemen', 'suplemen', '🌿', 2),
+  ('P3K', 'p3k', '🩹', 3), ('Masker', 'masker', '😷', 4),
+  ('Hand Sanitizer', 'hand-sanitizer', '🧼', 5), ('Termometer', 'termometer', '🌡️', 6)
 ) AS sub(name, slug, icon, sort_order)
 WHERE parent.slug = 'kesehatan'
 ON CONFLICT (slug) DO NOTHING;
@@ -865,9 +883,9 @@ INSERT INTO public.categories (name, slug, icon, parent_id, sort_order)
 SELECT sub.name, sub.slug, sub.icon, parent.id, sub.sort_order
 FROM public.categories parent
 CROSS JOIN (VALUES
-  ('Skincare', 'skincare', 'ðŸ§´', 1), ('Sunscreen', 'sunscreen', 'â˜€ï¸', 2),
-  ('Serum', 'serum', 'ðŸ§ª', 3), ('Pelembap', 'pelembap', 'ðŸ§´', 4),
-  ('Masker Wajah', 'masker-wajah', 'ðŸŽ­', 5), ('Pembersih Wajah', 'pembersih-wajah', 'ðŸ§¼', 6)
+  ('Skincare', 'skincare', '🧴', 1), ('Sunscreen', 'sunscreen', '☀️', 2),
+  ('Serum', 'serum', '🧪', 3), ('Pelembap', 'pelembap', '🧴', 4),
+  ('Masker Wajah', 'masker-wajah', '🎭', 5), ('Pembersih Wajah', 'pembersih-wajah', '🧼', 6)
 ) AS sub(name, slug, icon, sort_order)
 WHERE parent.slug = 'kecantikan'
 ON CONFLICT (slug) DO NOTHING;
@@ -877,9 +895,9 @@ INSERT INTO public.categories (name, slug, icon, parent_id, sort_order)
 SELECT sub.name, sub.slug, sub.icon, parent.id, sub.sort_order
 FROM public.categories parent
 CROSS JOIN (VALUES
-  ('Charger', 'charger', 'ðŸ”Œ', 1), ('Kabel', 'kabel', 'ðŸ”Œ', 2),
-  ('Power Bank', 'power-bank', 'ðŸ”‹', 3), ('Speaker', 'speaker', 'ðŸ”Š', 4),
-  ('Lampu', 'lampu', 'ðŸ’¡', 5), ('Baterai', 'baterai', 'ðŸ”‹', 6)
+  ('Charger', 'charger', '🔌', 1), ('Kabel', 'kabel', '🔌', 2),
+  ('Power Bank', 'power-bank', '🔋', 3), ('Speaker', 'speaker', '🔊', 4),
+  ('Lampu', 'lampu', '💡', 5), ('Baterai', 'baterai', '🔋', 6)
 ) AS sub(name, slug, icon, sort_order)
 WHERE parent.slug = 'elektronik'
 ON CONFLICT (slug) DO NOTHING;
@@ -889,8 +907,8 @@ INSERT INTO public.categories (name, slug, icon, parent_id, sort_order)
 SELECT sub.name, sub.slug, sub.icon, parent.id, sub.sort_order
 FROM public.categories parent
 CROSS JOIN (VALUES
-  ('Alat Tulis', 'alat-tulis', 'âœï¸', 1), ('Perlengkapan Bayi', 'perlengkapan-bayi', 'ðŸ¼', 2),
-  ('Hewan Peliharaan', 'hewan-peliharaan', 'ðŸ±', 3), ('Olahraga', 'olahraga', 'âš½', 4)
+  ('Alat Tulis', 'alat-tulis', '✏️', 1), ('Perlengkapan Bayi', 'perlengkapan-bayi', '🍼', 2),
+  ('Hewan Peliharaan', 'hewan-peliharaan', '🐱', 3), ('Olahraga', 'olahraga', '⚽', 4)
 ) AS sub(name, slug, icon, sort_order)
 WHERE parent.slug = 'lainnya'
 ON CONFLICT (slug) DO NOTHING;
@@ -1034,7 +1052,7 @@ ON CONFLICT (key) DO NOTHING;
 -- ============================================================
 
 -- =============================================
--- HERA STORE â€” Notifications System
+-- HERA STORE — Notifications System
 -- =============================================
 
 create table if not exists public.notifications (
@@ -1137,12 +1155,12 @@ create trigger on_order_status_change
 -- ============================================================
 
 -- =============================================
--- HERA STORE â€” Security & Performance Fixes
+-- HERA STORE — Security & Performance Fixes
 -- Applied: 22 June 2026
 -- Fixes: C6, C7, C8, C9, H5, H6, M12
 -- =============================================
 
--- C6: Fix order_items insert policy â€” only allow order owner or admin
+-- C6: Fix order_items insert policy — only allow order owner or admin
 drop policy if exists "Auth users can insert order items" on public.order_items;
 
 create policy "Users can insert own order items"
@@ -1156,7 +1174,7 @@ create policy "Users can insert own order items"
     public.has_role(auth.uid(), array['super_admin', 'admin', 'operator'])
   );
 
--- C7: Fix notifications insert policy â€” restrict to admins
+-- C7: Fix notifications insert policy — restrict to admins
 drop policy if exists "Admins can insert notifications" on public.notifications;
 
 create policy "Admins can insert notifications"
@@ -1174,7 +1192,7 @@ create policy "Admins can delete notifications"
   on public.notifications for delete to authenticated
   using (public.has_role(auth.uid(), array['super_admin', 'admin']));
 
--- C8: Fix increment_voucher_usage â€” add missing search_path
+-- C8: Fix increment_voucher_usage — add missing search_path
 create or replace function public.increment_voucher_usage(voucher_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 begin
@@ -1227,7 +1245,7 @@ create index if not exists idx_flash_sale_products_product_id on public.flash_sa
 -- ============================================================
 
 -- =============================================
--- HERA STORE â€” Additional Bug Fixes
+-- HERA STORE — Additional Bug Fixes
 -- Applied: 23 June 2026
 -- Fixes: variant stock management, order number uniqueness
 -- =============================================
@@ -1315,6 +1333,118 @@ create event trigger ensure_rls
   execute function public.rls_auto_enable();
 
 -- ============================================================
+-- [TAMBAHAN T-18/T-19/T-21] Keamanan & keandalan (2026-08-29)
+-- Diterapkan via MCP sebagai migration `20260829140000_security_fixes`;
+-- ditambahkan ke file agar full_schema = db live.
+-- ============================================================
+
+-- T-19: RPC lapor pembayaran manual (customer TIDAK self-mark lunas)
+create or replace function public.request_payment_confirmation(p_order_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_order public.orders%rowtype;
+begin
+  select * into v_order from public.orders where id = p_order_id;
+  if not found then return false; end if;
+  if v_order.user_id is distinct from auth.uid() then return false; end if;
+  if v_order.payment_status <> 'belum_bayar' then return false; end if;
+
+  insert into public.notifications (user_id, type, title, message, link)
+  select p.id, 'payment', 'Verifikasi Pembayaran',
+         'Pesanan ' || v_order.order_number || ' menunggu verifikasi pembayaran manual.',
+         '/admin/pesanan'
+  from public.profiles p
+  where p.role in ('super_admin', 'admin', 'operator')
+    and p.id <> v_order.user_id;
+
+  return true;
+end;
+$$;
+
+-- T-18: RPC konfirmasi terima (dikirim -> selesai, hanya pemilik order)
+create or replace function public.confirm_order_received(p_order_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_order public.orders%rowtype;
+begin
+  select * into v_order from public.orders where id = p_order_id;
+  if not found then return false; end if;
+  if v_order.user_id is distinct from auth.uid() then return false; end if;
+  if v_order.status <> 'dikirim' then return false; end if;
+
+  update public.orders set status = 'selesai', updated_at = now()
+  where id = p_order_id;
+  return found;
+end;
+$$;
+
+-- T-21: Penggunaan voucher per user
+create table if not exists public.voucher_usage (
+  id uuid primary key default uuid_generate_v4(),
+  voucher_id uuid not null references public.vouchers(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  used_count int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (voucher_id, user_id)
+);
+
+create index if not exists idx_voucher_usage_voucher_id on public.voucher_usage(voucher_id);
+create index if not exists idx_voucher_usage_user_id on public.voucher_usage(user_id);
+
+alter table public.voucher_usage enable row level security;
+
+create policy "Users can view own voucher usage"
+  on public.voucher_usage for select to authenticated
+  using (user_id = auth.uid());
+
+-- T-21: RPC redeem voucher atomic (quota + per-user limit + catat usage)
+create or replace function public.redeem_voucher(p_voucher_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_quota int;
+  v_limit int;
+  v_used int;
+  v_user_used int;
+begin
+  select quota, per_user_limit, used_count
+    into v_quota, v_limit, v_used
+  from public.vouchers where id = p_voucher_id;
+  if not found then return false; end if;
+
+  if v_quota is not null and v_used >= v_quota then return false; end if;
+
+  select used_count into v_user_used from public.voucher_usage
+  where voucher_id = p_voucher_id and user_id = auth.uid();
+  if found and v_user_used >= coalesce(v_limit, 1) then return false; end if;
+
+  update public.vouchers set used_count = used_count + 1
+  where id = p_voucher_id and (quota is null or used_count < quota);
+  if not found then return false; end if;
+
+  insert into public.voucher_usage (voucher_id, user_id, used_count)
+  values (p_voucher_id, auth.uid(), 1)
+  on conflict (voucher_id, user_id)
+  do update set used_count = public.voucher_usage.used_count + 1,
+                updated_at = now();
+
+  return true;
+end;
+$$;
+
+-- ============================================================
 -- [BAGIAN] 20260822120000_secure_functions_hardening.sql
 -- ============================================================
 
@@ -1326,11 +1456,11 @@ create event trigger ensure_rls
 -- membuat revoke per-role saja tidak efektif.
 --
 -- Keputusan:
---   * Fungsi stok/voucher  : app memanggil sebagai `authenticated` â†’ revoke
+--   * Fungsi stok/voucher  : app memanggil sebagai `authenticated` → revoke
 --     anon + PUBLIC, keep authenticated & service_role.
---   * Trigger/event-trigger: tidak pernah dipanggil via RPC oleh app â†’ revoke
+--   * Trigger/event-trigger: tidak pernah dipanggil via RPC oleh app → revoke
 --     anon, authenticated, dan PUBLIC.
---   * has_role             : TIDAK diubah â€” dipakai oleh 20 RLS policies;
+--   * has_role             : TIDAK diubah — dipakai oleh 20 RLS policies;
 --     revoke akan mematahkan evaluasi RLS untuk guest. Accepted risk.
 --   * generate_order_number: revoke anon/PUBLIC + search_path fixed ('')
 --     (body sudah schema-qualified; pg_catalog tetap implicit).
@@ -1347,3 +1477,8 @@ REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM anon, authenticated, PU
 
 REVOKE EXECUTE ON FUNCTION public.generate_order_number() FROM anon, PUBLIC;
 ALTER FUNCTION public.generate_order_number() SET search_path = '';
+
+-- T-18/T-19/T-21: Revoke fungsi baru dari anon/PUBLIC (keep authenticated & service_role)
+REVOKE EXECUTE ON FUNCTION public.request_payment_confirmation(uuid) FROM anon, PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.confirm_order_received(uuid) FROM anon, PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.redeem_voucher(uuid) FROM anon, PUBLIC;

@@ -30,6 +30,7 @@ interface OrderRow {
   status?: string;
   tracking_number?: string | null;
   payment_status: string;
+  total?: number;
   shipping_address?: { phone?: string; name?: string } | null;
 }
 
@@ -81,6 +82,15 @@ export async function POST(request: NextRequest) {
     // 5. Idempotency
     if (order.payment_status === "lunas") {
       return NextResponse.json({ received: true, idempotent: true });
+    }
+
+    // 5b. T-20: Verifikasi nominal — tolak pembayaran parsial (tidak dianggap lunas)
+    const paidAmount = Number(payload.paid_amount ?? 0);
+    if (paidAmount <= 0 || paidAmount < Number(order.total)) {
+      console.warn(
+        `[Xendit Webhook] Underpaid: invoice=${payload.id} order=${order.order_number} paid=${paidAmount} expected=${order.total}`
+      );
+      return NextResponse.json({ received: true, processed: false, reason: "underpaid" });
     }
 
     // 6. Transisi state: belum_bayar -> lunas (tanpa skip state)

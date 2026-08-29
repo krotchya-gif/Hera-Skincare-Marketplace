@@ -229,6 +229,45 @@ export async function getFlashSaleProducts(): Promise<Product[]> {
   }));
 }
 
+// T-17: Harga efektif per produk dari sisi server untuk validasi checkout.
+// Prioritas: flash_price (flash sale aktif) > discount_price > price.
+export async function getEffectivePrices(
+  productIds: string[]
+): Promise<Map<string, number>> {
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+  const map = new Map<string, number>();
+
+  if (productIds.length === 0) return map;
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, price, discount_price")
+    .in("id", productIds);
+
+  for (const p of (products as { id: string; price: number; discount_price: number | null }[] | null) ?? []) {
+    const hasDiscount =
+      p.discount_price !== null && Number(p.discount_price) < Number(p.price);
+    map.set(p.id, hasDiscount ? Number(p.discount_price) : Number(p.price));
+  }
+
+  const { data: flashItems } = await supabase
+    .from("flash_sale_products")
+    .select(
+      "product_id, flash_price, flash_sales!inner(is_active, starts_at, ends_at)"
+    )
+    .in("product_id", productIds)
+    .eq("flash_sales.is_active", true)
+    .lte("flash_sales.starts_at", now)
+    .gte("flash_sales.ends_at", now);
+
+  for (const f of (flashItems as { product_id: string; flash_price: number }[] | null) ?? []) {
+    map.set(f.product_id, Number(f.flash_price));
+  }
+
+  return map;
+}
+
 export async function getActiveFlashSaleEnd(): Promise<string | null> {
   const supabase = await createClient();
   const now = new Date().toISOString();

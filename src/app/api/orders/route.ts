@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createOrder, type CreateOrderPayload } from "@/lib/orders";
 import { createClient } from "@/utils/supabase/server";
 import { validateVoucher } from "@/lib/vouchers";
+import { getEffectivePrices } from "@/lib/products";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
@@ -19,7 +20,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as {
+      items?: { product_id: string; variant_id?: string; product_name?: string; product_sku?: string; qty: number; price: number; subtotal?: number }[];
+      subtotal?: number;
+      discount?: number;
+      shipping_cost?: number;
+      total?: number;
+      shipping_address?: unknown;
+      shipping_method?: string;
+      payment_method?: string;
+      notes?: string;
+      voucher_code?: string;
+    };
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -34,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Fetch harga & stok real dari DB ───────────────────────
-    const productIds = [...new Set(body.items.map((item: any) => item.product_id))];
+    const productIds: string[] = [...new Set(body.items.map((item: any) => item.product_id as string))];
     const { data: dbProducts, error: productError } = await supabase
       .from("products")
       .select("id, price, stock, name")
@@ -62,11 +74,19 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Validasi setiap item ──────────────────────────────────
+    // T-17: harga valid = harga efektif server (flash sale > discount_price > price)
+    const effectivePrices = await getEffectivePrices(productIds);
+
     let calculatedSubtotal = 0;
     for (const item of body.items) {
       const dbProduct = productMap.get(item.product_id);
       if (!dbProduct) {
         return NextResponse.json({ error: `Produk "${item.product_name}" tidak ditemukan.` }, { status: 400 });
+      }
+
+      // T-22: qty wajib integer positif
+      if (!Number.isInteger(item.qty) || Number(item.qty) <= 0) {
+        return NextResponse.json({ error: `Jumlah "${dbProduct.name}" tidak valid.` }, { status: 400 });
       }
 
       if (item.variant_id) {
@@ -77,7 +97,7 @@ export async function POST(request: NextRequest) {
         if (dbVariant.product_id !== item.product_id) {
           return NextResponse.json({ error: `Varian tidak sesuai dengan produk "${dbProduct.name}".` }, { status: 400 });
         }
-        // Validasi harga variant
+        // Validasi harga variant (variant tidak punya diskon — harga penuh)
         if (Number(dbVariant.price) !== Number(item.price)) {
           return NextResponse.json({
             error: `Harga varian "${dbProduct.name}" tidak sesuai. Silakan refresh halaman.`,
@@ -91,8 +111,9 @@ export async function POST(request: NextRequest) {
         }
         calculatedSubtotal += Number(dbVariant.price) * item.qty;
       } else {
-        // Validasi harga produk (tanpa varian)
-        if (Number(dbProduct.price) !== Number(item.price)) {
+        // Validasi harga produk (tanpa varian) terhadap harga efektif server
+        const effectivePrice = effectivePrices.get(item.product_id) ?? Number(dbProduct.price);
+        if (Number(effectivePrice) !== Number(item.price)) {
           return NextResponse.json({
             error: `Harga produk "${dbProduct.name}" tidak sesuai. Silakan refresh halaman.`,
           }, { status: 400 });
@@ -105,7 +126,7 @@ export async function POST(request: NextRequest) {
           }, { status: 400 });
         }
 
-        calculatedSubtotal += Number(dbProduct.price) * item.qty;
+        calculatedSubtotal += Number(effectivePrice) * item.qty;
       }
     }
 
@@ -121,7 +142,7 @@ export async function POST(request: NextRequest) {
       if (!body.voucher_code) {
         return NextResponse.json({ error: "Kode voucher diperlukan untuk menggunakan diskon." }, { status: 400 });
       }
-      const voucherResult = await validateVoucher(body.voucher_code, calculatedSubtotal);
+      const voucherResult = await validateVoucher(body.voucher_code, calculatedSubtotal, user.id);
       if (!voucherResult.valid) {
         return NextResponse.json({ error: voucherResult.message }, { status: 400 });
       }
@@ -140,19 +161,19 @@ export async function POST(request: NextRequest) {
     // ── Buat pesanan ──────────────────────────────────────────
     const payload: CreateOrderPayload = {
       user_id: user.id,
-      shipping_address: body.shipping_address,
-      shipping_method: body.shipping_method,
+      shipping_address: body.shipping_address as CreateOrderPayload["shipping_address"],
+      shipping_method: body.shipping_method ?? "",
       shipping_cost: shippingCost,
-      payment_method: body.payment_method,
+      payment_method: body.payment_method ?? "",
       subtotal: calculatedSubtotal,
       discount: calculatedDiscount,
       total: expectedTotal,
       notes: body.notes || "",
       voucher_code: body.voucher_code || undefined,
-      items: body.items.map((item: any) => ({
+      items: body.items!.map((item) => ({
         product_id: item.product_id,
         variant_id: item.variant_id,
-        product_name: item.product_name,
+        product_name: item.product_name ?? "",
         product_sku: item.product_sku,
         qty: item.qty,
         price: Number(item.price),

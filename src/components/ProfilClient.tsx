@@ -738,7 +738,7 @@ export default function ProfilClient({ initialUser, initialProfile, orders }: Pr
                                       if (confirm("Konfirmasi bahwa pesanan sudah diterima?")) {
                                         try {
                                           const supabase = createClient();
-                                          await supabase.from("orders").update({ status: "selesai", updated_at: new Date().toISOString() }).eq("id", order.id).eq("user_id", user.id);
+                                          await supabase.rpc("confirm_order_received", { p_order_id: order.id });
                                           window.location.reload();
                                         } catch (e) { console.error(e); }
                                       }

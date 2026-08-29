@@ -1,27 +1,27 @@
-# PLAN.MD ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SOURCE OF TRUTH Ãƒâ€šÃ‚Â· Hera Skincare Marketplace
+# PLAN.MD — SOURCE OF TRUTH · Hera Skincare Marketplace
 
 > **File ini adalah SATU-SATUNYA tracker pekerjaan project ini.**
 > `Todo.md`, `doc.md`, dan bagian "Status" di README.md sudah **ARCHIVED** dan TIDAK BOLEH dipakai sebagai instruksi kerja aktif.
 > (Catatan 2026-08-29: `Todo.md`, `doc.md`, `AGENT.md`, `CLAUDE.md` sudah DIHAPUS dari repo — lihat T-15.)
 > Setiap agent/kontributor **WAJIB** membaca bagian [Protokol](#-protokol-source-of-truth) sebelum menyentuh kode.
 >
-> Terakhir diperbarui: 2026-08-22
+> Terakhir diperbarui: 2026-08-29
 
 ---
 
-## ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Protokol Source of Truth
+## 📐 Protokol Source of Truth
 
 ### Aturan Wajib
 
 | # | Aturan |
 |---|--------|
 | R1 | Semua pekerjaan HARUS punya entri task di file ini **sebelum** baris kode pertama ditulis |
-| R2 | Status hanya boleh bergerak satu langkah: `BACKLOG ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ IN_PROGRESS ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ DONE` atau `IN_PROGRESS ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ BLOCKED` |
+| R2 | Status hanya boleh bergerak satu langkah: `BACKLOG → IN_PROGRESS → DONE` atau `IN_PROGRESS → BLOCKED` |
 | R3 | Mulai kerja = set status `IN_PROGRESS` + tanggal. Selesai = set status final + tanggal |
 | R4 | File di luar **Scope-IN** task yang sedang berjalan **DILARANG** dimodifikasi |
-| R5 | Ketemu bug/masalah baru di luar task aktif ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ **JANGAN** dibetulkan sekalian. Daftarkan task baru dengan ID berikutnya, lanjutkan task aktif apa adanya |
+| R5 | Ketemu bug/masalah baru di luar task aktif → **JANGAN** dibetulkan sekalian. Daftarkan task baru dengan ID berikutnya, lanjutkan task aktif apa adanya |
 | R6 | 1 task = 1 commit. Format pesan commit: `<T-ID>: <ringkasan>` (contoh: `T-02: integrasi midtrans snap create + webhook`) |
-| R7 | Kalau task gagal/batal, jangan hapus entrinya ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â set status `BLOCKED` + tulis alasannya |
+| R7 | Kalau task gagal/batal, jangan hapus entrinya — set status `BLOCKED` + tulis alasannya |
 
 ### Definition of Done (berlaku untuk SEMUA task)
 
@@ -33,34 +33,34 @@ npm run typecheck   # exit 0
 npm run build       # exit 0
 ```
 
-ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Tanpa bukti = status DONE tidak sah. Reviewer/pemilik project berhak menurunkan status kembali ke `IN_PROGRESS`.
+⚠️ Tanpa bukti = status DONE tidak sah. Reviewer/pemilik project berhak menurunkan status kembali ke `IN_PROGRESS`.
 
 ### Larangan Mutlak
 
-- ÃƒÂ¢Ã‚ÂÃ…â€™ Menghapus fitur, test, atau validasi agar build/lint lolos
-- ÃƒÂ¢Ã‚ÂÃ…â€™ Menyisakan mock data, placeholder, komentar `TODO`/`FIXME`, atau dead code
-- ÃƒÂ¢Ã‚ÂÃ…â€™ Menandai `DONE` tanpa bukti command
-- ÃƒÂ¢Ã‚ÂÃ…â€™ Mengedit/menghapus entri Changelog (bersifat **append-only**)
-- ÃƒÂ¢Ã‚ÂÃ…â€™ Melebar scope ("sekalian refactor", "sekalian rapikan styling")
-- ÃƒÂ¢Ã‚ÂÃ…â€™ Membuat tracker paralel baru (file `.md` lain selain `plan.md`)
-- ÃƒÂ¢Ã‚ÂÃ…â€™ Hardcode secret/API key di dalam kode ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â semua credential lewat env server-side
+- ❌ Menghapus fitur, test, atau validasi agar build/lint lolos
+- ❌ Menyisakan mock data, placeholder, komentar `TODO`/`FIXME`, atau dead code
+- ❌ Menandai `DONE` tanpa bukti command
+- ❌ Mengedit/menghapus entri Changelog (bersifat **append-only**)
+- ❌ Melebar scope ("sekalian refactor", "sekalian rapikan styling")
+- ❌ Membuat tracker paralel baru (file `.md` lain selain `plan.md`)
+- ❌ Hardcode secret/API key di dalam kode — semua credential lewat env server-side
 
 ### Checklist Eksekusi Task (salin ke task saat mulai dikerjakan)
 
 ```text
-[ ] Status ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ IN_PROGRESS (tanggal: ____ )
+[ ] Status → IN_PROGRESS (tanggal: ____ )
 [ ] Baca ulang Scope-IN dan Scope-OUT
 [ ] Implementasi sesuai kriteria
-[ ] npm run lint      ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ paste output
-[ ] npm run typecheck ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ paste output
-[ ] npm run build     ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ paste output
+[ ] npm run lint      → paste output
+[ ] npm run typecheck → paste output
+[ ] npm run build     → paste output
 [ ] Commit dengan format "<T-ID>: ..."
-[ ] Status ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ DONE (tanggal: ____ )
+[ ] Status → DONE (tanggal: ____ )
 ```
 
 ---
 
-## ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã‚ÂºÃƒÂ¯Ã‚Â¸Ã‚Â Roadmap
+## 🗺️ Roadmap
 
 | ID | Prioritas | Task | Status |
 |----|-----------|------|--------|
@@ -80,15 +80,24 @@ npm run build       # exit 0
 | [T-14](#t-14--sinkronisasi-db-live-ke-full-schema) | P0 | Sinkronisasi DB live ke full schema | DONE |
 | [T-15](#t-15--konsolidasi-dokumentasi--satu-migration) | P0 | Konsolidasi dokumentasi & satu file migration | DONE |
 | [T-16](#t-16--sinkronisasi-env-dan-project-ref-live) | P0 | Sinkronisasi env & project ref live | DONE |
+| T-17 | P0 | Fix checkout harga promo/flash sale (validasi server) | DONE |
+| T-18 | P0 | Policy profiles UPDATE aman + fix policy product_qna | DONE |
+| T-19 | P0 | Rework confirm-payment via RPC + verifikasi admin | DONE |
+| T-20 | P1 | Xendit webhook verifikasi paid_amount | DONE |
+| T-21 | P1 | Enforce per_user_limit voucher (tabel voucher_usage) | DONE |
+| T-22 | P1 | createOrder rollback fix + qty validasi | DONE |
+| T-23 | P1 | Validasi role update_admin_role + guard super_admin | DONE |
+| T-24 | P2 | Upload magic bytes + sinkron mime | DONE |
+| T-25 | P0 | Sinkronisasi full_schema = live DB | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
-> ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
+> ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
 
 ---
 
-## ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Detail Task
+## 📋 Detail Task
 
-### T-01 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Infrastruktur Verifikasi & Baseline
+### T-01 — Infrastruktur Verifikasi & Baseline
 
 | Field | Isi |
 |---|---|
@@ -98,8 +107,8 @@ Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID leb
 **Tujuan:** Pastikan ketiga gerbang verifikasi tersedia dan kondisi awal project tercatat sebagai acuan regresi.
 
 **Scope-IN**
-- `package.json` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tambah script `"typecheck": "tsc --noEmit"`
-- `.env.example` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â sinkronkan dengan seluruh env var yang benar-benar dipakai kode (tanpa secret asli)
+- `package.json` — tambah script `"typecheck": "tsc --noEmit"`
+- `.env.example` — sinkronkan dengan seluruh env var yang benar-benar dipakai kode (tanpa secret asli)
 - Catat baseline hasil 3 command di bagian **Bukti**
 
 **Scope-OUT (dilarang disentuh)**
@@ -113,10 +122,10 @@ Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID leb
 **Bukti**
 ```
 == npm run lint ==
-ÃƒÂ¢Ã…â€œÃ¢â‚¬â€œ 22 problems (14 errors, 8 warnings)   exit=1 (error pre-existing)
-Rincian error: no-explicit-any ÃƒÆ’Ã¢â‚¬â€10, set-state-in-effect ÃƒÆ’Ã¢â‚¬â€3, immutability ÃƒÆ’Ã¢â‚¬â€1
-Rincian warning: img-element ÃƒÆ’Ã¢â‚¬â€4, unused-vars ÃƒÆ’Ã¢â‚¬â€3, exhaustive-deps ÃƒÆ’Ã¢â‚¬â€1
-(Baseline ASLI ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â .claude/worktrees sudah di-ignore sejak T-09)
+✖ 22 problems (14 errors, 8 warnings)   exit=1 (error pre-existing)
+Rincian error: no-explicit-any ×10, set-state-in-effect ×3, immutability ×1
+Rincian warning: img-element ×4, unused-vars ×3, exhaustive-deps ×1
+(Baseline ASLI — .claude/worktrees sudah di-ignore sejak T-09)
 
 == npm run typecheck ==  tsc --noEmit   exit=0
 
@@ -124,49 +133,49 @@ Rincian warning: img-element ÃƒÆ’Ã¢â‚¬â€4, unused-vars ÃƒÆ’
 
 == .env.example ==
 Kode mereferensi 8 var: SUPABASE_URL, PUBLISHABLE_DEFAULT_KEY, SITE_URL
-(wajib) + 5 STORE_* (opsional, fallback di storeConfig.ts) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â semua kini
-ada di example. .env.local lokal: BASE_URL diperbaiki ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ SITE_URL.
+(wajib) + 5 STORE_* (opsional, fallback di storeConfig.ts) — semua kini
+ada di example. .env.local lokal: BASE_URL diperbaiki → SITE_URL.
 ```
 
 ---
 
-### T-02 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Xendit Invoice Pembayaran Online (Server-Side)
+### T-02 — Xendit Invoice Pembayaran Online (Server-Side)
 
 | Field | Isi |
 |---|---|
 | Status | `DONE` |
 | Mulai / Selesai | 2026-08-22 / 2026-08-22 |
-| Referensi | Xendit Invoice API v2 (`POST https://api.xendit.co/v2/invoices`) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â callback via header `x-callback-token` |
+| Referensi | Xendit Invoice API v2 (`POST https://api.xendit.co/v2/invoices`) — callback via header `x-callback-token` |
 
 **Tujuan:** Customer bisa bayar online via Xendit (QRIS, VA bank, e-wallet OVO/DANA/ShopeePay/LinkAja, kartu, retail), menggantikan/dampingi alur transfer manual di `/bayar/[id]`. Link invoice dapat dibagikan via WhatsApp.
 
-**Riwayat keputusan:** Direvisi dari Midtrans Snap ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ **Xendit** atas instruksi pemilik project (22 Agu 2026): cakupan e-wallet lebih luas (OVO/DANA) + model invoice-link yang bisa dikirim via WA.
+**Riwayat keputusan:** Direvisi dari Midtrans Snap → **Xendit** atas instruksi pemilik project (22 Agu 2026): cakupan e-wallet lebih luas (OVO/DANA) + model invoice-link yang bisa dikirim via WA.
 
 **Keputusan desain (dikunci, jangan diubah tanpa persetujuan pemilik):**
-- Implementasi pakai **Next.js API Route** (bukan Supabase Edge Function) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â konsisten dengan pola route yang ada, dan secret tinggal di server
-- Produk Xendit: **Invoice API v2** ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â satu endpoint untuk semua metode bayar + hosted checkout page + callback status
+- Implementasi pakai **Next.js API Route** (bukan Supabase Edge Function) — konsisten dengan pola route yang ada, dan secret tinggal di server
+- Produk Xendit: **Invoice API v2** — satu endpoint untuk semua metode bayar + hosted checkout page + callback status
 - `XENDIT_SECRET_KEY` & `XENDIT_CALLBACK_TOKEN` **WAJIB** env server-side tanpa prefix `NEXT_PUBLIC`; environment (Dev/Live) ditentukan pasangan key yang dipakai di dashboard, tanpa flag terpisah
-- Verifikasi webhook: header `x-callback-token` dibandingkan constant-time dengan env token; invalid ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 401
-- Jika env belum diset: create mengembalikan 503 ramah ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â transfer manual tetap fallback utuh
+- Verifikasi webhook: header `x-callback-token` dibandingkan constant-time dengan env token; invalid → 401
+- Jika env belum diset: create mengembalikan 503 ramah — transfer manual tetap fallback utuh
 
 **Scope-IN**
-- `src/app/api/payments/xendit/create/route.ts` (baru) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â buat/reuse Invoice untuk order milik user yang login; amount dari DB
-- `src/app/api/payments/xendit/webhook/route.ts` (baru) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â callback server-to-server Xendit
-- Migration live DB via MCP + mirror ke `supabase/migrations/20260822130000_full_schema.sql` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â kolom `orders.xendit_invoice_id`, `orders.xendit_invoice_url`
-- `src/types/database.ts` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tipe kolom baru
-- `src/app/checkout/page.tsx` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â opsi metode "Bayar Online via Xendit" di step pembayaran
-- `src/app/bayar/[id]/page.tsx` + komponen client baru ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tombol bayar online, buka link invoice, salin link, bagikan via WhatsApp (`wa.me`)
-- `.env.example` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â `XENDIT_SECRET_KEY`, `XENDIT_CALLBACK_TOKEN`
+- `src/app/api/payments/xendit/create/route.ts` (baru) — buat/reuse Invoice untuk order milik user yang login; amount dari DB
+- `src/app/api/payments/xendit/webhook/route.ts` (baru) — callback server-to-server Xendit
+- Migration live DB via MCP + mirror ke `supabase/migrations/20260822130000_full_schema.sql` — kolom `orders.xendit_invoice_id`, `orders.xendit_invoice_url`
+- `src/types/database.ts` — tipe kolom baru
+- `src/app/checkout/page.tsx` — opsi metode "Bayar Online via Xendit" di step pembayaran
+- `src/app/bayar/[id]/page.tsx` + komponen client baru — tombol bayar online, buka link invoice, salin link, bagikan via WhatsApp (`wa.me`)
+- `.env.example` — `XENDIT_SECRET_KEY`, `XENDIT_CALLBACK_TOKEN`
 
 **Scope-OUT (dilarang disentuh)**
 - Halaman admin, `src/proxy.ts`, Navbar/Footer, styling global, route orders yang sudah ada
 
 **Kriteria Selesai**
 1. Create invoice: auth required, hanya pemilik order (verifikasi `user_id`); order harus `menunggu` & `belum_bayar`
-2. Amount **tidak diterima dari client** ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â selalu dari kolom `orders.total` di DB
-3. Webhook: verifikasi `x-callback-token`; invalid ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 401; hanya status relevan yang diproses
-4. Webhook idempotent: callback ulang / order sudah `lunas` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 200 tanpa efek samping
-5. Update `payment_status` mengikuti transisi yang sudah ada (`belum_bayar` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `lunas`, tanpa skip state)
+2. Amount **tidak diterima dari client** — selalu dari kolom `orders.total` di DB
+3. Webhook: verifikasi `x-callback-token`; invalid → 401; hanya status relevan yang diproses
+4. Webhook idempotent: callback ulang / order sudah `lunas` → 200 tanpa efek samping
+5. Update `payment_status` mengikuti transisi yang sudah ada (`belum_bayar` → `lunas`, tanpa skip state)
 6. Alur transfer manual lama tetap berfungsi normal (tombol "Sudah Bayar" utuh)
 7. Ketiga gerbang DoD hijau + bukti tercatat
 
@@ -174,8 +183,8 @@ ada di example. .env.local lokal: BASE_URL diperbaiki ÃƒÂ¢Ã¢â‚¬Â Ã�
 ```
 == Migration live (via MCP) ==
 xendit_order_columns: orders.xendit_invoice_id text + xendit_invoice_url text
-Verifikasi live: kedua kolom ada (information_schema) ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
-Mirror ke full_schema.sql: inline di CREATE TABLE orders ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+Verifikasi live: kedua kolom ada (information_schema) ✅
+Mirror ke full_schema.sql: inline di CREATE TABLE orders ✅
 
 == File baru/diubah ==
 + src/app/api/payments/xendit/create/route.ts   (rate-limit, auth, ownership,
@@ -190,7 +199,7 @@ Mirror ke full_schema.sql: inline di CREATE TABLE orders ÃƒÂ¢Ã…â€œÃ�
 ~ src/types/database.ts, .env.example, README.md (26 routes)
 
 == Gerbang ==
-typecheck exit 0 Ãƒâ€šÃ‚Â· lint 22 problems (baseline sama, tidak bertambah) Ãƒâ€šÃ‚Â· build exit 0
+typecheck exit 0 · lint 22 problems (baseline sama, tidak bertambah) · build exit 0
 
 == UNVERIFIED (butuh kredensial owner) ==
 E2E end-to-end dengan Xendit sandbox/live belum bisa dijalankan:
@@ -203,7 +212,7 @@ Kriteria 1-6 terverifikasi lewat code-review & typecheck; runtime proof menunggu
 
 ---
 
-### T-03 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Flash Sale CRUD di Admin
+### T-03 — Flash Sale CRUD di Admin
 
 | Field | Isi |
 |---|---|
@@ -213,17 +222,17 @@ Kriteria 1-6 terverifikasi lewat code-review & typecheck; runtime proof menunggu
 **Tujuan:** Admin bisa membuat/mengubah flash sale. Saat ini hanya read-only table di `/admin/promo`.
 
 **Scope-IN**
-- `src/app/api/admin/flash-sales/route.ts` (baru) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â GET/POST
-- `src/app/api/admin/flash-sales/[id]/route.ts` (baru) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â PUT/DELETE
-- Halaman `/admin/promo` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â form create/edit flash sale + items
-- `src/types/database.ts` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â bila perlu
+- `src/app/api/admin/flash-sales/route.ts` (baru) — GET/POST
+- `src/app/api/admin/flash-sales/[id]/route.ts` (baru) — PUT/DELETE
+- Halaman `/admin/promo` — form create/edit flash sale + items
+- `src/types/database.ts` — bila perlu
 
 **Scope-OUT (dilarang disentuh)**
 - Route voucher yang sudah ada, homepage flash-sale rendering, migration lama
 
 **Kriteria Selesai**
 1. Create/edit/delete/toggle flash sale beserta item produknya
-2. Validasi: `end_time > start_time`, diskon 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“100%, produk wajib ada
+2. Validasi: `end_time > start_time`, diskon 1–100%, produk wajib ada
 3. Semua handler pakai `verifyAdminRole()` seperti route admin lain
 4. Ketiga gerbang DoD hijau + bukti tercatat
 
@@ -239,49 +248,49 @@ Kriteria 1-6 terverifikasi lewat code-review & typecheck; runtime proof menunggu
     datetime mulai/berakhir, picker multi-produk dgn harga & stok flash;
     tabel dapat kolom Aksi: edit/hapus + badge status jadi tombol toggle;
     sumber data pindah dari client supabase langsung -> API admin)
-Catatan tipe: FlashSaleProduct sudah punya products? ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â database.ts tidak diubah.
+Catatan tipe: FlashSaleProduct sudah punya products? — database.ts tidak diubah.
 
 == Adaptasi kriteria no.2 ==
 Model DB memakai harga absolut (flash_price numeric >= 0), bukan persen.
 "Diskon 1-100%" diimplementasikan sesuai model data:
-end_time > start_time ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Ãƒâ€šÃ‚Â· flash_price harus diskon nyata
-(0 < flash_price < harga normal produk) ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Ãƒâ€šÃ‚Â· produk wajib ada & aktif ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+end_time > start_time ✅ · flash_price harus diskon nyata
+(0 < flash_price < harga normal produk) ✅ · produk wajib ada & aktif ✅
 
 == Gerbang ==
-typecheck exit 0 Ãƒâ€šÃ‚Â· lint 22 problems (baseline sama) Ãƒâ€šÃ‚Â· build exit 0
+typecheck exit 0 · lint 22 problems (baseline sama) · build exit 0
 ```
 
-Status kriteria: 1 ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Ãƒâ€šÃ‚Â· 2 ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ (adaptasi terdokumentasi) Ãƒâ€šÃ‚Â· 3 ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Ãƒâ€šÃ‚Â· 4 ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+Status kriteria: 1 ✅ · 2 ✅ (adaptasi terdokumentasi) · 3 ✅ · 4 ✅
 
 ---
 
-### T-04 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tutup Bug LOW dari Audit Lama
+### T-04 — Tutup Bug LOW dari Audit Lama
 
 | Field | Isi |
 |---|---|
 | Status | `DONE` |
 | Mulai / Selesai | 2026-08-22 / 2026-08-22 |
-| Sumber daftar | `Todo.md` Ãƒâ€šÃ‚Â§ Final Metrics ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ baris "Open (14 LOW)" (ARSIP ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â hanya rujukan daftar, bukan tracker) |
+| Sumber daftar | `Todo.md` § Final Metrics → baris "Open (14 LOW)" (ARSIP — hanya rujukan daftar, bukan tracker) |
 
 **Aturan khusus task ini (anti-noise):**
-Saat memulai, pecah dulu daftar bug LOW menjadi sub-entri bernomor di bawah tabel ini (T-04.1, T-04.2, ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦), masing-masing dengan kriteria selesai sendiri. **Satu sub-bug = satu commit.** Sub-bug boleh dikerjakan bertahap; task induk DONE jika semua sub-entri DONE atau eksplisit di-skip dengan alasan oleh pemilik project.
+Saat memulai, pecah dulu daftar bug LOW menjadi sub-entri bernomor di bawah tabel ini (T-04.1, T-04.2, …), masing-masing dengan kriteria selesai sendiri. **Satu sub-bug = satu commit.** Sub-bug boleh dikerjakan bertahap; task induk DONE jika semua sub-entri DONE atau eksplisit di-skip dengan alasan oleh pemilik project.
 
 | Sub-ID | Bug (ringkas) | Status |
 |--------|---------------|--------|
-| T-04.1 | L2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â `router` sebagai dependency useEffect | SKIP (verifikasi 22 Agu: tidak ada lagi di kode) |
-| T-04.2 | N29 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â CSS universal `*` transition | SKIP (sudah scoped `.transition-premium`; `*` hanya box-sizing) |
-| T-04.3 | N30 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Floating WhatsApp `animate-pulse` terus-menerus | SKIP (tombol WA kini hover-only; pulse tersisa = skeleton loading sah) |
-| T-04.4 | N38 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â `revalidate = 0` mematikan cache | SKIP (desain data real-time utk stok/harga e-commerce; halaman ber-cookie sudah dynamic natural) |
-| T-04.5 | N43 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Halaman profil tanpa guard session server-side | SKIP (sudah ada getUser server-side; UI menampilkan form auth utk guest) |
-| T-04.6 | N46 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Public search `/api/products` tanpa rate limit | SKIP (sudah ada checkRateLimit 120/menit) |
-| T-04.7 | N49 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Deskripsi produk tanpa sanitasi HTML | SKIP (tidak ada dangerouslySetInnerHTML; React auto-escape default) |
-| T-04.8 | L13 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Related products query tanpa limit | SKIP (sudah `pageSize: 7` + `.slice(0, 6)`) |
-| T-04.9 | L9 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Supabase CLI tidak ada di devDependencies | DONE |
-| T-04.10 | Linter warnings ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 8 warning baseline (img ÃƒÆ’Ã¢â‚¬â€4, unused-vars ÃƒÆ’Ã¢â‚¬â€3, deps ÃƒÆ’Ã¢â‚¬â€1) | DONE |
-| T-04.11 | H8 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â `console.error` di catch blok | SKIP (intentional ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â logging terkontrol untuk debug produksi) |
-| T-04.12 | P15 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Custom modal ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ native `<dialog>` | SKIP (refactor besar lintas komponen; modal custom berfungsi baik) |
-| T-04.13 | N40 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â CSP `'unsafe-inline'` untuk scripts | SKIP (butuh infrastruktur nonce + risiko merusak Meta Pixel/GA4; mitigasi: domain whitelist ketat) |
-| T-04.14 | N33/N34/L1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â metadata statis / dropdown kategori by-name / sisa `confirm()` | SKIP (metadata statis by design dgn fallback SEO DB; confirm() utk aksi destruktif adalah pola UX sengaja dipertahankan) |
+| T-04.1 | L2 — `router` sebagai dependency useEffect | SKIP (verifikasi 22 Agu: tidak ada lagi di kode) |
+| T-04.2 | N29 — CSS universal `*` transition | SKIP (sudah scoped `.transition-premium`; `*` hanya box-sizing) |
+| T-04.3 | N30 — Floating WhatsApp `animate-pulse` terus-menerus | SKIP (tombol WA kini hover-only; pulse tersisa = skeleton loading sah) |
+| T-04.4 | N38 — `revalidate = 0` mematikan cache | SKIP (desain data real-time utk stok/harga e-commerce; halaman ber-cookie sudah dynamic natural) |
+| T-04.5 | N43 — Halaman profil tanpa guard session server-side | SKIP (sudah ada getUser server-side; UI menampilkan form auth utk guest) |
+| T-04.6 | N46 — Public search `/api/products` tanpa rate limit | SKIP (sudah ada checkRateLimit 120/menit) |
+| T-04.7 | N49 — Deskripsi produk tanpa sanitasi HTML | SKIP (tidak ada dangerouslySetInnerHTML; React auto-escape default) |
+| T-04.8 | L13 — Related products query tanpa limit | SKIP (sudah `pageSize: 7` + `.slice(0, 6)`) |
+| T-04.9 | L9 — Supabase CLI tidak ada di devDependencies | DONE |
+| T-04.10 | Linter warnings — 8 warning baseline (img ×4, unused-vars ×3, deps ×1) | DONE |
+| T-04.11 | H8 — `console.error` di catch blok | SKIP (intentional — logging terkontrol untuk debug produksi) |
+| T-04.12 | P15 — Custom modal → native `<dialog>` | SKIP (refactor besar lintas komponen; modal custom berfungsi baik) |
+| T-04.13 | N40 — CSP `'unsafe-inline'` untuk scripts | SKIP (butuh infrastruktur nonce + risiko merusak Meta Pixel/GA4; mitigasi: domain whitelist ketat) |
+| T-04.14 | N33/N34/L1 — metadata statis / dropdown kategori by-name / sisa `confirm()` | SKIP (metadata statis by design dgn fallback SEO DB; confirm() utk aksi destruktif adalah pola UX sengaja dipertahankan) |
 
 **Hasil:** 2 sub-bug diperbaiki (T-04.9, T-04.10), 12 terverifikasi sudah hilang/obsolete atau di-skip dengan alasan eksplisit.
 
@@ -298,7 +307,7 @@ T-04.10: lint 22 problems (14 err/8 warn) -> 14 problems (14 err/0 warn)
   - ProductDetailClient.tsx (2) + ProductFormModal.tsx (1): <img> -> next/image
     (fill + sizes; remotePatterns **.supabase.co sudah ada di next.config)
   Commit fd9dcdd
-Gerbang: typecheck exit 0 Ãƒâ€šÃ‚Â· build exit 0 Ãƒâ€šÃ‚Â· lint error tetap 14 (pre-existing)
+Gerbang: typecheck exit 0 · build exit 0 · lint error tetap 14 (pre-existing)
 ```
 
 **Scope-IN:** file yang disebut di sub-entri masing-masing saja
@@ -311,7 +320,7 @@ Gerbang: typecheck exit 0 Ãƒâ€šÃ‚Â· build exit 0 Ãƒâ€šÃ‚Â·
 
 ---
 
-### T-05 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Notifikasi Otomatis Email/WA
+### T-05 — Notifikasi Otomatis Email/WA
 
 | Field | Isi |
 |---|---|
@@ -320,14 +329,14 @@ Gerbang: typecheck exit 0 Ãƒâ€šÃ‚Â· build exit 0 Ãƒâ€šÃ‚Â·
 
 **Tujuan:** Kirim email/WA otomatis saat status pesanan berubah (masuk, dibayar, dikirim, selesai). Saat ini settings-nya sudah ada di Pengaturan tapi belum terhubung provider.
 
-**Keputusan desain (dikunci):** Email = **Resend** (`POST https://api.resend.com/emails`), WA = **Fonnte** (`POST https://api.fonnte.com/send`) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â murni REST via fetch, tanpa dependency baru. Penerima = customer (email dari `profiles.email`, WA dari `orders.shipping_address.phone`). Toggle `store_settings.notifications` yang ada adalah preferensi event ADMIN ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â dibiarkan utuh. Kredensial env server-side: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `FONNTE_TOKEN`; kosong = channel no-op senyap. Fire-and-forget: gagal kirim hanya di-log.
+**Keputusan desain (dikunci):** Email = **Resend** (`POST https://api.resend.com/emails`), WA = **Fonnte** (`POST https://api.fonnte.com/send`) — murni REST via fetch, tanpa dependency baru. Penerima = customer (email dari `profiles.email`, WA dari `orders.shipping_address.phone`). Toggle `store_settings.notifications` yang ada adalah preferensi event ADMIN — dibiarkan utuh. Kredensial env server-side: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `FONNTE_TOKEN`; kosong = channel no-op senyap. Fire-and-forget: gagal kirim hanya di-log.
 
 **Scope-IN:** API route/handler notifikasi baru, integrasi provider, key settings terkait, `.env.example`
-**Scope-OUT:** UI admin pengaturan (kecuali perlu field baru ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â daftarkan dulu), template halaman customer
+**Scope-OUT:** UI admin pengaturan (kecuali perlu field baru — daftarkan dulu), template halaman customer
 
 **Kriteria Selesai**
-1. Trigger terjadi dari perubahan status pesanan (bukan polling manual) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ 3 titik: admin orders PUT, xendit webhook, confirm-payment
-2. Credential hanya di env server; gagal kirim ter-log dan tidak menggagalkan transaksi utama ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ try/catch total + Promise.allSettled + console.warn
+1. Trigger terjadi dari perubahan status pesanan (bukan polling manual) — ✅ 3 titik: admin orders PUT, xendit webhook, confirm-payment
+2. Credential hanya di env server; gagal kirim ter-log dan tidak menggagalkan transaksi utama — ✅ try/catch total + Promise.allSettled + console.warn
 3. Ketiga gerbang DoD hijau + bukti tercatat
 
 **Bukti**
@@ -341,7 +350,7 @@ Gerbang: typecheck exit 0 Ãƒâ€šÃ‚Â· build exit 0 Ãƒâ€šÃ‚Â·
 ~ .env.example                 : RESEND_API_KEY, RESEND_FROM_EMAIL, FONNTE_TOKEN
 
 == Gerbang ==
-typecheck exit 0 Ãƒâ€šÃ‚Â· lint 14 problems (0 warning, error baseline sama) Ãƒâ€šÃ‚Â· build exit 0
+typecheck exit 0 · lint 14 problems (0 warning, error baseline sama) · build exit 0
 
 == UNVERIFIED (butuh kredensial owner) ==
 Pengiriman nyata butuh RESEND_API_KEY (+domain terverifikasi utk FROM)
@@ -351,7 +360,7 @@ menunggu kredensial.
 
 ---
 
-### T-06 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Port Fitur Q&A Produk + Comparison dari Project React
+### T-06 — Port Fitur Q&A Produk + Comparison dari Project React
 
 | Field | Isi |
 |---|---|
@@ -361,31 +370,31 @@ menunggu kredensial.
 
 **Catatan:** Dijalankan penuh atas instruksi "lanjut semua" pemilik project; dipecah sesuai catatan: T-06.1 (Q&A) dan T-06.2 (Comparison).
 
-#### T-06.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Q&A Produk
+#### T-06.1 — Q&A Produk
 
 **Implementasi**
 - Migration live `product_qna` via MCP (adaptasi UUID dari init.sql React) + mirror ke full_schema.sql: tabel + index + 3 policy (select publik, insert authenticated, update admin via has_role)
-- API: `POST /api/products/qna` (bertanya, auth) Ãƒâ€šÃ‚Â· `GET /api/admin/qna` (daftar) Ãƒâ€šÃ‚Â· `PATCH+DELETE /api/admin/qna/[id]` (jawab/hapus, verifyAdminRole)
+- API: `POST /api/products/qna` (bertanya, auth) · `GET /api/admin/qna` (daftar) · `PATCH+DELETE /api/admin/qna/[id]` (jawab/hapus, verifyAdminRole)
 - lib/products.ts: `getQuestionsByProduct()`; UI customer: tab "Tanya Jawab" di detail produk (list + form bertanya, login-gated); UI admin: panel jawab/hapus pertanyaan di halaman ulasan
 
-#### T-06.2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Comparison
+#### T-06.2 — Comparison
 
 **Implementasi**
-- `src/lib/comparison-utils.ts`: port ComparisonContext.jsx ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ localStorage (`hera_compare`, maks 4 produk, event `compare-updated`)
+- `src/lib/comparison-utils.ts`: port ComparisonContext.jsx → localStorage (`hera_compare`, maks 4 produk, event `compare-updated`)
 - Tombol toggle perbandingan (GitCompare) di galeri detail produk + link ke halaman khusus
 - Halaman `/perbandingan`: tabel side-by-side harga/stok/detail + hapus item + kosongkan
 
 **Bukti**
 ```
-Migration live : product_qna (MCP success) + mirror full_schema ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
-Gerbang        : typecheck exit 0 Ãƒâ€šÃ‚Â· lint 14 err/0 warn (baseline sama;
+Migration live : product_qna (MCP success) + mirror full_schema ✅
+Gerbang        : typecheck exit 0 · lint 14 err/0 warn (baseline sama;
                  2 error pola setState-in-effect dari kode baru diperbaiki
-                 saat proses) Ãƒâ€šÃ‚Â· build exit 0
+                 saat proses) · build exit 0
 ```
 
 ---
 
-### T-07 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Konsolidasi Dokumentasi & Arsip Project React
+### T-07 — Konsolidasi Dokumentasi & Arsip Project React
 
 | Field | Isi |
 |---|---|
@@ -395,31 +404,31 @@ Gerbang        : typecheck exit 0 Ãƒâ€šÃ‚Â· lint 14 err/0 warn (basel
 **Tujuan:** Satu codebase hidup, satu sumber kebenaran.
 
 **Scope-IN**
-- README.md ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â bagian "Status" diganti pointer ke plan.md
+- README.md — bagian "Status" diganti pointer ke plan.md
 - Banner arsip di `../Hera Store React/README.md` (project React ditandai DEPRECATED, referensi fitur yang sudah diporting)
 - Bersihkan sisa tracker basi di repo Next.js
 
 **Scope-OUT:** kode aplikasi, database
 
 **Kriteria Selesai**
-1. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Tidak ada lagi dokumen di kedua repo yang bisa disalahartikan sebagai tracker aktif ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Next.js: hanya plan.md aktif; doc.md/Todo.md/AGENT.md arsip ber-banner & gitignored. React: README diberi banner DEPRECATED di posisi paling atas
-2. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Project React jelas tertanda deprecated + tanggal (22 Agustus 2026) + daftar fitur yang sudah diporting
+1. ✅ Tidak ada lagi dokumen di kedua repo yang bisa disalahartikan sebagai tracker aktif — Next.js: hanya plan.md aktif; doc.md/Todo.md/AGENT.md arsip ber-banner & gitignored. React: README diberi banner DEPRECATED di posisi paling atas
+2. ✅ Project React jelas tertanda deprecated + tanggal (22 Agustus 2026) + daftar fitur yang sudah diporting
 3. Ketiga gerbang DoD hijau + bukti tercatat
 
 **Bukti**
 ```
-README.md (Next.js) : bagian "Status" -> pointer plan.md (sejak T-11) ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
-../Hera Store React/README.md : banner "DEPRECATED ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ARSIP PROJECT
+README.md (Next.js) : bagian "Status" -> pointer plan.md (sejak T-11) ✅
+../Hera Store React/README.md : banner "DEPRECATED — ARSIP PROJECT
   (22 Agustus 2026)" ditambahkan di baris pertama + daftar fitur
-  yang telah diporting + pointer ke plan.md penerus ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+  yang telah diporting + pointer ke plan.md penerus ✅
 Tracker basi repo Next.js : sudah terarsip sejak 2026-08-22 awal
-  (doc.md, Todo.md ber-banner ARCHIVED + gitignored) ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
-Gerbang: typecheck exit 0 Ãƒâ€šÃ‚Â· lint 14 err/0 warn Ãƒâ€šÃ‚Â· build exit 0 (lihat commit T-06)
+  (doc.md, Todo.md ber-banner ARCHIVED + gitignored) ✅
+Gerbang: typecheck exit 0 · lint 14 err/0 warn · build exit 0 (lihat commit T-06)
 ```
 
 ---
 
-### T-08 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Pembaruan Dependencies ke Versi Stabil
+### T-08 — Pembaruan Dependencies ke Versi Stabil
 
 | Field | Isi |
 |---|---|
@@ -429,9 +438,9 @@ Gerbang: typecheck exit 0 Ãƒâ€šÃ‚Â· lint 14 err/0 warn Ãƒâ€šÃ�
 **Tujuan:** Ganti `typescript@^6.0.0-beta` (prerelease) dengan versi stabil terbaru dan bawa seluruh dependencies ke versi stabil terbaru yang kompatibel, untuk keamanan (patch CVE) dan konsistensi toolchain.
 
 **Keputusan desain (dikunci saat mulai):**
-- TypeScript ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `7.0.2` (latest stable). Fallback `6.0.3` bila gerbang verifikasi gagal.
-- `next` + `eslint-config-next` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `16.3.2` (selalu berpasangan, major tetap 16).
-- ESLint ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `10.9.0` (peer `>=9` terpenuhi). Fallback latest 9.x bila baseline lint rusak parah.
+- TypeScript → `7.0.2` (latest stable). Fallback `6.0.3` bila gerbang verifikasi gagal.
+- `next` + `eslint-config-next` → `16.3.2` (selalu berpasangan, major tetap 16).
+- ESLint → `10.9.0` (peer `>=9` terpenuhi). Fallback latest 9.x bila baseline lint rusak parah.
 - Paket yang sudah latest stabil tidak disentuh: react/react-is 19.2.8, recharts 3.10.1, tailwindcss & @tailwindcss/postcss 4.3.3.
 
 **Scope-IN**
@@ -449,38 +458,38 @@ Gerbang: typecheck exit 0 Ãƒâ€šÃ‚Â· lint 14 err/0 warn Ãƒâ€šÃ�
 5. `npm audit` tidak menampilkan vulnerability high/critical baru
 6. Bukti ketiga gerbang + audit tercatat di bagian Bukti
 
-**Catatan gerbang lint:** Baseline `npm run lint` sudah gagal sejak sebelum task ini (386 error ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â lihat analisis 22 Agu 2026). Gerbang DoD "lint exit 0" penuh tidak dapat dipenuhi sampai utang lint dibereskan; kriteria no.4 dipakai sebagai pengganti sementara. Status DONE final menunggu persetujuan pemilik project atas pengecualian ini.
+**Catatan gerbang lint:** Baseline `npm run lint` sudah gagal sejak sebelum task ini (386 error — lihat analisis 22 Agu 2026). Gerbang DoD "lint exit 0" penuh tidak dapat dipenuhi sampai utang lint dibereskan; kriteria no.4 dipakai sebagai pengganti sementara. Status DONE final menunggu persetujuan pemilik project atas pengecualian ini.
 
 **Bukti**
 ```
 == Versi final (npm ls) ==
-typescript@6.0.3 (fallback dari 7.0.2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â typescript-eslint belum support TS 7.0,
+typescript@6.0.3 (fallback dari 7.0.2 — typescript-eslint belum support TS 7.0,
                    lihat error resmi tool saat lint dengan TS 7.0.2)
-next@16.3.2 Ãƒâ€šÃ‚Â· eslint-config-next@16.3.2
-eslint@9.39.5   (fallback dari 10.9.0 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â crash di eslint-plugin-react bawaan
+next@16.3.2 · eslint-config-next@16.3.2
+eslint@9.39.5   (fallback dari 10.9.0 — crash di eslint-plugin-react bawaan
                  eslint-config-next yang dibangun utk ESLint 9)
-@supabase/ssr@0.12.4 Ãƒâ€šÃ‚Â· @supabase/supabase-js@2.112.3 Ãƒâ€šÃ‚Â· lucide-react@1.33.0
-@types/node@26.2.0 Ãƒâ€šÃ‚Â· @types/react@19.2.18 Ãƒâ€šÃ‚Â· @types/react-dom@19.2.4
-react/react-is@19.2.8 Ãƒâ€šÃ‚Â· recharts@3.10.1 Ãƒâ€šÃ‚Â· tailwindcss@4.3.3 (sudah latest)
+@supabase/ssr@0.12.4 · @supabase/supabase-js@2.112.3 · lucide-react@1.33.0
+@types/node@26.2.0 · @types/react@19.2.18 · @types/react-dom@19.2.4
+react/react-is@19.2.8 · recharts@3.10.1 · tailwindcss@4.3.3 (sudah latest)
 
 == Gerbang 1: npx tsc --noEmit == EXIT 0
 
 == Gerbang 2: npm run lint ==
-ÃƒÂ¢Ã…â€œÃ¢â‚¬â€œ 713 problems (386 errors, 327 warnings)
+✖ 713 problems (386 errors, 327 warnings)
 Error: identik baseline (269 no-explicit-any + 104 set-state-in-effect
-       + 7 immutability + 6 static-components) ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 0 regresi error.
-Warning: +58 vs baseline (269ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢327) SELURUHNYA dari rule BARU upstream
+       + 7 immutability + 6 static-components) → 0 regresi error.
+Warning: +58 vs baseline (269→327) SELURUHNYA dari rule BARU upstream
        @next/next/no-location-assign-relative-destination (ditambahkan di
        eslint-config-next 16.3.2). Bukan regresi kode.
 
 == Gerbang 3: npm run build == EXIT 0 (semua route ter-generate)
 
 == npm audit ==
-found 0 vulnerabilities (baseline sebelum update: 2 high ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â brace-expansion DoS,
+found 0 vulnerabilities (baseline sebelum update: 2 high — brace-expansion DoS,
 nanoid; keduanya dipatch via npm audit fix non-breaking)
 ```
 
-### T-09 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Ganti Navigasi `window.location` dengan Router Next.js
+### T-09 — Ganti Navigasi `window.location` dengan Router Next.js
 
 | Field | Isi |
 |---|---|
@@ -505,7 +514,7 @@ nanoid; keduanya dipatch via npm audit fix non-breaking)
 
 **Scope-IN**
 - 6 file pada daftar lokasi di atas
-- `eslint.config.mjs` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â hanya penambahan ignore `.claude/**`
+- `eslint.config.mjs` — hanya penambahan ignore `.claude/**`
 - Entri plan.md ini + Changelog
 
 **Scope-OUT (dilarang disentuh)**
@@ -514,7 +523,7 @@ nanoid; keduanya dipatch via npm audit fix non-breaking)
 **Kriteria Selesai**
 1. 0 warning `no-location-assign-relative-destination` pada kode asli
 2. Perilaku navigasi tidak berubah (destinasi & kondisi pemicu sama)
-3. Jumlah error lint ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¤ baseline 386
+3. Jumlah error lint ≤ baseline 386
 4. `npx tsc --noEmit` exit 0
 5. `npm run build` exit 0
 6. Bukti gerbang tercatat di bagian Bukti
@@ -522,43 +531,43 @@ nanoid; keduanya dipatch via npm audit fix non-breaking)
 **Bukti**
 ```
 == Perubahan ==
-10/10 lokasi diganti window.location.href ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ router.push("/..."):
-login/page.tsx:47 Ãƒâ€šÃ‚Â· CategoryClient.tsx:47,78 Ãƒâ€šÃ‚Â· HomeClient.tsx:205,250
-ProfilClient.tsx:771,795 (replaceAll) Ãƒâ€šÃ‚Â· AdminSidebar.tsx:121
+10/10 lokasi diganti window.location.href → router.push("/..."):
+login/page.tsx:47 · CategoryClient.tsx:47,78 · HomeClient.tsx:205,250
+ProfilClient.tsx:771,795 (replaceAll) · AdminSidebar.tsx:121
 AdminTopbar.tsx:96,109
 Import useRouter (next/navigation) + hook ditambahkan di 6 file.
 eslint.config.mjs: globalIgnores += ".claude/**".
 
 == Gerbang lint ==
-ÃƒÂ¢Ã…â€œÃ¢â‚¬â€œ 22 problems (14 errors, 8 warnings)
-no-location-assign-relative-destination: 0 ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ (kriteria 1)
-Error 14 ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¤ baseline 386 ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ (kriteria 3)
+✖ 22 problems (14 errors, 8 warnings)
+no-location-assign-relative-destination: 0 ✅ (kriteria 1)
+Error 14 ≤ baseline 386 ✅ (kriteria 3)
 
-ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â KOREKSI BASELINE PENTING: angka lint lama (655ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“713 problems /
+⚠️ KOREKSI BASELINE PENTING: angka lint lama (655–713 problems /
 386 errors) ternyata TERCEMAR oleh salinan project basi di
 .claude/worktrees/** yang ikut ter-scan. Setelah di-ignore, baseline
 ASLI project = 14 error / 8 warning. Perbandingan regresi di Bukti
 T-08 tetap sah karena kedua sisi pengukuran sama-sama tercemar.
 
-Sisa temuan pre-existing (bukan dari T-09): no-explicit-any ÃƒÆ’Ã¢â‚¬â€10,
-set-state-in-effect ÃƒÆ’Ã¢â‚¬â€3, immutability ÃƒÆ’Ã¢â‚¬â€1, img-element ÃƒÆ’Ã¢â‚¬â€4,
-exhaustive-deps ÃƒÆ’Ã¢â‚¬â€1, unused-vars ÃƒÆ’Ã¢â‚¬â€3 (keranjang/page.tsx,
-NotificationDropdown.tsx ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â file tidak disentuh task ini).
+Sisa temuan pre-existing (bukan dari T-09): no-explicit-any ×10,
+set-state-in-effect ×3, immutability ×1, img-element ×4,
+exhaustive-deps ×1, unused-vars ×3 (keranjang/page.tsx,
+NotificationDropdown.tsx — file tidak disentuh task ini).
 
-== Gerbang typecheck == npx tsc --noEmit ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ EXIT 0
+== Gerbang typecheck == npx tsc --noEmit → EXIT 0
 
-== Gerbang build == npm run build ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ EXIT 0
+== Gerbang build == npm run build → EXIT 0
 
 == Perilaku ==
 Destinasi & kondisi pemicu navigasi identik; satu-satunya perubahan
-mekanis: full page reload ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ client-side navigation (tujuan rule).
+mekanis: full page reload → client-side navigation (tujuan rule).
 Login/logout tetap benar: cookie auth diperbarui sebelum push dan
 navigasi baru memicu fetch RSC dengan sesi segar.
 ```
 
 ---
 
-### T-10 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Hardening Fungsi SECURITY DEFINER Database
+### T-10 — Hardening Fungsi SECURITY DEFINER Database
 
 | Field | Isi |
 |---|---|
@@ -568,10 +577,10 @@ navigasi baru memicu fetch RSC dengan sesi segar.
 **Tujuan:** Menutup temuan kritis Supabase security advisor: 9 fungsi `SECURITY DEFINER` dapat dieksekusi publik tanpa login via `/rest/v1/rpc/...` (ACL terverifikasi `anon=X/postgres`), memungkinkan korupsi stok (`decrement/increment_*_stock`), pembakaran kuota voucher (`increment_voucher_usage`), dan probing role (`has_role`). Plus lint `function_search_path_mutable` pada `generate_order_number`.
 
 **Keputusan desain (terverifikasi terhadap live DB sebelum migrasi):**
-- 5 fungsi stok/voucher ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ REVOKE dari `anon`, KEEP `authenticated` (app memanggil via cookie client ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â bukti: `src/lib/orders.ts`, `src/lib/vouchers.ts`)
-- `handle_new_user`, `handle_order_status_change`, `rls_auto_enable` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ REVOKE dari `anon`+`authenticated` (trigger/event-trigger, tidak pernah dipanggil via RPC oleh app)
-- `has_role` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ **KEEP semua role** ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â terverifikasi dipakai di 20 RLS policies; revoke akan mematahkan evaluasi RLS untuk guest. Warning advisor utk fungsi ini diterima sebagai risiko rendah terdokumentasi (read-only boolean, search_path fixed).
-- `generate_order_number` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ REVOKE anon + `SET search_path = ''` (aman: body sudah schema-qualified ke `public.orders`; pg_catalog tetap implicit)
+- 5 fungsi stok/voucher → REVOKE dari `anon`, KEEP `authenticated` (app memanggil via cookie client — bukti: `src/lib/orders.ts`, `src/lib/vouchers.ts`)
+- `handle_new_user`, `handle_order_status_change`, `rls_auto_enable` → REVOKE dari `anon`+`authenticated` (trigger/event-trigger, tidak pernah dipanggil via RPC oleh app)
+- `has_role` → **KEEP semua role** — terverifikasi dipakai di 20 RLS policies; revoke akan mematahkan evaluasi RLS untuk guest. Warning advisor utk fungsi ini diterima sebagai risiko rendah terdokumentasi (read-only boolean, search_path fixed).
+- `generate_order_number` → REVOKE anon + `SET search_path = ''` (aman: body sudah schema-qualified ke `public.orders`; pg_catalog tetap implicit)
 
 **Scope-IN**
 - Migration live DB via MCP + file `supabase/migrations/20260822120000_secure_functions.sql`
@@ -591,7 +600,7 @@ navigasi baru memicu fetch RSC dengan sesi segar.
 ```
 == Migration live (via MCP) ==
 secure_functions_hardening + secure_functions_hardening_public (koreksi
-grant PUBLIC =X yang membuat revoke per-role tidak efektif ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ditemukan
+grant PUBLIC =X yang membuat revoke per-role tidak efektif — ditemukan
 saat verifikasi ACL pasca-migrasi pertama).
 File repo: supabase/migrations/20260822120000_secure_functions_hardening.sql
 
@@ -599,27 +608,27 @@ File repo: supabase/migrations/20260822120000_secure_functions_hardening.sql
 decrement_product_stock / decrement_variant_stock /
 increment_product_stock / increment_variant_stock /
 increment_voucher_usage / generate_order_number
-  ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ authenticated=X, service_role=X   (anon & PUBLIC hilang) ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+  → authenticated=X, service_role=X   (anon & PUBLIC hilang) ✅
 handle_new_user / handle_order_status_change / rls_auto_enable
-  ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ service_role=X saja ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
-has_role ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ semua role (by design, dipakai 20 RLS policies) ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+  → service_role=X saja ✅
+has_role → semua role (by design, dipakai 20 RLS policies) ✅
 
 == search_path generate_order_number ==
-config: search_path="" ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ (lint function_search_path_mutable HILANG)
+config: search_path="" ✅ (lint function_search_path_mutable HILANG)
 
 == Security advisor ==
-19 warnings ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 7 warnings.
+19 warnings → 7 warnings.
 Sisa 7 = by-design & terdokumentasi:
-- authenticated-lint ÃƒÆ’Ã¢â‚¬â€6 pada fungsi yang memang dipanggil app
+- authenticated-lint ×6 pada fungsi yang memang dipanggil app
   (decrement/increment stok+voucher, has_role via policy)
-- anon-lint ÃƒÆ’Ã¢â‚¬â€1 pada has_role (wajib utk evaluasi RLS guest)
+- anon-lint ×1 pada has_role (wajib utk evaluasi RLS guest)
 ```
 
-Kriteria 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 terpenuhi. Status: DONE.
+Kriteria 1–5 terpenuhi. Status: DONE.
 
 ---
 
-### T-11 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Sinkronisasi Dokumentasi dengan Kondisi Aktual
+### T-11 — Sinkronisasi Dokumentasi dengan Kondisi Aktual
 
 | Field | Isi |
 |---|---|
@@ -629,9 +638,9 @@ Kriteria 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 terpenuhi. Status: DONE.
 **Tujuan:** Menghapus drift antara dokumentasi dan kondisi riil codebase/database pasca T-08, T-09, T-10, T-01.
 
 **Scope-IN**
-- `README.md` (tracked) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â versi stack, jumlah migration, statusÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢pointer plan.md, catatan keamanan RPC
-- `AGENTS.md` (lokal) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â isi Ãƒâ€šÃ‚Â§20 Project-Specific Configuration yang masih placeholder
-- `.gitignore` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â komentar basi "MIGRATE.md"
+- `README.md` (tracked) — versi stack, jumlah migration, status→pointer plan.md, catatan keamanan RPC
+- `AGENTS.md` (lokal) — isi §20 Project-Specific Configuration yang masih placeholder
+- `.gitignore` — komentar basi "MIGRATE.md"
 - Entri plan.md ini + Changelog
 
 **Scope-OUT (dilarang disentuh)**
@@ -639,27 +648,27 @@ Kriteria 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 terpenuhi. Status: DONE.
 
 **Kriteria Selesai**
 1. README tidak lagi memuat klaim usang (versi lama, "1 migration", tabel Status manual)
-2. AGENTS.md Ãƒâ€šÃ‚Â§20 terisi data riil project
+2. AGENTS.md §20 terisi data riil project
 3. Ketiga gerbang tetap hijau (dokumen tidak memengaruhi build)
 4. Bukti tercatat
 
 **Bukti**
 ```
 README.md  : stack 16.3.2/TS6, migrations 7 file (tabel lengkap),
-             verifikasi + baseline lint, Status ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ pointer plan.md,
+             verifikasi + baseline lint, Status → pointer plan.md,
              catatan security RPC & client routing.
-AGENTS.md Ãƒâ€šÃ‚Â§20 : terisi penuh (project, stack, live systems + aturan
+AGENTS.md §20 : terisi penuh (project, stack, live systems + aturan
              verifikasi Supabase/Vercel, SSOT files, commands).
 .gitignore : komentar basi "MIGRATE.md" diperbaiki.
-doc.md / Todo.md / AGENT.md / CLAUDE.md : arsip lokal ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â banner sudah
+doc.md / Todo.md / AGENT.md / CLAUDE.md : arsip lokal — banner sudah
              benar, tidak diubah (Scope-OUT).
 
-Gerbang: lint 22 problems (baseline sama) Ãƒâ€šÃ‚Â· typecheck exit 0 Ãƒâ€šÃ‚Â· build exit 0
+Gerbang: lint 22 problems (baseline sama) · typecheck exit 0 · build exit 0
 ```
 
 ---
 
-### T-12 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Konsolidasi Migration Menjadi Satu Full Schema
+### T-12 — Konsolidasi Migration Menjadi Satu Full Schema
 
 | Field | Isi |
 |---|---|
@@ -669,12 +678,12 @@ Gerbang: lint 22 problems (baseline sama) Ãƒâ€šÃ‚Â· typecheck exit 0 
 **Tujuan:** Satu file migration tunggal (`full_schema`) yang berfungsi sebagai init + seed keseluruhan database, merepresentasikan struktur DB live saat ini (termasuk hardening T-10); file-file migration lama yang terfragmentasi dihapus dari repo.
 
 **Metode (dikunci saat mulai):**
-- Gabungkan 7 migration existing **berurutan kronologis** ke dalam `supabase/migrations/20260822130000_full_schema.sql` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â statement belakangan menimpa yang awal sehingga hasil akhir = state final yang identik dengan urutan penerapan historis.
+- Gabungkan 7 migration existing **berurutan kronologis** ke dalam `supabase/migrations/20260822130000_full_schema.sql` — statement belakangan menimpa yang awal sehingga hasil akhir = state final yang identik dengan urutan penerapan historis.
 - Verifikasi inventaris live DB (tabel, fungsi+ACL, trigger, policy, bucket) sebelum & sesudah merge.
 - Catatan data: live DB saat ini 0 baris di semua tabel; bagian seed tetap disertakan agar file bisa menginisialisasi project baru lengkap.
 
 **Scope-IN**
-- `supabase/migrations/` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 7 file lama dihapus, 1 file konsolidasi baru
+- `supabase/migrations/` — 7 file lama dihapus, 1 file konsolidasi baru
 - Entri plan.md ini + Changelog
 
 **Scope-OUT (dilarang disentuh)**
@@ -682,7 +691,7 @@ Gerbang: lint 22 problems (baseline sama) Ãƒâ€šÃ‚Â· typecheck exit 0 
 
 **Kriteria Selesai**
 1. Repo hanya berisi 1 file migration hasil konsolidasi
-2. Urutan statement mempertahankan dependensi (schema ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ seed ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ fix ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ hardening)
+2. Urutan statement mempertahankan dependensi (schema → seed → fix → hardening)
 3. Inventaris objek live DB (fungsi/ACL/trigger/policy/bucket) terverifikasi cocok dengan isi file
 4. Ketiga gerbang hijau + bukti tercatat
 
@@ -690,25 +699,25 @@ Gerbang: lint 22 problems (baseline sama) Ãƒâ€šÃ‚Â· typecheck exit 0 
 ```
 == Hasil konsolidasi ==
 File: supabase/migrations/20260822130000_full_schema.sql (1314 baris, ~62 KB)
-Repo kini berisi TEPAT 1 file migration ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ (7 file lama di-git-rm)
+Repo kini berisi TEPAT 1 file migration ✅ (7 file lama di-git-rm)
 
 == Verifikasi inventaris vs live DB ==
-Tabel          : 14 create table (profiles..store_settings) = live 14 ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+Tabel          : 14 create table (profiles..store_settings) = live 14 ✅
 Fungsi         : 10 unik, identik daftar live (incl. rls_auto_enable
-                 yang ternyata dibuat manual di luar migration lama ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
+                 yang ternyata dibuat manual di luar migration lama —
                  definisi + event trigger `ensure_rls` diekstrak dari
                  live DB via pg_event_trigger & ditambahkan ke file)
-Event trigger  : ensure_rls ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ rls_auto_enable ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
-Trigger tabel  : on_order_status_change (orders) ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+Event trigger  : ensure_rls → rls_auto_enable ✅
+Trigger tabel  : on_order_status_change (orders) ✅
 Policy         : replay kronologis 54 create / 4 drop = state final
-                 live (42 policy) ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
-Hardening      : REVOKE anon/PUBLIC ÃƒÆ’Ã¢â‚¬â€9 + search_path='' ada di akhir ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+                 live (42 policy) ✅
+Hardening      : REVOKE anon/PUBLIC ×9 + search_path='' ada di akhir ✅
 Seed           : categories/products/variants/vouchers/flash_sales/
-                 store_settings/profiles tersertakan ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
-Storage        : bucket product-images ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦
+                 store_settings/profiles tersertakan ✅
+Storage        : bucket product-images ✅
 
 == Gerbang ==
-lint 22 problems (baseline sama) Ãƒâ€šÃ‚Â· typecheck exit 0 Ãƒâ€šÃ‚Â· build exit 0
+lint 22 problems (baseline sama) · typecheck exit 0 · build exit 0
 
 Catatan: live DB tidak diubah (Scope-OUT). File ini adalah init untuk
 project baru; struktur finalnya identik dengan DB live hari ini.
@@ -716,27 +725,27 @@ project baru; struktur finalnya identik dengan DB live hari ini.
 
 ---
 
-## ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Â¾ Changelog (APPEND-ONLY ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â dilarang mengedit/menghapus entri lama)
+## 🧾 Changelog (APPEND-ONLY — dilarang mengedit/menghapus entri lama)
 
 | Tanggal | ID | Perubahan | Oleh |
 |---------|-----|-----------|------|
-| 2026-08-22 | ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â | plan.md dibuat; Todo.md & doc.md diarsipkan; roadmap + protokol SSOT disepakati pemilik project | ox-alpha |
+| 2026-08-22 | — | plan.md dibuat; Todo.md & doc.md diarsipkan; roadmap + protokol SSOT disepakati pemilik project | ox-alpha |
 | 2026-08-22 | T-08 | Task T-08 dibuat & dimulai (IN_PROGRESS) atas instruksi pemilik project: update dependencies ke versi stabil | ox-alpha |
-| 2026-08-22 | T-08 | Implementasi selesai + bukti 3 gerbang & audit tercatat. Status menunggu keputusan pemilik: warning +58 (rule baru upstream) diterima sebagai baseline baru ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ DONE, atau dibuat task perbaikan terpisah | ox-alpha |
-| 2026-08-22 | T-08 | Keputusan pemilik: opsi 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â perbaikan 10 call-site asli dibuat task terpisah. T-08 ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ DONE (Selesai 22 Agu 2026) | ox-alpha |
+| 2026-08-22 | T-08 | Implementasi selesai + bukti 3 gerbang & audit tercatat. Status menunggu keputusan pemilik: warning +58 (rule baru upstream) diterima sebagai baseline baru → DONE, atau dibuat task perbaikan terpisah | ox-alpha |
+| 2026-08-22 | T-08 | Keputusan pemilik: opsi 2 — perbaikan 10 call-site asli dibuat task terpisah. T-08 → DONE (Selesai 22 Agu 2026) | ox-alpha |
 | 2026-08-22 | T-09 | Task T-09 dibuat & dimulai (IN_PROGRESS): ganti window.location dengan useRouter di 10 lokasi + ignore `.claude/**` di eslint config | ox-alpha |
 | 2026-08-22 | T-09 | Selesai (DONE): 10/10 lokasi diganti, 0 warning rule target, lint bersih dari polusi worktree (baseline asli: 14 err/8 warn), tsc & build exit 0. Temuan dokumentasi: angka baseline lama tercemar salinan `.claude/worktrees/**` | ox-alpha |
-| 2026-08-22 | ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â | Commit T-08 (`5b4ee22`) & T-09 (`cb738c2`) sesuai format R6 | ox-alpha |
+| 2026-08-22 | — | Commit T-08 (`5b4ee22`) & T-09 (`cb738c2`) sesuai format R6 | ox-alpha |
 | 2026-08-22 | T-10 | Task T-10 dibuat & dimulai (IN_PROGRESS) hasil re-audit + instruksi pemilik project: hardening fungsi SECURITY DEFINER live DB | ox-alpha |
-| 2026-08-22 | T-10 | Selesai (DONE): 2 migration diterapkan (incl. koreksi grant PUBLIC), advisor security 19ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢7 (sisa by-design terdokumentasi), search_path fixed, ACL diverifikasi live | ox-alpha |
+| 2026-08-22 | T-10 | Selesai (DONE): 2 migration diterapkan (incl. koreksi grant PUBLIC), advisor security 19→7 (sisa by-design terdokumentasi), search_path fixed, ACL diverifikasi live | ox-alpha |
 | 2026-08-22 | T-10 | Commit `76aa5ea` (plan.md) + `0adb560` (track semua migration + .gitignore) | ox-alpha |
-| 2026-08-22 | T-01 | Dimulai & selesai (DONE): script typecheck ditambahkan, .env.example disinkronkan 8 var, baseline asli tercatat (lint 14err/8warn exit1 pre-existing Ãƒâ€šÃ‚Â· typecheck 0 Ãƒâ€šÃ‚Â· build 0) | ox-alpha |
+| 2026-08-22 | T-01 | Dimulai & selesai (DONE): script typecheck ditambahkan, .env.example disinkronkan 8 var, baseline asli tercatat (lint 14err/8warn exit1 pre-existing · typecheck 0 · build 0) | ox-alpha |
 | 2026-08-22 | T-01 | Commit `01ca6b5` | ox-alpha |
 | 2026-08-22 | T-11 | Task T-11 dibuat & dimulai (IN_PROGRESS) instruksi pemilik project: sinkronkan seluruh dokumentasi dengan kondisi aktual | ox-alpha |
-| 2026-08-22 | T-11 | Selesai (DONE): README + AGENTS.md Ãƒâ€šÃ‚Â§20 + .gitignore disinkronkan kondisi aktual; gerbang lint/typecheck/build tetap hijau | ox-alpha |
-| 2026-08-22 | T-12 | Task T-12 dibuat & dimulai (IN_PROGRESS) instruksi pemilik project: konsolidasi 7 migration ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 1 full schema (init+seed) | ox-alpha |
+| 2026-08-22 | T-11 | Selesai (DONE): README + AGENTS.md §20 + .gitignore disinkronkan kondisi aktual; gerbang lint/typecheck/build tetap hijau | ox-alpha |
+| 2026-08-22 | T-12 | Task T-12 dibuat & dimulai (IN_PROGRESS) instruksi pemilik project: konsolidasi 7 migration → 1 full schema (init+seed) | ox-alpha |
 | 2026-08-22 | T-12 | Selesai (DONE): `20260822130000_full_schema.sql` (1314 baris) menggantikan 7 file lama; inventaris terverifikasi identik live DB (14 tabel, 10 fungsi, ensure_rls, 42 policy final, seed, bucket); gerbang hijau | ox-alpha |
-| 2026-08-22 | T-02 | REVISI DESAIN: Midtrans Snap ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ **Xendit Invoice API v2** atas instruksi pemilik project (alasan: e-wallet lebih luas OVO/DANA + invoice-link via WA). Scope & kriteria ditulis ulang; task dimulai (IN_PROGRESS) | ox-alpha |
+| 2026-08-22 | T-02 | REVISI DESAIN: Midtrans Snap → **Xendit Invoice API v2** atas instruksi pemilik project (alasan: e-wallet lebih luas OVO/DANA + invoice-link via WA). Scope & kriteria ditulis ulang; task dimulai (IN_PROGRESS) | ox-alpha |
 | 2026-08-22 | T-02 | Selesai (DONE): migration xendit_order_columns live+mirror, 2 API route (create/webhook) + admin client, UI bayar online & checkout, gerbang hijau. E2E runtime menunggu kredensial Xendit dari owner (tercatat di Bukti) | ox-alpha |
 | 2026-08-22 | T-02 | Commit `8c1000c` + `83cf562` (gitignore migration fix) | ox-alpha |
 | 2026-08-22 | T-03 | Dimulai & selesai (DONE): 3 API route flash-sales (GET/POST/PUT/DELETE/toggle) dgn verifyAdminRole, 6 fungsi lib/admin, FlashSaleModal + aksi tabel di /admin/promo; kriteria no.2 diadaptasi ke model harga absolut (terdokumentasi); gerbang hijau | ox-alpha |
@@ -748,11 +757,11 @@ project baru; struktur finalnya identik dengan DB live hari ini.
 | 2026-08-22 | T-06 | Dimulai & selesai (DONE): migration product_qna live+mirror, API tanya/jawab, tab Q&A detail produk, panel admin di ulasan, comparison utils+tombol+halaman /perbandingan; gerbang hijau | ox-alpha |
 | 2026-08-22 | T-07 | Dimulai & selesai (DONE): banner DEPRECATED dipasang di ../Hera Store React/README.md; kriteria konsolidasi terpenuhi penuh (sisanya sudah di T-11/T-12) | ox-alpha |
 
-## ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â ROADMAP SELESAI ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â semua task T-01 s/d T-12 berstatus DONE per 22 Agustus 2026.
+## 🏁 ROADMAP SELESAI — semua task T-01 s/d T-12 berstatus DONE per 22 Agustus 2026.
 
 ---
 
-### T-13 â€” Sinkronisasi Dokumentasi Pasca-Roadmap
+### T-13 — Sinkronisasi Dokumentasi Pasca-Roadmap
 
 | Field | Isi |
 |---|---|
@@ -761,26 +770,30 @@ project baru; struktur finalnya identik dengan DB live hari ini.
 
 **Tujuan:** Menyinkronkan seluruh dokumentasi dengan kondisi akhir setelah T-02 s/d T-07 selesai (pembayaran online, notifikasi, Q&A, comparison, flash sale CRUD).
 
-**Scope-IN:** README.md, AGENTS.md Â§20
+**Scope-IN:** README.md, AGENTS.md §20
 **Scope-OUT:** kode aplikasi
 
 **Kriteria Selesai**
-1. âœ… README: struktur tree (33 route, lib baru, halaman perbandingan), fitur customer/admin terkini, tabel API 33 route, baseline verifikasi (14 err/0 warn), tabel Environment Variables lengkap
-2. âœ… AGENTS.md Â§20: jumlah route 33, entri Live Systems Xendit & Notifikasi, tanggal sinkron T-13
-3. âœ… Gerbang: lint 14/0 Â· typecheck 0 Â· build 0
+1. ✅ README: struktur tree (33 route, lib baru, halaman perbandingan), fitur customer/admin terkini, tabel API 33 route, baseline verifikasi (14 err/0 warn), tabel Environment Variables lengkap
+2. ✅ AGENTS.md §20: jumlah route 33, entri Live Systems Xendit & Notifikasi, tanggal sinkron T-13
+3. ✅ Gerbang: lint 14/0 · typecheck 0 · build 0
 
 **Bukti**
 `
 README.md : tree+fitur+API(33)+verifikasi+env table diperbarui
-AGENTS.md : Â§20 route count 33, Xendit & Notifikasi live-systems,
+AGENTS.md : §20 route count 33, Xendit & Notifikasi live-systems,
             sync date T-13, lint baseline 14 problems
-Gerbang   : lint 14 err/0 warn Â· typecheck exit 0 Â· build exit 0
+Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 `
 
----| 2026-08-22 | T-13 | Dimulai & selesai (DONE): README (tree/fitur/API 33/verifikasi/env table) + AGENTS.md §20 disinkronkan kondisi akhir; gerbang hijau | ox-alpha |
+---
+
+| 2026-08-22 | T-13 | Dimulai & selesai (DONE): README (tree/fitur/API 33/verifikasi/env table) + AGENTS.md §20 disinkronkan kondisi akhir; gerbang hijau | ox-alpha |
 | 2026-08-29 | T-14 | Dimulai & selesai (DONE): sinkronisasi DB live ke 20260822130000_full_schema.sql via MCP — migration `20260829120000_sync_full_schema` (product_qna + kolom xendit orders + hardening T-10 revoke EXECUTE + storage bucket 2MB/mime + policy DELETE storage); terverifikasi live: 15 tabel, 43 policy, ACL fungsi sesuai hardening, bucket 2MB jpg/png/webp; advisor hanya by-design WARN (has_role & fungsi stok authenticated) | ox-alpha |
 | 2026-08-29 | T-15 | Dimulai & selesai (DONE): konsolidasi dokumentasi — hapus migration sync (sisa 1: full_schema), hapus AGENT.md/CLAUDE.md/doc.md/Todo.md, AGENTS.md satu-satunya dokumen agent + aturan DB-SYNC-1/2/3 (full_schema = DB live = codebase; wajib MCP, dilarang CLI) | ox-alpha |
 | 2026-08-29 | T-16 | Dimulai & selesai (DONE): env disinkronkan ke proyek live leocryckwezmxusrorhm (.env.local URL + AGENTS.md §20/§22 AUTH-NOTE-1); konfirmasi super_admin ada & remote git origin ter-set | ox-alpha |
+| 2026-08-29 | — | Perbaikan encoding: mojibake (double-encoded UTF-8) di plan.md & full_schema.sql dibersihkan — dipulihkan ke UTF-8 benar; emoji ikon kategori kini cocok dengan live DB; backup di temp/opencode/hera-backup | ox-alpha |
+| 2026-08-29 | T-17 s/d T-25 | Dimulai & selesai (DONE): perbaikan keamanan & keandalan — T-17 checkout harga promo (getEffectivePrices: flash > discount > price) · T-18 policy profiles aman (user: safe fields; admin: penuh) + product_qna authenticated · T-19 confirm-payment via RPC request_payment_confirmation + verifikasi admin di modal · T-20 webhook cek paid_amount · T-21 voucher_usage + RPC redeem_voucher (per-user limit) · T-22 rollback variant phantom + qty integer · T-23 role whitelist + guard super_admin terakhir · T-24 magic bytes upload · T-25 full_schema = live (migration 20260829140000_security_fixes via MCP); gerbang typecheck 0 · build 0 · lint 13 (turun dari baseline 14) | ox-alpha |
 
 ---
 

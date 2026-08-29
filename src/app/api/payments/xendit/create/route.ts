@@ -125,8 +125,18 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error("[Xendit Create] Update error:", updateError);
-      // Invoice sudah ada di Xendit; user bisa coba lagi dan akan reuse via lookup? 
-      // Belum tersimpan -> create baru dengan external_id unik berikutnya. Aman.
+      // T-17: Batalkan invoice di Xendit agar tidak menjadi invoice yatim yang bisa dibayar
+      try {
+        await fetch(`https://api.xendit.co/v2/invoices/${invoice.id}/expire`, {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${secret}:`).toString("base64")}`,
+            "Content-Type": "application/json",
+          },
+        });
+      } catch (expireErr) {
+        console.error("[Xendit Create] Gagal expire invoice yatim:", expireErr);
+      }
       return NextResponse.json(
         { error: "Tagihan dibuat namun gagal disimpan. Silakan coba lagi." },
         { status: 500 }
