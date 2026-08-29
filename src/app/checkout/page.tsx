@@ -78,7 +78,7 @@ export default function CheckoutPage() {
   const [checkoutItems, setCheckoutItems] = useState<CheckoutItem[]>([]);
   const [subtotal, setSubtotal] = useState(0);
   const [discount, setDiscount] = useState(0);
-  const [, setVoucherCode] = useState<string | null>(null);
+  const [voucherCode, setVoucherCode] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   const [, startTransition] = useTransition();
@@ -295,6 +295,8 @@ export default function CheckoutPage() {
         payment_method: paymentMethod?.name || "Transfer",
         subtotal,
         discount,
+        // T-49: server menolak discount > 0 tanpa voucher_code — kirim kode dari keranjang
+        voucher_code: voucherCode || undefined,
         total,
         // T-41: UTM dari campaign (localStorage) — dilaporkan sebagai order conversion
         utm_source: getStoredUtm().utm_source || null,

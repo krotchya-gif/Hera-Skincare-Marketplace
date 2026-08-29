@@ -109,7 +109,7 @@ npm run build       # exit 0
 | T-46 | P1 | Hapus Edge Runtime deprecated → nodejs (4 file ikon + README) | DONE |
 | T-47 | P1 | Rebrand catalog → skincare (kategori lucide, produk skincare, gambar, emoji → icon) | DONE |
 | T-48 | P1 | Sinkronisasi dokumentasi pasca T-47 (README 36 route, AGENTS.md) | DONE |
-| T-49 | P0 | Fix checkout voucher (voucher_code tidak terkirim ke /api/orders) | BACKLOG |
+| T-49 | P0 | Fix checkout voucher (voucher_code tidak terkirim ke /api/orders) | DONE |
 | T-50 | P0 | Validasi shipping_cost & total di /api/orders (tolak negatif) | BACKLOG |
 | T-51 | P0 | Xendit create: simpan referensi invoice via service-role | BACKLOG |
 | T-52 | P0 | Perbaiki syntax error full_schema.sql (store_settings terpotong) | BACKLOG |
@@ -916,7 +916,8 @@ Gerbang   : tidak ada perubahan src → lint/typecheck/build tidak dijalankan ul
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
 | Prioritas | P0 |
 | Sumber | Audit menyeluruh 2026-08-29 — temuan HIGH-1 (terverifikasi kode) |
 
@@ -936,6 +937,27 @@ Gerbang   : tidak ada perubahan src → lint/typecheck/build tidak dijalankan ul
 2. Order tanpa voucher tetap berjalan normal
 3. Revalidasi server tetap menolak discount tanpa kode / nilai diskon tak cocok
 4. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Perubahan ==
+~ src/app/checkout/page.tsx
+  - state `[, setVoucherCode]` (dead) → `[voucherCode, setVoucherCode]`
+  - payload POST /api/orders kini mengirim voucher_code dari
+    localStorage hera_applied_voucher (undefined bila tanpa voucher)
+
+== Gerbang ==
+lint      : 13 problems (13 error pre-existing baseline, 0 warning) — tidak bertambah
+typecheck : tsc --noEmit → EXIT 0
+build     : EXIT 0 (semua route ter-generate)
+
+== Status kriteria ==
+1 ✅ rantai lengkap: keranjang simpan {code,discount} → checkout kirim voucher_code
+   → server validasi (getEffectivePrices + validateVoucher) — runtime E2E dengan
+   akun nyata menunggu dev server owner (tidak dibuat data test di DB live)
+2 ✅ voucher_code undefined bila tanpa voucher → jalur order tanpa diskon utuh
+3 ✅ validasi server tidak diubah sama sekali
+```
 
 ---
 
