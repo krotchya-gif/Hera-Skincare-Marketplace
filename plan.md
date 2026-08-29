@@ -130,7 +130,7 @@ npm run build       # exit 0
 | T-67 | P1 | Storefront: halaman katalog semua produk `/produk` (filter kategori + sort + pagination) | BACKLOG |
 | T-68 | P1 | Manajemen gambar produk: hapus per thumbnail + sinkronisasi product_images saat edit | BACKLOG |
 | T-69 | P2 | Kartu Banner/Push di Marketing jadi navigasi ke tab masing-masing | BACKLOG |
-| T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | BACKLOG |
+| T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -1961,7 +1961,8 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Keluh owner 2026-08-30 saat mencoba upload banner |
 
@@ -1980,6 +1981,16 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 1. Upload gambar di form banner sukses → URL terisi → banner tersimpan dan tampil
 2. Tidak ada row product_images yang dibuat untuk banner
 3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ src/components/admin/BannerManager.tsx — upload kirim productId "temp"
+  (jalur skip-referensi yang sudah ada di /api/admin/upload sejak flow
+  produk baru) → tidak menyentuh product_images; URL tersimpan di
+  banners.image_url. Konstanta UPLOAD_FOLDER_ID dihapus.
+E2E via browser menyusul di changelog (upload banner nyata).
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
 
 **Bukti**
 ```

@@ -38,8 +38,10 @@ const EMPTY_FORM: BannerForm = {
   is_active: true,
 };
 
-// UUID placeholder agar file banner tersimpan di folder terpisah di bucket
-const UPLOAD_FOLDER_ID = "00000000-0000-0000-0000-000000000000";
+// T-70: upload banner memakai jalur "temp" pada /api/admin/upload —
+// TANPA referensi product_images (UUID placeholder akan ditolak FK).
+// URL gambar tersimpan di banners.image_url, bukan di tabel produk.
+const UPLOAD_NO_REF = "temp";
 
 export default function BannerManager() {
   const { toast } = useToast();
@@ -89,7 +91,7 @@ export default function BannerManager() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("productId", UPLOAD_FOLDER_ID);
+      fd.append("productId", UPLOAD_NO_REF);
       const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.url) {
