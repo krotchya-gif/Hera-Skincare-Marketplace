@@ -127,7 +127,7 @@ npm run build       # exit 0
 | T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | DONE |
 | T-65 | P1 | CSP whitelist endpoint regional GA4 + tampilkan error API di tab Analytics | DONE |
 | T-66 | P1 | GA4/GTM script pindah ke `<head>` (kini di body → verifikasi GSC gagal) | DONE |
-| T-67 | P1 | Storefront: halaman katalog semua produk `/produk` (filter kategori + sort + pagination) | BACKLOG |
+| T-67 | P1 | Storefront: link "Semua Produk" (/kategori/semua) di navbar/footer + sitemap/llms | DONE |
 | T-68 | P1 | Manajemen gambar produk: hapus per thumbnail + sinkronisasi product_images saat edit | DONE |
 | T-69 | P2 | Kartu Banner/Push di Marketing jadi navigasi ke tab masing-masing | DONE |
 | T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | DONE |
@@ -860,6 +860,10 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-60 | Prioritas diturunkan P0→P2 (keputusan owner: foto masih placeholder; galeri self-heal saat foto asli di-upload ke Supabase Storage) | zcode |
 | 2026-08-30 | T-62 | Selesai (DONE): audit admin 11 halaman (login super_admin) + checkout end-to-end customer (login user.md) di 375px — SEMUA 0 overflow, tidak ada perbaikan dibutuhkan; bonus verifikasi live: AreaPicker sugesti API asli ✓, gratis-ongkir 0-hit ✓, fallback flat ✓; action item operasional: owner isi origin_area_id + alamat lama pilih area | zcode |
 | 2026-08-30 | T-63 | Selesai (DONE): fitur banner promosi — migration banners_table live+mirror (2 policy), 3 API admin route, tab Banner di marketing (BannerManager + upload), carousel auto-rotate di homepage; gerbang hijau | zcode |
+| 2026-08-30 | T-67 | Selesai (DONE): revisi scope — halaman semua-produk ternyata sudah ada (/kategori/semua, 16 produk terverifikasi live); fix discoverability: link di navbar drawer + footer + sitemap + llms.txt; gerbang hijau | zcode |
+| 2026-08-30 | T-68 | Selesai (DONE): syncProductImages di lib/admin (hapus/insert/urutan/is_primary) + PUT /api/admin/products/[id] menerima images[] + ProductFormModal hapus per thumbnail & badge Utama & EDIT kirim images — fix "slide 3" & placeholder tak tergantikan; E2E edit menyusul bila perlu | zcode |
+| 2026-08-30 | T-69 | Selesai (DONE): kartu Push Notification & Banner Iklan di tab Ringkasan jadi navigasi ke tab masing-masing (badge Aktif); Email Blast tetap Segera | zcode |
+| 2026-08-30 | T-70 | Selesai (DONE): upload banner pakai jalur "temp" (tanpa referensi product_images) — fix FK violation "Gagal menyimpan referensi gambar"; file yatim lama di Storage opsional dibersihkan via dashboard | zcode |
 | 2026-08-30 | T-65/T-66 | Selesai (DONE) & terverifikasi live: CSP connect-src += endpoint regional GA4; error API per-section di tab Analytics; GA4 config + GTM loader kini di <head> (gtag config @2.224, GTM @2.595 — sebelumnya di body @84rb) — syarat verifikasi GSC terpenuhi | zcode |
 | 2026-08-30 | T-64 | Selesai (DONE): fitur push notification Web Push VAPID — deps web-push, VAPID keys digenerate ke env, migration push_subscriptions_table live+mirror (2 policy), public/sw.js, /api/push/subscribe + /api/admin/push, PushOptIn homepage + PushComposer tab Push; 503 graceful tanpa env; gerbang hijau; E2E runtime menunggu VAPID di Vercel + redeploy | zcode |
 | 2026-08-30 | T-59 | Selesai (DONE): tab bar detail produk overflow-x-auto no-scrollbar (tombol nowrap shrink-0, px-4 mobile); gerbang hijau | zcode |
@@ -1885,8 +1889,8 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 
 | Field | Isi |
 |---|---|
-| Status | `IN_PROGRESS` |
-| Mulai / Selesai | 2026-08-30 / - |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Keluh owner 2026-08-30: "16 produk aktif, yang tampil hanya 6, tidak bisa lihat keseluruhan" |
 
@@ -1906,6 +1910,19 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 1. `/kategori/semua` menampilkan semua produk aktif (16) + bisa dicari/disort dari UI yang ada
 2. Link terlihat di navbar drawer & footer
 3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ Navbar drawer  — "Semua Produk" → /kategori/semua (icon Package)
+~ Footer Layanan — "Semua Produk" urutan pertama
+~ sitemap.xml    — /kategori/semua (daily, 0.9)
+~ llms.txt       — link Semua Produk
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+
+== Verifikasi live pasca-deploy (2026-08-30) ==
+Homepage memuat 3× href /kategori/semua (navbar + footer) ✓
+/kategori/semua HTTP 200, menampilkan 16 produk ✓
+```
 
 ---
 
