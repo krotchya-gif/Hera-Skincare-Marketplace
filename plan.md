@@ -858,6 +858,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-59 | Selesai (DONE): tab bar detail produk overflow-x-auto no-scrollbar (tombol nowrap shrink-0, px-4 mobile); gerbang hijau | zcode |
 | 2026-08-30 | T-61 | Selesai (DONE): kartu item keranjang direstrukturisasi — hapus pindah ke kanan nama, nama full-width line-clamp-2, harga+stepper satu baris nowrap; gerbang hijau | zcode |
 | 2026-08-30 | T-59/T-61 | Verifikasi live post-deploy (browser 375×812): halaman detail docW 370 (sebelumnya 448) 0 overflow, tab bar scrollable; keranjang nama tampil penuh & harga 1 baris — kedua temuan keluhan owner tertutup. Roadmap T-01..T-64 semuanya DONE | zcode |
+| 2026-08-30 | T-02 | VERIFIKASI WEBHOOK: Xendit dashboard Test → 200 OK (512ms) — XENDIT_CALLBACK_TOKEN terpasang di Vercel, endpoint produksi terautentikasi; sisa runtime E2E (bayar simulasi → lunas otomatis) menunggu pesanan test owner. Seluruh dokumentasi disinkronkan (AGENTS.md tanggal + status Xendit) | zcode |
 
 ---
 
@@ -1820,7 +1821,10 @@ Catatan: 3 issue saat pengerjaan diperbaiki (state subscribed + tipe
 applicationServerKey + catch binding sw.js) sampai baseline kembali.
 
 == UNVERIFIED (runtime) ==
-E2E subscribe + notifikasi muncul di browser butuh env VAPID terpasang di
-Vercel + redeploy (env .env.local sudah berisi key). Alur kirim broadcast
-menunggu ≥1 perangkat subscribe.
+VERIFIKASI WEBHOOK ✓ (30 Agu 2026): Xendit dashboard Test → 200 OK
+(512ms) — callback token terpasang di Vercel, endpoint produksi
+terautentikasi. Sisa UNVERIFIED (keputusan owner: push diaktifkan
+setelah produksi penuh): subscribe E2E di browser (menunggu env VAPID
+dipasang owner di Vercel + redeploy — key sudah ada di .env.local) +
+alur kirim broadcast (menunggu ≥1 perangkat subscribe).
 ```
