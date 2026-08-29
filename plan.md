@@ -116,7 +116,7 @@ npm run build       # exit 0
 | T-53 | P1 | Newsletter via API route (RLS-safe, tanpa success palsu) | DONE |
 | T-54 | P1 | Integrasi RajaOngkir V2 (Komerce) — cek ongkir real + satukan logika ongkir | DONE |
 | T-55 | P1 | Konsistensi order & stok (4 sub-bug hasil audit) | DONE |
-| T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | BACKLOG |
+| T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -831,6 +831,14 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-47 | Dimulai & selesai (DONE): rebrand catalog ke skincare — DB (migration 20260829190000_rebrand_skincare_catalog + full_schema sync): hapus 13 produk rumah tangga + test, 30 kategori baru (6 induk + 24 sub) murni kecantikan dengan icon NAMA LUCIDE (droplets/palette/bath/dll), 16 produk skincare (cleanser, toner, serum, moisturizer, sunscreen, mask, makeup, rambut, parfum, tubuh), 7 varian, 2 gambar per produk (picsum seeded), flash sale baru, store_info description skincare · kode: komponen CategoryIcon (map nama→lucide, 60+ icon), getProductImage helper, cart item image (ganti emoji), emoji diganti lucide di Home/Category/Detail/Navbar/Footer/keranjang/checkout/blog/cara-belanja/hubungi-kami/voucher/karir/not-found + seluruh admin (dashboard/keuangan/pesanan/pelanggan/promo/ulasan/produk/pengaturan/marketing/blog) + admin kategori form jadi grid pemilih lucide; gerbang typecheck 0 · build 0 · lint 13 | ox-alpha |
 | 2026-08-29 | T-48 | Dimulai & selesai (DONE): sinkronisasi dokumentasi pasca T-47 — README (36 API routes + 3 baru events/utm/analytics, struktur tree, fitur customer 18 halaman, admin marketing 4 tab + SEO tabs, migration seed skincare, baseline lint 13) + AGENTS.md §20 (36 routes, catalog T-47) + §22 tanggal sinkron; gerbang typecheck 0 · lint 13 | ox-alpha |
 | 2026-08-29 | — | Audit menyeluruh (kode + live DB via MCP) → 5 temuan HIGH + MEDIUM/LOW didaftarkan T-49..T-56 (BACKLOG); keputusan owner: cek ongkir real via RajaOngkir API V2 (Komerce, key tersedia), presisi subdistrict dengan picker alamat + kolom destination_area_id | zcode |
+| 2026-08-29 | T-49 | Selesai (DONE): checkout kirim voucher_code (state dead diaktifkan); gerbang lint 13/typecheck 0/build 0. Commit `10c82b1` | zcode |
+| 2026-08-29 | T-50 | Selesai (DONE): validasi shipping_cost finite>=0, discount<=subtotal, total>0 di /api/orders. Commit `ce0e38b` | zcode |
+| 2026-08-29 | T-51 | Selesai (DONE): referensi invoice Xendit ditulis via service-role + guard env 503; E2E UNVERIFIED menunggu env owner (pola T-02). Commit `2b276cc` | zcode |
+| 2026-08-29 | T-52 | Selesai (DONE): fragmen store_settings terpotong dihapus; parse OK 264 statement via pglast (libpg_query Postgres 17). Commit `8cdec0d` | zcode |
+| 2026-08-29 | T-53 | Selesai (DONE): /api/newsletter server-side (service-role, dedupe, 503 bila env kosong) + HomeClient tanpa success palsu; persist runtime UNVERIFIED menunggu SUPABASE_SERVICE_ROLE_KEY. | zcode |
+| 2026-08-29 | T-54 | Selesai (DONE): migration shipping_area_columns live+mirror (destination_area_id/label), settings += origin_area_id/label, lib/shipping.ts (sumber tunggal), /api/shipping/destination + /api/shipping/cost, AreaPicker di checkout/profil/admin, recompute ongkir server di /api/orders (mode flat: ongkir wajib == tarif settings); gerbang hijau; E2E dgn key owner UNVERIFIED (shape respons dinormalisasi defensif) | zcode |
+| 2026-08-29 | T-55 | Selesai (DONE) 4 sub: .1 rollback createOrder via service-role + addresses 404 · .2 validasi flash_stock · .3 whitelist status orders/customers · .4 notifikasi customer pindah ke RPC request_payment_confirmation (migration payment_report_customer_notification live+mirror). Commit per sub | zcode |
+| 2026-08-29 | T-56 | Selesai (DONE) 3 sub: .1 mask ga_service_account GET + preserve PUT · .2 sitemap/llms.txt/judul skincare · .3 housekeeping supabase/.temp + .claude/worktrees. Commit per sub (56.3 = disk only) | zcode |
 
 ---
 
@@ -1317,8 +1325,8 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 
 | Field | Isi |
 |---|---|
-| Status | `IN_PROGRESS` |
-| Mulai / Selesai | 2026-08-29 / - |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
 | Prioritas | P2 |
 | Sumber | Audit 2026-08-29 — temuan LOW + housekeeping |
 
@@ -1328,7 +1336,7 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 |--------|----------------|--------|
 | T-56.1 | `GET /api/admin/settings` tidak lagi mengembalikan isi penuh `seo.ga_service_account` (private key tak transit browser; nilai penuh hanya lewat PUT) | DONE |
 | T-56.2 | SEO/content: sitemap exclude `/keranjang` `/checkout` `/profil`; llms.txt perbaiki link `/kategori` (404); default title layout & homepage → skincare (copy drift pasca T-47) | DONE |
-| T-56.3 | Housekeeping workspace: bersihkan `supabase/.temp` (ter-link project lama `pvvjfnabrywvnoolipji`) + `.claude/worktrees` basi — keduanya gitignored; live DB tidak disentuh | BACKLOG |
+| T-56.3 | Housekeeping workspace: bersihkan `supabase/.temp` (ter-link project lama `pvvjfnabrywvnoolipji`) + `.claude/worktrees` basi — keduanya gitignored; live DB tidak disentuh | DONE |
 
 **Kriteria Selesai (per sub)**
 1. Perilaku terverifikasi; tidak ada regresi fitur
@@ -1352,4 +1360,14 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ~ layout.tsx + page.tsx — default title "Marketplace Produk Rumah Tangga"
   → "Marketplace Skincare & Perawatan Pribadi" (copy drift T-47)
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+**Bukti T-56.3**
+```
+Dihapus dari disk (gitignored, bukan bagian repo):
+- supabase/.temp/         — link CLI ke project LAMA pvvjfnabrywvnoolipji
+  (mencegah kesalahan penggunaan CLI terhadap project yang salah;
+  verifikasi DB tetap 100% via MCP sesuai DB-SYNC-2)
+- .claude/worktrees/      — salinan project basi sisa sesi agent lama
+Live DB tidak disentuh; tidak ada file tracked yang berubah.
 ```
