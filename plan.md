@@ -121,7 +121,7 @@ npm run build       # exit 0
 | T-58 | P1 | Normalisasi NEXT_PUBLIC_SITE_URL (double slash di sitemap/robots/llms.txt) | DONE |
 | T-59 | P0 | Mobile: tab bar detail produk overflow → halaman melebar 448px (bisa geser horizontal) | DONE |
 | T-60 | P2 | Mobile: galeri gambar detail produk rusak (next/image × picsum tidak di-whitelist) — DITURUNKAN: foto masih placeholder, otomatis tampil saat foto asli di-upload ke Supabase Storage | BACKLOG |
-| T-61 | P1 | Mobile keranjang: nama produk terpotong parah + harga patah 2 baris | BACKLOG |
+| T-61 | P1 | Mobile keranjang: nama produk terpotong parah + harga patah 2 baris | DONE |
 | T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | DONE |
 | T-63 | P1 | Fitur banner promosi: tabel banners + admin CRUD (tab Banner di marketing) + carousel storefront | DONE |
 | T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | DONE |
@@ -1590,7 +1590,8 @@ browser menyusul commit)
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Audit visual mobile 2026-08-29 (keranjang dengan 2 item simulasi) |
 
@@ -1606,6 +1607,18 @@ browser menyusul commit)
 **Kriteria Selesai**
 1. 375px: nama produk terbaca (min. 2 baris penuh sebelum ellipsis), harga 1 baris
 2. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ src/app/keranjang/page.tsx (kartu item) — restrukturisasi:
+  - tombol hapus pindah ke kanan nama (row teratas), nama full-width
+    line-clamp-2
+  - harga whitespace-nowrap + stepper qty dalam satu row di bawah
+    (tidak lagi menekan kolom nama)
+  - gambar w-16 h-16 di mobile (sm:w-20), gap dipadatkan
+  - subtotal nowrap
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
 
 ---
 

@@ -264,7 +264,7 @@ export default function KeranjangPage() {
                     checkedItems.includes(item.id) ? "border-green-200" : "border-gray-100"
                   }`}
                 >
-                  <div className="p-4 flex items-start gap-4">
+                  <div className="p-3 sm:p-4 flex items-start gap-3 sm:gap-4">
                     <input
                       type="checkbox"
                       checked={checkedItems.includes(item.id)}
@@ -272,7 +272,7 @@ export default function KeranjangPage() {
                       className="w-4 h-4 mt-1 accent-green-600 cursor-pointer shrink-0"
                     />
 
-                    <div className="w-20 h-20 bg-green-50 rounded-xl overflow-hidden shrink-0">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-50 rounded-xl overflow-hidden shrink-0">
                       {item.image ? (
                         // eslint-disable-next-line @next/next/no-img-element -- gambar produk dari storage/cdn
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
@@ -283,52 +283,56 @@ export default function KeranjangPage() {
                       )}
                     </div>
 
+                    {/* T-61: nama dapat lebar penuh (hapus pindah ke kanan nama),
+                        harga + stepper satu baris di bawah — tidak saling menekan */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm leading-snug mb-1 line-clamp-2">
-                        {item.name}
-                      </p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium text-gray-900 text-sm leading-snug line-clamp-2">
+                          {item.name}
+                        </p>
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                          aria-label={`Hapus ${item.name}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                       {item.variant && (
-                        <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full mb-2">
+                        <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full mt-1">
                           {item.variant}
                         </span>
                       )}
                       {item.originalPrice && (
-                        <p className="text-xs text-gray-400 line-through">
+                        <p className="text-xs text-gray-400 line-through mt-1">
                           {formatRp(item.originalPrice)}
                         </p>
                       )}
-                      <p className="text-base font-bold text-green-700">
-                        {formatRp(item.price)}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-end gap-3 shrink-0">
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
-                        <button
-                          onClick={() => updateQty(item.id, -1)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="w-9 h-8 flex items-center justify-center text-sm font-semibold text-gray-900 border-x border-gray-200">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => updateQty(item.id, 1)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                      <div className="flex items-center justify-between gap-2 mt-2">
+                        <p className="text-base font-bold text-green-700 whitespace-nowrap">
+                          {formatRp(item.price)}
+                        </p>
+                        <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+                          <button
+                            onClick={() => updateQty(item.id, -1)}
+                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="w-9 h-8 flex items-center justify-center text-sm font-semibold text-gray-900 border-x border-gray-200">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQty(item.id, 1)}
+                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400 mt-1.5">
                         Subtotal:{" "}
-                        <span className="font-semibold text-gray-700">
+                        <span className="font-semibold text-gray-700 whitespace-nowrap">
                           {formatRp(item.price * item.quantity)}
                         </span>
                       </p>
