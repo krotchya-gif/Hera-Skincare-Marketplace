@@ -369,6 +369,8 @@ create table if not exists public.shipping_addresses (
   province text not null,
   postal_code text not null,
   is_default boolean default false,
+  destination_area_id text,
+  destination_area_label text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -806,7 +808,7 @@ ON CONFLICT DO NOTHING;
 
 INSERT INTO public.store_settings (key, value) VALUES
   ('store_info', '{"name": "Hera Skincare", "email": "info@heraskincare.com", "phone": "+6281234567890", "city": "Jakarta Selatan", "description": "Marketplace produk rumah tangga premium.", "address": "Alamat Gudang Hera Skincare", "operational_hours": {"start": "08:00", "end": "21:00", "days": ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"]}, "social_media": {"instagram": "", "tiktok": "", "facebook": ""}}'::jsonb),
-  ('shipping', '{"free_shipping": true, "free_shipping_min": 100000, "couriers": ["JNE", "J&T Express", "SiCepat", "Gosend", "Anteraja"], "origin_city": "Jakarta Selatan"}'::jsonb),
+  ('shipping', '{"free_shipping": true, "free_shipping_min": 100000, "couriers": ["JNE", "J&T Express", "SiCepat", "Gosend", "Anteraja"], "origin_city": "Jakarta Selatan", "origin_area_id": "", "origin_area_label": ""}'::jsonb),
   ('payment', '{"methods": ["Transfer Bank (BCA, Mandiri, BRI)", "GoPay", "OVO", "Dana", "ShopeePay", "Virtual Account", "COD (Bayar di Tempat)"], "payment_timeout_hours": 24, "bank_account": {"bank": "BCA", "owner": "Hera Skincare", "number": "1234567890"}}'::jsonb),
   ('notifications', '{"email": {"Pesanan baru masuk": true, "Pembayaran diterima": true, "Stok produk menipis (< 10 item)": true, "Ulasan baru masuk": true}, "wa": {"Pesanan baru masuk": true, "Pembayaran diterima": true, "Stok produk menipis (< 10 item)": false, "Ulasan baru masuk": false}}'::jsonb)
 ON CONFLICT (key) DO NOTHING;
@@ -1035,7 +1037,7 @@ ON CONFLICT DO NOTHING;
 -- =============================================
 INSERT INTO public.store_settings (key, value) VALUES
   ('store_info', '{"name": "Hera Store", "email": "info@herastore.com", "phone": "+6281234567890", "city": "Jakarta Selatan", "description": "Marketplace produk rumah tangga premium.", "address": "Alamat Gudang Hera Store", "operational_hours": {"start": "08:00", "end": "21:00", "days": ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"]}, "social_media": {"instagram": "", "tiktok": "", "facebook": ""}}'::jsonb),
-  ('shipping', '{"free_shipping": true, "free_shipping_min": 100000, "couriers": ["JNE", "J&T Express", "SiCepat", "Gosend", "Anteraja"], "origin_city": "Jakarta Selatan"}'::jsonb),
+  ('shipping', '{"free_shipping": true, "free_shipping_min": 100000, "couriers": ["JNE", "J&T Express", "SiCepat", "Gosend", "Anteraja"], "origin_city": "Jakarta Selatan", "origin_area_id": "", "origin_area_label": ""}'::jsonb),
   ('payment', '{"methods": ["Transfer Bank (BCA, Mandiri, BRI)", "GoPay", "OVO", "Dana", "ShopeePay", "Virtual Account", "COD (Bayar di Tempat)"], "payment_timeout_hours": 24, "bank_account": {"bank": "BCA", "owner": "PT Hera Store", "number": "1234567890"}}'::jsonb),
   ('notifications', '{"email": {"Pesanan baru masuk": true, "Pembayaran diterima": true, "Stok produk menipis (< 10 item)": true, "Ulasan baru masuk": true}, "wa": {"Pesanan baru masuk": true, "Pembayaran diterima": true, "Stok produk menipis (< 10 item)": false, "Ulasan baru masuk": false}}'::jsonb)
 ON CONFLICT (key) DO NOTHING;

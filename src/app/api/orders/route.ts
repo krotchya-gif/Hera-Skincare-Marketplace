@@ -4,6 +4,13 @@ import { createClient } from "@/utils/supabase/server";
 import { validateVoucher } from "@/lib/vouchers";
 import { getEffectivePrices } from "@/lib/products";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
+import {
+  fetchRajaOngkirCosts,
+  getShippingSettings,
+  getWeightFromItems,
+  isFreeShipping,
+  isRajaOngkirEnabled,
+} from "@/lib/shipping";
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,6 +39,9 @@ export async function POST(request: NextRequest) {
       notes?: string;
       voucher_code?: string;
       utm_source?: string;
+      address_id?: string;
+      courier_code?: string;
+      service_code?: string;
     };
 
     const supabase = await createClient();
@@ -152,7 +162,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ── Validasi ongkir, diskon & total (T-50) ────────────────
+    // ── Validasi ongkir, diskon & total (T-50/T-54) ───────────
     // Ongkir tidak pernah dipercaya mentah dari client: tolak nilai bukan
     // angka finite / negatif. Field opsional (undefined) tetap diperlakukan 0.
     const shippingCost =
@@ -163,20 +173,97 @@ export async function POST(request: NextRequest) {
     if (calculatedDiscount > calculatedSubtotal) {
       return NextResponse.json({ error: "Nilai diskon melebihi subtotal." }, { status: 400 });
     }
-    const expectedTotal = calculatedSubtotal + shippingCost - calculatedDiscount;
+
+    // ── Ongkir = kebenaran server (T-54; penguat T-50) ────────
+    const shippingSettings = await getShippingSettings();
+    const rajaOngkirActive = isRajaOngkirEnabled(shippingSettings.origin_area_id);
+    const freeQualifies = isFreeShipping(shippingSettings, calculatedSubtotal);
+    let serverShipping: number;
+    let serverAddress = body.shipping_address as CreateOrderPayload["shipping_address"];
+
+    if (rajaOngkirActive) {
+      // Mode ongkir real: alamat & berat dari DB, layanan divalidasi
+      // terhadap hasil RajaOngkir — nilai ongkir/total client diabaikan.
+      if (typeof body.address_id !== "string" || !body.address_id) {
+        return NextResponse.json({ error: "Alamat pengiriman wajib dipilih." }, { status: 400 });
+      }
+      const { data: dbAddress } = await supabase
+        .from("shipping_addresses")
+        .select("*")
+        .eq("id", body.address_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const areaId = (dbAddress as { destination_area_id?: string } | null)?.destination_area_id;
+      if (!dbAddress || !areaId) {
+        return NextResponse.json(
+          { error: "Alamat belum memiliki area tujuan. Silakan perbarui alamat Anda." },
+          { status: 400 }
+        );
+      }
+      const weight = await getWeightFromItems(
+        body.items.map((item) => ({ product_id: item.product_id, qty: item.qty }))
+      );
+      if (!weight) {
+        return NextResponse.json(
+          { error: "Gagal menghitung berat pengiriman. Silakan coba lagi." },
+          { status: 400 }
+        );
+      }
+      const options = await fetchRajaOngkirCosts(
+        shippingSettings.origin_area_id,
+        areaId,
+        weight,
+        shippingSettings.couriers
+      );
+      const courierCode = typeof body.courier_code === "string" ? body.courier_code : "";
+      const serviceCode = typeof body.service_code === "string" ? body.service_code : "";
+      const chosen = options
+        .flatMap((option) => option.services)
+        .find((s) => s.courier_code === courierCode && s.service_code === serviceCode);
+      if (!chosen) {
+        return NextResponse.json(
+          { error: "Layanan pengiriman tidak valid. Silakan pilih ulang kurir." },
+          { status: 400 }
+        );
+      }
+      serverShipping = freeQualifies ? 0 : chosen.price;
+      const db = dbAddress as Record<string, string | null>;
+      serverAddress = {
+        name: db.name ?? "",
+        phone: db.phone ?? "",
+        address: db.address ?? "",
+        city: db.city ?? "",
+        province: db.province ?? "",
+        postal_code: db.postal_code ?? "",
+        destination_area_id: areaId,
+        destination_area_label: db.destination_area_label ?? null,
+      };
+    } else {
+      // Mode flat: ongkir wajib sama dengan tarif flat settings (atau 0 bila
+      // gratis ongkir memenuhi syarat) — client tidak bisa menentukan nilai lain.
+      const allowedShipping = freeQualifies ? 0 : shippingSettings.flat_rate;
+      if (shippingCost !== allowedShipping) {
+        return NextResponse.json({ error: "Biaya pengiriman tidak sesuai tarif." }, { status: 400 });
+      }
+      serverShipping = shippingCost;
+    }
+
+    const expectedTotal = calculatedSubtotal + serverShipping - calculatedDiscount;
     if (expectedTotal <= 0) {
       return NextResponse.json({ error: "Total pesanan tidak valid." }, { status: 400 });
     }
-    if (Number(body.total) !== expectedTotal) {
+    // Equality total client divalidasi pada mode flat; pada mode rajaongkir
+    // server yang menentukan (ongkir final hasil recompute di atas).
+    if (!rajaOngkirActive && Number(body.total) !== expectedTotal) {
       return NextResponse.json({ error: "Total pesanan tidak valid." }, { status: 400 });
     }
 
     // ── Buat pesanan ──────────────────────────────────────────
     const payload: CreateOrderPayload = {
       user_id: user.id,
-      shipping_address: body.shipping_address as CreateOrderPayload["shipping_address"],
+      shipping_address: serverAddress as CreateOrderPayload["shipping_address"],
       shipping_method: body.shipping_method ?? "",
-      shipping_cost: shippingCost,
+      shipping_cost: serverShipping,
       payment_method: body.payment_method ?? "",
       subtotal: calculatedSubtotal,
       discount: calculatedDiscount,

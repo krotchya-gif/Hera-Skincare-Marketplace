@@ -114,7 +114,7 @@ npm run build       # exit 0
 | T-51 | P0 | Xendit create: simpan referensi invoice via service-role | DONE |
 | T-52 | P0 | Perbaiki syntax error full_schema.sql (store_settings terpotong) | DONE |
 | T-53 | P1 | Newsletter via API route (RLS-safe, tanpa success palsu) | DONE |
-| T-54 | P1 | Integrasi RajaOngkir V2 (Komerce) — cek ongkir real + satukan logika ongkir | BACKLOG |
+| T-54 | P1 | Integrasi RajaOngkir V2 (Komerce) — cek ongkir real + satukan logika ongkir | DONE |
 | T-55 | P1 | Konsistensi order & stok (4 sub-bug hasil audit) | BACKLOG |
 | T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | BACKLOG |
 
@@ -1163,7 +1163,8 @@ cek key subscribed_emails berisi email subscriber.
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
 | Prioritas | P1 |
 | Referensi | https://rajaongkir.com/docs/shipping-cost/getting_started/about — API V2 (Komerce): base `https://rajaongkir.komerce.id/api/v1/`, auth header `key`; `POST /calculate/domestic-cost` (origin, destination = area ID subdistrict, weight gram, courier kode mis. `jne`); `GET /destination/domestic-destination?search=` (pencarian area) |
 | Keputusan owner | 2026-08-29: key Komerce/V2 sudah tersedia (E2E bisa diverifikasi saat implementasi); presisi subdistrict dengan picker alamat + kolom baru |
@@ -1191,6 +1192,61 @@ cek key subscribed_emails berisi email subscriber.
 3. Keranjang & checkout menampilkan sumber ongkir yang sama (tidak ada lagi 12000 hardcoded / "Gratis!" lalu ditagih)
 4. Migration live terverifikasi via MCP (kolom ada, advisor tidak bertambah) + full_schema tersinkron
 5. E2E dengan key Komerce owner + ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Migration live (via MCP) ==
+shipping_area_columns: shipping_addresses.destination_area_id text +
+  destination_area_label text — terverifikasi live (information_schema) ✅
+store_settings.shipping += origin_area_id:"" + origin_area_label:"" ✅
+Advisor: tidak berubah (temuan kategori lama yang sudah di-skip saja)
+
+== File baru ==
++ src/lib/shipping.ts                — SATU sumber logika ongkir: settings,
+  isRajaOngkirEnabled, searchDestinationAreas (normalisasi defensif), fetch
+  costs per kurir + cache 5 menit, buildFlatOptions, getWeightFromItems (DB)
++ src/app/api/shipping/destination   — GET proxy pencarian area (auth +
+  rate-limit 60/menit; cukup RAJAONGKIR_API_KEY, tanpa origin — agar admin
+  bisa mencari area asal pertama kali)
++ src/app/api/shipping/cost          — POST address_id+items+subtotal →
+  berat dari DB, area dari alamat DB, mode rajaongkir|flat + info gratis-ongkir
++ src/components/AreaPicker.tsx      — picker pencarian area (debounce 350ms)
+
+== File diubah ==
+~ supabase/migrations/full_schema.sql — kolom baru di shipping_addresses +
+  seed shipping += origin_area_id/label (parse ulang: OK 264 stmt, libpg_query PG17)
+~ src/types/database.ts               — ShippingAddress += destination fields
+~ api/addresses (+[id])               — whitelist destination_area_id/label
+  (string bersih / null)
+~ checkout/page.tsx                   — opsi ongkir dari /api/shipping/cost
+  per alamat terpilih, AreaPicker di modal alamat, payload kirim address_id +
+  courier_code + service_code, ringkasan "Gratis" saat free-shipping,
+  catatan mode flat; ongkir hardcode 12000 DIHAPUS
+~ components/ProfilClient.tsx         — AreaPicker di form alamat (edit/baru)
+~ admin/pengaturan (Pengiriman)       — AreaPicker area asal + field
+  origin_area_id/label disertakan saat PUT (sebelumnya PUT menimpa jsonb
+  dan akan MENGHAPUS field baru — bug yang dicegah)
+~ api/orders                          — mode rajaongkir: address_id wajib,
+  alamat & berat dari DB, courier/service divalidasi, ongkir final recompute
+  server (nilai client diabaikan); mode flat: ongkir wajib == tarif settings
+  (atau 0 bila gratis-ongkir); total equality hanya mode flat
+~ .env.example / .env.local           — RAJAONGKIR_API_KEY (kosong = flat)
+~ README.md (39 routes, fitur, env) + AGENTS.md §20 (39 routes, Live Systems
+  RajaOngkir; termasuk sinkron route /api/newsletter dari T-53)
+
+== Gerbang ==
+lint      : 13 problems (baseline sama, 0 warning) — 2 error baru
+            (set-state-in-effect) muncul lama diperbaiki: setState hanya
+            pasca-await / dalam callback timer; loading diturunkan dari state
+typecheck : tsc --noEmit → EXIT 0
+build     : EXIT 0
+
+== UNVERIFIED (menunggu key owner) ==
+1. Shape respons eksak RajaOngkir V2 (normalisasi defensif utk array objek &
+   array of arrays sudah dipasang) — konfirmasi saat RAJAONGKIR_API_KEY diisi
+2. E2E: isi key → Admin→Pengiriman pilih area asal → isi alamat dgn picker →
+   checkout: ongkir real per kurir → order terbuat dgn ongkir recompute server
+```
 
 ---
 

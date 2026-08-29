@@ -10,6 +10,7 @@ import { createClient } from "@/utils/supabase/client";
 import { formatRp } from "@/utils/format";
 import { getStoredUtm, clearStoredUtm } from "@/lib/utm";
 import { trackEvent } from "@/lib/tracking";
+import AreaPicker from "@/components/AreaPicker";
 import {
   ChevronRight,
   MapPin,
@@ -39,6 +40,8 @@ interface SavedAddress {
   postal_code: string;
   is_default: boolean;
   created_at: string;
+  destination_area_id?: string | null;
+  destination_area_label?: string | null;
 }
 
 interface CheckoutItem {
@@ -67,7 +70,12 @@ export default function CheckoutPage() {
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [selectedShipping, setSelectedShipping] = useState<string | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
-  const [shippingOptions, setShippingOptions] = useState<{ courier: string; logo: string; services: { name: string; code: string; etd: string; price: number }[] }[]>([]);
+  const [shippingOptions, setShippingOptions] = useState<{ courier: string; logo: string; services: { name: string; code: string; etd: string; price: number; courier_code?: string; service_code?: string }[] }[]>([]);
+  const [shippingMode, setShippingMode] = useState<"flat" | "rajaongkir">("flat");
+  const [shippingFree, setShippingFree] = useState(false);
+  const [shippingForAddress, setShippingForAddress] = useState<string | null>(null);
+  // T-54: loading diturunkan — true selama alamat terpilih belum punya hasil ongkir
+  const shippingLoading = Boolean(selectedAddress) && shippingForAddress !== selectedAddress;
   const [paymentMethods, setPaymentMethods] = useState<{ group: string; icon: string; options: { code: string; name: string; logo: string }[] }[]>([]);
 
   const [orderNumber, setOrderNumber] = useState("");
@@ -94,6 +102,8 @@ export default function CheckoutPage() {
     province: "",
     postal_code: "",
     is_default: false,
+    destination_area_id: "",
+    destination_area_label: "",
   });
   const [savingAddress, setSavingAddress] = useState(false);
 
@@ -200,6 +210,41 @@ export default function CheckoutPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // T-54: opsi ongkir per alamat terpilih — berat & area dihitung server;
+  // mode "rajaongkir" = harga real, "flat" = fallback tarif settings.
+  // Semua setState dilakukan pasca-await (bukan sinkron di body effect).
+  useEffect(() => {
+    if (!mounted || !selectedAddress || checkoutItems.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/shipping/cost", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address_id: selectedAddress,
+            subtotal,
+            items: checkoutItems.map((item) => ({ product_id: item.id, qty: item.quantity })),
+          }),
+        });
+        const data = res.ok ? await res.json() : null;
+        if (cancelled || !data) return;
+        if (Array.isArray(data.options) && data.options.length > 0) {
+          setShippingOptions(data.options);
+        }
+        setShippingMode(data.mode === "rajaongkir" ? "rajaongkir" : "flat");
+        setShippingFree(Boolean(data.free_shipping?.qualifies));
+        setShippingForAddress(selectedAddress);
+        setSelectedShipping(null);
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mounted, selectedAddress]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const openNewAddress = () => {
     setAddressForm({
       label: "Rumah",
@@ -210,6 +255,8 @@ export default function CheckoutPage() {
       province: "",
       postal_code: "",
       is_default: false,
+      destination_area_id: "",
+      destination_area_label: "",
     });
     setShowAddressForm(true);
   };
@@ -250,7 +297,7 @@ export default function CheckoutPage() {
     .flatMap((g) => g.options.map((o) => ({ ...o, group: g.group })))
     .find((p) => p.code === selectedPayment);
 
-  const ongkir = shippingService?.price ?? 0;
+  const ongkir = shippingFree ? 0 : (shippingService?.price ?? 0);
   const total = subtotal + ongkir - discount;
 
   const copyOrderNumber = () => {
@@ -292,6 +339,11 @@ export default function CheckoutPage() {
         },
         shipping_method: `${shippingService?.courier} ${shippingService?.name}`,
         shipping_cost: ongkir,
+        // T-54: server merecompute ongkir dari alamat+berat DB saat mode
+        // rajaongkir; address_id dipakai memuat alamat & area tujuan dari DB
+        address_id: selectedAddress,
+        courier_code: shippingService?.courier_code,
+        service_code: shippingService?.service_code,
         payment_method: paymentMethod?.name || "Transfer",
         subtotal,
         discount,
@@ -486,6 +538,14 @@ export default function CheckoutPage() {
                 {address && (
                   <p className="text-sm text-gray-500 mb-4">
                     Dikirim ke: {address.address}, {address.city}
+                  </p>
+                )}
+                {shippingLoading && (
+                  <p className="text-xs text-gray-400 mb-3">Memuat opsi pengiriman...</p>
+                )}
+                {!shippingLoading && shippingMode === "flat" && !shippingFree && (
+                  <p className="text-xs text-gray-400 mb-3">
+                    Tarif flat — pilih area tujuan (kecamatan) saat mengisi alamat untuk ongkir akurat.
                   </p>
                 )}
 
@@ -764,9 +824,11 @@ export default function CheckoutPage() {
                     <span className="font-medium">{formatRp(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Ongkos Kirim</span>
+                    <span className="text-gray-600">
+                      Ongkos Kirim{shippingFree ? " (Gratis Ongkir)" : ""}
+                    </span>
                     <span className={`font-medium ${ongkir === 0 ? "text-green-600" : ""}`}>
-                      {selectedShipping ? formatRp(ongkir) : "-"}
+                      {selectedShipping || shippingFree ? (ongkir === 0 ? "Gratis" : formatRp(ongkir)) : "-"}
                     </span>
                   </div>
                   {discount > 0 && (
@@ -840,6 +902,23 @@ export default function CheckoutPage() {
                   onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })}
                 />
               </div>
+              <AreaPicker
+                value={
+                  addressForm.destination_area_id
+                    ? {
+                        id: addressForm.destination_area_id,
+                        label: addressForm.destination_area_label || addressForm.destination_area_id,
+                      }
+                    : null
+                }
+                onSelect={(area) =>
+                  setAddressForm({
+                    ...addressForm,
+                    destination_area_id: area?.id ?? "",
+                    destination_area_label: area?.label ?? "",
+                  })
+                }
+              />
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Kota</label>

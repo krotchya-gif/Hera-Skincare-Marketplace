@@ -40,10 +40,13 @@ interface ShippingAddress {
   postal_code: string;
   is_default: boolean;
   created_at: string;
+  destination_area_id?: string | null;
+  destination_area_label?: string | null;
 }
 
 import { formatRp } from "@/utils/format";
 import { STATUS_CONFIG } from "@/utils/order-status";
+import AreaPicker from "@/components/AreaPicker";
 
 // ─── Address Manager ───────────────────────────────────────────
 function AddressManager() {
@@ -53,6 +56,7 @@ function AddressManager() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({
     label: "Rumah", name: "", phone: "", address: "", city: "", province: "", postal_code: "", is_default: false,
+    destination_area_id: "", destination_area_label: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -70,13 +74,13 @@ function AddressManager() {
 
   const openNew = () => {
     setEditId(null);
-    setForm({ label: "Rumah", name: "", phone: "", address: "", city: "", province: "", postal_code: "", is_default: false });
+    setForm({ label: "Rumah", name: "", phone: "", address: "", city: "", province: "", postal_code: "", is_default: false, destination_area_id: "", destination_area_label: "" });
     setShowForm(true);
   };
 
   const openEdit = (addr: ShippingAddress) => {
     setEditId(addr.id);
-    setForm({ label: addr.label, name: addr.name, phone: addr.phone, address: addr.address, city: addr.city, province: addr.province, postal_code: addr.postal_code, is_default: addr.is_default });
+    setForm({ label: addr.label, name: addr.name, phone: addr.phone, address: addr.address, city: addr.city, province: addr.province, postal_code: addr.postal_code, is_default: addr.is_default, destination_area_id: addr.destination_area_id || "", destination_area_label: addr.destination_area_label || "" });
     setShowForm(true);
   };
 
@@ -157,6 +161,20 @@ function AddressManager() {
               </div>
               <div><label className="block text-xs font-medium text-gray-600 mb-1">Alamat Lengkap</label>
                 <textarea className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400 resize-none" rows={2} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+              <AreaPicker
+                value={
+                  form.destination_area_id
+                    ? { id: form.destination_area_id, label: form.destination_area_label || form.destination_area_id }
+                    : null
+                }
+                onSelect={(area) =>
+                  setForm({
+                    ...form,
+                    destination_area_id: area?.id ?? "",
+                    destination_area_label: area?.label ?? "",
+                  })
+                }
+              />
               <div className="grid grid-cols-3 gap-3">
                 <div><label className="block text-xs font-medium text-gray-600 mb-1">Kota</label>
                   <input className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>

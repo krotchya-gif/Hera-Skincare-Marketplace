@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { Plus, Loader2, Upload, Camera, Music2, ThumbsUp } from "lucide-react";
 import { useToast } from "@/components/Toast";
+import AreaPicker from "@/components/AreaPicker";
 import { AI_CRAWLERS } from "@/lib/ai-crawlers";
 import {
   STORE_NAME,
@@ -72,6 +73,9 @@ export default function SettingsPage() {
   const [freeShipping, setFreeShipping] = useState(true);
   const [freeShippingMin, setFreeShippingMin] = useState(100000);
   const [originCity, setOriginCity] = useState("Jakarta Selatan");
+  // T-54: area asal RajaOngkir V2 (ID subdistrict) — wajib agar ongkir real aktif
+  const [originAreaId, setOriginAreaId] = useState("");
+  const [originAreaLabel, setOriginAreaLabel] = useState("");
 
   // --- States for Payment ---
   const [paymentToggles, setPaymentToggles] = useState<Record<string, boolean>>(
@@ -169,6 +173,8 @@ export default function SettingsPage() {
         setFreeShipping(settings.shipping.free_shipping ?? true);
         setFreeShippingMin(settings.shipping.free_shipping_min ?? 100000);
         setOriginCity(settings.shipping.origin_city || "Jakarta Selatan");
+        setOriginAreaId(settings.shipping.origin_area_id || "");
+        setOriginAreaLabel(settings.shipping.origin_area_label || "");
         const courierMap: Record<string, boolean> = {};
         couriers.forEach(c => {
           courierMap[c] = settings.shipping.couriers?.includes(c) || false;
@@ -313,7 +319,9 @@ export default function SettingsPage() {
             free_shipping: freeShipping,
             free_shipping_min: Number(freeShippingMin),
             couriers: Object.keys(courierToggles).filter(c => courierToggles[c]),
-            origin_city: originCity
+            origin_city: originCity,
+            origin_area_id: originAreaId,
+            origin_area_label: originAreaLabel
           }
         })
       });
@@ -797,12 +805,24 @@ export default function SettingsPage() {
           </div>
           <div className="border-t border-gray-100 pt-5">
             <h3 className="font-semibold text-gray-800 mb-3 text-sm">Lokasi Asal Pengiriman</h3>
-            <input 
+            <input
               className="w-full max-w-xs border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
               value={originCity}
               onChange={(e) => setOriginCity(e.target.value)}
               placeholder="Misal: Jakarta Selatan"
             />
+            <div className="mt-3 max-w-md">
+              <AreaPicker
+                value={originAreaId ? { id: originAreaId, label: originAreaLabel || originAreaId } : null}
+                onSelect={(area) => {
+                  setOriginAreaId(area?.id ?? "");
+                  setOriginAreaLabel(area?.label ?? "");
+                }}
+              />
+              <p className="text-[10px] text-gray-400 mt-1">
+                T-54: area asal (kecamatan gudang) wajib diisi agar ongkir real RajaOngkir aktif di checkout. Kosong = ongkir flat.
+              </p>
+            </div>
           </div>
           <div className="flex justify-end">
             <button 

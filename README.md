@@ -31,7 +31,7 @@ marketplace/
 │   │   ├── bayar/[id]/, voucher/, perbandingan/          # perbandingan = T-06.2
 │   │   ├── admin/ (login + 12 dashboard pages)
 │   │   ├── llms.txt/, sitemap.xml/, robots.txt/
-│   │   └── api/ (36 route handlers)
+│   │   └── api/ (39 route handlers)
 │   │   ├── admin/blog/     # Blog CRUD (terpisah dari Pengaturan)
 │   ├── components/
 │   │   ├── Navbar.tsx, Footer.tsx, Toast.tsx, ErrorBoundary.tsx
@@ -44,7 +44,7 @@ marketplace/
 │   │                ProductFormModal, OrderDetailModal, NotificationDropdown)
 │   ├── lib/        (products, orders, admin, auth-utils, vouchers, rate-limit,
 │   │                cart-utils, comparison-utils, notify, seo, tracking,
-│   │                utm, google-analytics, product-image, ai-crawlers)
+│   │                utm, google-analytics, product-image, ai-crawlers, shipping)
 │   ├── types/      (database.ts)
 │   └── utils/      (format, storeConfig, order-status, supabase client/server/admin)
 │   └── proxy.ts    # Next.js 16 Proxy (menggantikan middleware.ts)
@@ -59,7 +59,7 @@ marketplace/
 - **Detail Produk** — Galeri gambar, varian, qty, CTA, tab deskripsi/ulasan/**tanya jawab**, rekomendasi, tombol perbandingan
 - **Perbandingan** — Bandingkan hingga 4 produk side-by-side (`/perbandingan`)
 - **Keranjang** — Checkbox, qty, voucher, ringkasan
-- **Checkout** — 5-step: Alamat → Pengiriman → Pembayaran → Konfirmasi → Selesai; UTM campaign tersimpan ke order
+- **Checkout** — 5-step: Alamat → Pengiriman → Pembayaran → Konfirmasi → Selesai; UTM campaign tersimpan ke order; ongkir real via RajaOngkir V2 (Komerce) + gratis ongkir konsisten, fallback tarif flat
 - **Profil** — Tab pesanan, wishlist, alamat, edit profil, aksi per-status
 - **Pembayaran** — Info rekening dari DB, lapor bayar (verifikasi admin), **bayar online via Xendit** (QRIS/e-wallet/VA) + salin/kirim link invoice via WhatsApp
 - **Voucher** — Daftar voucher + copy code
@@ -98,7 +98,7 @@ marketplace/
 - **Event Tracking & UTM** — event_logs (5 pemicu) + utm_visits + orders.utm_source untuk atribusi kampanye.
 - **Ikon** — Semua UI memakai icon Lucide (termasuk kategori — nama icon disimpan di DB, dirender via `CategoryIcon`).
 
-## API Routes (36)
+## API Routes (39)
 
 | Route | Method | Auth | Deskripsi |
 |-------|--------|------|-----------|
@@ -138,6 +138,9 @@ marketplace/
 | `/api/admin/events` | GET/PATCH | Admin | Event monitor — daftar 100 event + retry (T-40) |
 | `/api/admin/utm` | GET | Admin | Laporan UTM per source (kunjungan/order/revenue, T-41) |
 | `/api/admin/analytics` | GET | Admin | Angka real GA4 + Search Console (T-43) |
+| `/api/newsletter` | POST | Public (rate-limit) | Simpan subscriber newsletter (server-side, RLS-safe — T-53) |
+| `/api/shipping/destination` | GET | Required | Pencarian area tujuan RajaOngkir V2 (proxy server — T-54) |
+| `/api/shipping/cost` | POST | Required | Ongkir per kurir utk alamat+item; berat dari DB; fallback flat (T-54) |
 
 ## Cara Menjalankan
 
@@ -195,6 +198,7 @@ Terapkan pada project baru via **Supabase MCP** (`apply_migration`) — DILARANG
 | `SUPABASE_SERVICE_ROLE_KEY` | utk webhook | Service-role (server-side only) |
 | `XENDIT_SECRET_KEY` / `XENDIT_CALLBACK_TOKEN` | opsional | Pembayaran online Xendit |
 | `RESEND_API_KEY` / `RESEND_FROM_EMAIL` / `FONNTE_TOKEN` | opsional | Notifikasi Email/WA |
+| `RAJAONGKIR_API_KEY` | opsional | Ongkir real RajaOngkir V2/Komerce (T-54); kosong = tarif flat |
 | `NEXT_PUBLIC_STORE_*` (5 var) | opsional | Fallback di `storeConfig.ts` |
 
 ## Status

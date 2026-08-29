@@ -55,6 +55,15 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { label, name, phone, address, city, province, postal_code, is_default } = body;
+    // T-54: area tujuan RajaOngkir (opsional) — dipakai untuk ongkir presisi
+    const destination_area_id =
+      typeof body.destination_area_id === "string" && body.destination_area_id.trim()
+        ? body.destination_area_id.trim().slice(0, 100)
+        : null;
+    const destination_area_label =
+      typeof body.destination_area_label === "string" && body.destination_area_label.trim()
+        ? body.destination_area_label.trim().slice(0, 200)
+        : null;
 
     if (!name?.trim() || !phone?.trim() || !address?.trim() || !city?.trim() || !province?.trim() || !postal_code?.trim()) {
       return NextResponse.json({ error: "Semua field wajib diisi" }, { status: 400 });
@@ -84,6 +93,8 @@ export async function POST(request: NextRequest) {
         province,
         postal_code,
         is_default: is_default ?? false,
+        destination_area_id,
+        destination_area_label,
       })
       .select()
       .single();

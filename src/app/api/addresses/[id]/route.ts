@@ -28,10 +28,18 @@ export async function PUT(
     const body = await request.json();
 
     // Whitelist field yang diizinkan (cegah mass assignment)
-    const allowedFields = ["label", "name", "phone", "address", "city", "province", "postal_code", "is_default"];
+    const allowedFields = ["label", "name", "phone", "address", "city", "province", "postal_code", "is_default", "destination_area_id", "destination_area_label"];
     const sanitizedBody: Record<string, unknown> = {};
     for (const key of allowedFields) {
       if (body[key] !== undefined) sanitizedBody[key] = body[key];
+    }
+    // T-54: area tujuan hanya boleh string bersih atau null
+    for (const key of ["destination_area_id", "destination_area_label"]) {
+      if (key in sanitizedBody) {
+        const v = sanitizedBody[key];
+        sanitizedBody[key] =
+          typeof v === "string" && v.trim() ? v.trim().slice(0, 200) : null;
+      }
     }
 
     // Validate phone format

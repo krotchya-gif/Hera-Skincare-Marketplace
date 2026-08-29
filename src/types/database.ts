@@ -131,6 +131,9 @@ export interface ShippingAddress {
   city: string;
   province: string;
   postal_code: string;
+  // T-54: area tujuan RajaOngkir (opsional, disimpan di shipping_addresses)
+  destination_area_id?: string | null;
+  destination_area_label?: string | null;
 }
 
 export interface OrderItem {
