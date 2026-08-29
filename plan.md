@@ -131,6 +131,9 @@ npm run build       # exit 0
 | T-68 | P1 | Manajemen gambar produk: hapus per thumbnail + sinkronisasi product_images saat edit | DONE |
 | T-69 | P2 | Kartu Banner/Push di Marketing jadi navigasi ke tab masing-masing | DONE |
 | T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | DONE |
+| T-71 | P2 | Hero beranda mendukung gambar latar dari admin (settings key hero) | BACKLOG |
+| T-72 | P1 | Homepage: section "Semua Produk" setelah Produk Terlaris (+ link /kategori/semua) | BACKLOG |
+| T-73 | P1 | Admin: panel "Promo Terbatas" di /admin/promo (kelola diskon produk) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -1968,6 +1971,12 @@ Catatan: file Storage yatim (upload dibatalkan) dibiarkan — tidak
 mengganggu; pembersihan opsional via dashboard.
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 E2E via browser menyusul di changelog.
+
+**Addendum T-68 (2026-08-30, keluhan owner: foto aktif tak tampil di form):**
+getProductsAdmin TIDAK meng-join product_images → editProduct.product_images
+selalu undefined → thumbnail existing tak pernah tampil. Fix: select +=
+`product_images(order=sort_order)`. Gerbang diverifikasi ulang bersama
+commit addendum.
 ```
 
 ---
@@ -2028,6 +2037,75 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 1. Upload gambar di form banner sukses → URL terisi → banner tersimpan dan tampil
 2. Tidak ada row product_images yang dibuat untuk banner
 3. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-71 — Hero beranda mendukung gambar latar dari admin
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P2 |
+| Sumber | Pertanyaan owner 2026-08-30: "hero section emang ga bisa diisi gambar ya? hanya warna hijau doang?" |
+
+**Temuan:** HeroBanner sepenuhnya hardcoded (gradient + dekorasi), tidak ada input gambar.
+
+**Desain:** settings key `hero` (`{"image_url": "..."}`) + upload via
+/api/admin/upload jalur "temp" (pola T-70) di Pengaturan → Informasi Toko
+("Gambar Hero Beranda"); HeroBanner: bila image_url terisi → gambar latar
+dengan overlay gelap untuk keterbacaan teks; kosong → gradient seperti kini.
+
+**Scope-IN:** settings hero + field upload di Pengaturan; HeroBanner bg image;
+Entri plan.md + Changelog.
+**Scope-OUT:** teks/CTA hero, tabel DB baru (settings key-value cukup).
+**Kriteria:** hero menampilkan gambar dari admin; kosong = gradient;
+3 gerbang hijau + bukti.
+
+---
+
+### T-72 — Homepage: section "Semua Produk" setelah Produk Terlaris
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Keluh owner 2026-08-30: homepage hanya Flash Sale / Promo Terbatas / Terlaris |
+
+**Desain:** page.tsx fetch tambahan `getProducts({ page: 1, pageSize: 8, sort: "newest" })`
+(produk aktif terbaru) → prop ke HomeClient → section "Semua Produk"
+(setelah Terlaris, sebelum newsletter) dengan grid kartu + tombol
+"Lihat Semua →" menuju /kategori/semua. Menghindari duplikasi katalog —
+section ini pintu masuk; katalog penuh tetap di /kategori/semua.
+
+**Scope-IN:** page.tsx fetch + HomeClient section; Entri plan.md + Changelog.
+**Scope-OUT:** halaman /produk baru (parallel implementation), logika keranjang.
+**Kriteria:** section tampil 8 produk terbaru + link semua; 3 gerbang + bukti.
+
+---
+
+### T-73 — Admin: panel "Promo Terbatas" di /admin/promo
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Keluh owner 2026-08-30: "tidak ada UI untuk input promo terbatas di dashboard admin" |
+
+**Temuan:** section homepage "Promo Terbatas" = produk dengan `discount_price`
+terisi (getPromoProducts). Belum ada UI admin khusus — diskon hanya bisa
+diatur satu-per-satu lewat form produk.
+
+**Desain:** /admin/promo dapat panel "Promo Terbatas": daftar produk
+(dengan/ tanpa diskon, search), aksi: set/ubah harga diskon (input inline,
+validasi 0 < diskon < harga — pola T-29) & "Hapus Diskon" (set null),
+semua via PUT /api/admin/products/[id] yang sudah ada. Statistik ringkas
+(jumlah produk berdiskon).
+
+**Scope-IN:** panel di /admin/promo + fetch produk + aksi diskon via PUT
+existing; Entri plan.md + Changelog.
+**Scope-OUT:** endpoint baru, tabel/DB, section homepage.
+**Kriteria:** set/ubah/hapus diskon dari panel; homepage Promo Terbatas
+mengikuti; 3 gerbang hijau + bukti.
 
 **Bukti**
 ```

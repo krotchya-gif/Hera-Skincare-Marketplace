@@ -155,7 +155,9 @@ export async function getAllProductsAdmin(filters: { search?: string; categoryId
 
   let query = supabase
     .from("products")
-    .select(`*, categories!products_category_id_fkey(id, name, slug)`, { count: "exact" })
+    // T-68 addendum: sertakan product_images (urut sort_order) agar form edit
+    // menampilkan foto yang sudah aktif — tanpa ini uploadedImages selalu kosong
+    .select(`*, categories!products_category_id_fkey(id, name, slug), product_images(order=sort_order)`, { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (search) query = query.ilike("name", `%${search}%`);
