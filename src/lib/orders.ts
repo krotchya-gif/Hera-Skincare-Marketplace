@@ -1,5 +1,6 @@
 // ─── Orders Data Layer — Supabase queries ────────────────────────────────────
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { validateVoucher, redeemVoucher } from "@/lib/vouchers";
 import type { Order, OrderStatus, ShippingAddress } from "@/types/database";
 
@@ -155,8 +156,10 @@ export async function createOrder(payload: CreateOrderPayload): Promise<Order | 
   const { error: itemsError } = await supabase.from("order_items").insert(items);
   if (itemsError) {
     console.error("[createOrder items]", itemsError);
-    // Cleanup: delete orphaned order if items failed
-    await supabase.from("orders").delete().eq("id", order.id);
+    // T-55.1: cleanup via service-role — user tidak punya policy DELETE
+    // pada orders (rollback dengan client user selalu RLS-ditolak)
+    const admin = createAdminClient();
+    await admin.from("orders").delete().eq("id", order.id);
     return null;
   }
 
@@ -191,9 +194,11 @@ export async function createOrder(payload: CreateOrderPayload): Promise<Order | 
         await supabase.rpc("increment_variant_stock", { vid: dp.variant_id, qty: dp.qty });
       }
     }
-    // Delete orphaned order & items
-    await supabase.from("order_items").delete().eq("order_id", order.id);
-    await supabase.from("orders").delete().eq("id", order.id);
+    // T-55.1: delete orphaned order & items via service-role (RLS user
+    // tidak punya DELETE pada orders/order_items — terkonfirmasi live)
+    const admin = createAdminClient();
+    await admin.from("order_items").delete().eq("order_id", order.id);
+    await admin.from("orders").delete().eq("id", order.id);
     return null;
   }
 

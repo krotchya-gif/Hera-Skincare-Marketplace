@@ -1254,7 +1254,8 @@ build     : EXIT 0
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `IN_PROGRESS` |
+| Mulai / Selesai | 2026-08-29 / - |
 | Prioritas | P1 |
 | Sumber | Audit 2026-08-29 — temuan MEDIUM terverifikasi kode + live DB |
 
@@ -1262,7 +1263,7 @@ build     : EXIT 0
 
 | Sub-ID | Bug (ringkas) | Status |
 |--------|---------------|--------|
-| T-55.1 | Rollback `createOrder` delete orders/order_items via client user — RLS-ditolak (tidak ada policy DELETE) → order yatim tertinggal; cleanup via service-role; sekalian: addresses PUT/DELETE cek baris terdampak (bukan success palsu) | BACKLOG |
+| T-55.1 | Rollback `createOrder` delete orders/order_items via client user — RLS-ditolak (tidak ada policy DELETE) → order yatim tertinggal; cleanup via service-role; sekalian: addresses PUT/DELETE cek baris terdampak (bukan success palsu) | DONE |
 | T-55.2 | `flash_stock` tidak divalidasi server di `/api/orders` (hanya `products.stock`) — kuota flash bisa ditembus | BACKLOG |
 | T-55.3 | Whitelist status: admin orders PUT (transisi valid via `updateOrderStatus`) & customers PUT (`aktif\|nonaktif\|diblokir`) | BACKLOG |
 | T-55.4 | Notifikasi customer "Pembayaran Dilaporkan" dibuat di dalam RPC `request_payment_confirmation` (SECURITY DEFINER) — insert client pasti ditolak policy INSERT notifications admin-only | BACKLOG |

@@ -56,14 +56,19 @@ export async function PUT(
         .neq("id", id);
     }
 
-    const { error } = await supabase
+    // T-55.1: cek baris terdampak — id asing/tidak ada = 404, bukan success palsu
+    const { data, error } = await supabase
       .from("shipping_addresses")
       .update({ ...sanitizedBody, updated_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .select();
 
     if (error) throw error;
-    return NextResponse.json({ success: true });
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: "Alamat tidak ditemukan." }, { status: 404 });
+    }
+    return NextResponse.json(data[0]);
   } catch (error) {
     console.error("[API PUT Address]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -92,13 +97,18 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { error } = await supabase
+    // T-55.1: cek baris terdampak — id asing/tidak ada = 404, bukan success palsu
+    const { data, error } = await supabase
       .from("shipping_addresses")
       .delete()
       .eq("id", id)
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .select();
 
     if (error) throw error;
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: "Alamat tidak ditemukan." }, { status: 404 });
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[API DELETE Address]", error);
