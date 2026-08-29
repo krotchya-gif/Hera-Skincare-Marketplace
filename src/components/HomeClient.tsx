@@ -358,27 +358,18 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
     }
     setSubscribeStatus("loading");
     try {
-      // Simpan ke store_settings untuk keperluan marketing
-      const supabase = createClient();
-      const { data: existing } = await supabase
-        .from("store_settings")
-        .select("value")
-        .eq("key", "subscribed_emails")
-        .maybeSingle();
-      const existingEmails: string[] = (existing?.value as { emails?: string[] })?.emails || [];
-      if (!existingEmails.includes(emailSubscribe.trim())) {
-        existingEmails.push(emailSubscribe.trim());
-      }
-      const { error } = await supabase
-        .from("store_settings")
-        .upsert({
-          key: "subscribed_emails",
-          value: { emails: existingEmails },
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "key" });
-      if (error) {
-        console.warn("[Email Subscribe] Gagal simpan ke DB:", error.message);
-        // Fallback: tetap anggap berhasil
+      // T-53: simpan via API server — upsert langsung dari browser ke
+      // store_settings ditolak RLS (write admin-only)
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailSubscribe.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setSubscribeStatus("error");
+        toast("error", (data as { error?: string } | null)?.error ?? "Gagal berlangganan. Silakan coba lagi.");
+        return;
       }
       setSubscribeStatus("success");
       setEmailSubscribe("");
@@ -387,6 +378,7 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
     } catch (err) {
       console.error("[Email Subscribe] Error:", err);
       setSubscribeStatus("error");
+      toast("error", "Gagal berlangganan. Silakan coba lagi.");
     }
   };
 

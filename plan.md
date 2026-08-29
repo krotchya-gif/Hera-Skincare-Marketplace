@@ -113,7 +113,7 @@ npm run build       # exit 0
 | T-50 | P0 | Validasi shipping_cost & total di /api/orders (tolak negatif) | DONE |
 | T-51 | P0 | Xendit create: simpan referensi invoice via service-role | DONE |
 | T-52 | P0 | Perbaiki syntax error full_schema.sql (store_settings terpotong) | DONE |
-| T-53 | P1 | Newsletter via API route (RLS-safe, tanpa success palsu) | BACKLOG |
+| T-53 | P1 | Newsletter via API route (RLS-safe, tanpa success palsu) | DONE |
 | T-54 | P1 | Integrasi RajaOngkir V2 (Komerce) — cek ongkir real + satukan logika ongkir | BACKLOG |
 | T-55 | P1 | Konsistensi order & stok (4 sub-bug hasil audit) | BACKLOG |
 | T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | BACKLOG |
@@ -1111,7 +1111,8 @@ Tidak ada perubahan src → lint/typecheck/build tidak dijalankan ulang (pola T-
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
 | Prioritas | P1 |
 | Sumber | Audit 2026-08-29 — temuan HIGH-3; TERKONFIRMASI live via MCP (write store_settings admin-only; key `subscribed_emails` tidak ada = belum pernah tersimpan) |
 
@@ -1131,6 +1132,30 @@ Tidak ada perubahan src → lint/typecheck/build tidak dijalankan ulang (pola T-
 2. Email duplikat tidak tersimpan dobel; guest & login sama-sama jalan
 3. Gagal simpan = toast error (bukan success palsu)
 4. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Perubahan ==
++ src/app/api/newsletter/route.ts (POST) — rate-limit 10/menit, validasi email,
+  guard SUPABASE_SERVICE_ROLE_KEY kosong → 503, baca-dedupe-upsert ke
+  store_settings key subscribed_emails via createAdminClient (server-side),
+  duplikat → sukses tanpa tulis ulang, gagal → 4xx/5xx dengan pesan
+~ src/components/HomeClient.tsx (handleSubscribe) — fetch /api/newsletter;
+  fallback "tetap anggap berhasil" DIHAPUS; gagal → toast error
+Catatan: sync jumlah route README (36→37) digabung ke Bukti T-54 yang sudah
+memiliki README di Scope-IN.
+
+== Gerbang ==
+lint      : 13 problems (baseline sama, 0 warning)
+typecheck : tsc --noEmit → EXIT 0
+build     : EXIT 0
+
+== UNVERIFIED (pola T-02) ==
+Runtime persist ke live DB menunggu SUPABASE_SERVICE_ROLE_KEY diisi owner
+(.env.local kini hanya 3 var NEXT_PUBLIC). Route sudah guard 503 ramah bila
+env kosong — tidak ada lagi success palsu. Verifikasi MCP setelah env diisi:
+cek key subscribed_emails berisi email subscriber.
+```
 
 ---
 
