@@ -260,13 +260,9 @@ create policy "Authenticated users can create orders" on public.orders
   for insert to authenticated
   with check (user_id = auth.uid());
 
--- Auto increment voucher usage count (atomic)
-create or replace function public.increment_voucher_usage(voucher_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
-begin
-  update public.vouchers set used_count = used_count + 1 where id = voucher_id;
-end;
-$$;
+-- Auto increment voucher usage count (atomic) — T-38: DIHAPUS,
+-- digantikan RPC redeem_voucher (T-21, quota + per-user limit).
+-- ============================================================
 
 -- Auto-generate order number with HS prefix
 create or replace function public.generate_order_number()
@@ -1192,13 +1188,7 @@ create policy "Admins can delete notifications"
   on public.notifications for delete to authenticated
   using (public.has_role(auth.uid(), array['super_admin', 'admin']));
 
--- C8: Fix increment_voucher_usage — add missing search_path
-create or replace function public.increment_voucher_usage(voucher_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
-begin
-  update public.vouchers set used_count = used_count + 1 where id = voucher_id;
-end;
-$$;
+-- C8: (T-38) increment_voucher_usage DIHAPUS — digantikan RPC redeem_voucher (T-21)
 
 -- C9: Add atomic stock decrement function (used by orders.ts)
 create or replace function public.decrement_product_stock(pid uuid, qty int)
@@ -1469,7 +1459,7 @@ REVOKE EXECUTE ON FUNCTION public.decrement_product_stock(uuid, integer) FROM an
 REVOKE EXECUTE ON FUNCTION public.decrement_variant_stock(uuid, integer) FROM anon, PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.increment_product_stock(uuid, integer) FROM anon, PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.increment_variant_stock(uuid, integer) FROM anon, PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.increment_voucher_usage(uuid) FROM anon, PUBLIC;
+-- (T-38) increment_voucher_usage dihapus — revoke-nya ikut dihapus
 
 REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM anon, authenticated, PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_order_status_change() FROM anon, authenticated, PUBLIC;
