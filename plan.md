@@ -126,7 +126,11 @@ npm run build       # exit 0
 | T-63 | P1 | Fitur banner promosi: tabel banners + admin CRUD (tab Banner di marketing) + carousel storefront | DONE |
 | T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | DONE |
 | T-65 | P1 | CSP whitelist endpoint regional GA4 + tampilkan error API di tab Analytics | DONE |
-| T-66 | P1 | GA4/GTM script pindah ke `<head>` (kini di body → verifikasi GSC gagal) | BACKLOG |
+| T-66 | P1 | GA4/GTM script pindah ke `<head>` (kini di body → verifikasi GSC gagal) | DONE |
+| T-67 | P1 | Storefront: halaman katalog semua produk `/produk` (filter kategori + sort + pagination) | BACKLOG |
+| T-68 | P1 | Manajemen gambar produk: hapus per thumbnail + sinkronisasi product_images saat edit | BACKLOG |
+| T-69 | P2 | Kartu Banner/Push di Marketing jadi navigasi ke tab masing-masing | BACKLOG |
+| T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -1874,6 +1878,108 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 ```
 
 **Alternatif tanpa kode (bila lebih disukai owner):** verifikasi GSC via DNS TXT untuk domain property `calysta.fun` — tidak tergantung posisi snippet.
+
+---
+
+### T-67 — Storefront: halaman katalog semua produk `/produk`
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Keluh owner 2026-08-30: "16 produk aktif, yang tampil hanya 6, tidak bisa lihat keseluruhan" |
+
+**Temuan investigasi:** admin /admin/produk sudah benar ("Menampilkan 16 dari 16" — terverifikasi live). Masalahnya di STOREFRONT: tidak ada halaman semua-produk; produk terpecah per kategori (Skincare 6, Makeup 4, Rambut 3, Parfum 1, Perawatan Tubuh 2) dan `/kategori` tanpa slug 404.
+
+**Scope-IN**
+- Halaman `src/app/produk/page.tsx` + `src/components/AllProductsClient.tsx` — grid semua produk aktif via `/api/products` (tanpa filter kategori), pencarian, sort (sesuai dukungan API), filter kategori chips, pagination
+- Link "Semua Produk" di navbar (drawer Menu Utama) + footer Layanan
+- sitemap.xml += `/produk`; llms.txt += link
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Halaman kategori existing, logika keranjang
+
+**Kriteria Selesai**
+1. `/produk` menampilkan 16 produk (semua aktif) dengan pagination
+2. Filter kategori & sort berfungsi; link navbar/footer aktif
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-68 — Manajemen gambar produk: hapus per thumbnail + sinkronisasi saat edit
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Keluh owner 2026-08-30: placeholder tidak bisa dihapus; upload baru "masuk slide 3" |
+
+**Temuan investigasi (ProductFormModal.tsx):**
+1. Tidak ada tombol hapus per thumbnail — placeholder picsum tidak bisa dibuang
+2. Saat EDIT, payload mengirim `images: undefined` → gambar baru hasil upload hanya ke Storage (tanpa record product_images) dan tak pernah disinkronkan — karena itu hanya terlihat sebagai preview ke-3 di form, storefront tetap placeholder lama
+3. Kaitan T-60: setelah task ini, placeholder picsum bisa diganti foto asli
+
+**Scope-IN**
+- `src/app/api/admin/products/[id]/route.ts` + `src/lib/admin.ts` — PUT menerima `images: string[]` (daftar URL final) → sinkronkan `product_images`: hapus row yang URL-nya dibuang, insert URL baru (unik), set `is_primary` = urutan pertama + `sort_order` sesuai urutan list
+- `src/components/admin/ProductFormModal.tsx` — tombol hapus per thumbnail, badge "Utama" pada gambar pertama, kirim `images: uploadedImages` saat EDIT (bukan undefined)
+- File Storage yatim boleh dibiarkan (dicatat); penghapusan file fisik opsional
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Endpoint upload, tabel/DB, storefront
+
+**Kriteria Selesai**
+1. Edit produk: hapus 1 thumbnail → simpan → row product_images hilang; tambah upload → simpan → row baru muncul dengan urutan benar
+2. Gambar pertama selalu is_primary
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-69 — Kartu Banner/Push di Marketing jadi navigasi tab
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P2 |
+| Sumber | Keluh owner 2026-08-30: kartu masih "Dalam Pengembangan" padahal fiturnya sudah jadi tab |
+
+**Scope-IN**
+- `src/app/admin/(dashboard)/marketing/page.tsx` (tab Ringkasan, array Marketing Channels) — kartu "Push Notification" += `onClick: setTab("push")`, kartu "Banner Iklan" += `onClick: setTab("banner")`, status → "Aktif"; "Email Blast" tetap Segera (fitur belum ada); "Voucher Campaign" dibiarkan (tabelnya di tab yang sama)
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Halaman/fitur lain
+
+**Kriteria Selesai**
+1. Kedua kartu bisa diklik → pindah ke tab masing-masing, tanpa badge "Dalam Pengembangan"
+2. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-70 — Upload gambar banner gagal ("Gagal menyimpan referensi gambar")
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Keluh owner 2026-08-30 saat mencoba upload banner |
+
+**Akar masalah (terkonfirmasi dari kode):** BannerManager memakai `/api/admin/upload` (route produk) dengan UUID placeholder → route wajib insert referensi ke `product_images` (FK product_id) → FK ditolak → 400. File tetap terunggah ke Storage (yatim di folder UUID placeholder — bisa dibersihkan via dashboard).
+
+**Fix:** route ini sudah punya jalur skip-referensi (`productId === "temp"` — warisan flow produk baru) → BannerManager cukup mengirim `productId: "temp"` (1 baris) sehingga tidak menyentuh `product_images`; URL tersimpan di `banners.image_url`.
+
+**Scope-IN**
+- `src/components/admin/BannerManager.tsx` — productId "temp" + rapikan komentar
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Route upload (perilaku produk tidak boleh berubah)
+
+**Kriteria Selesai**
+1. Upload gambar di form banner sukses → URL terisi → banner tersimpan dan tampil
+2. Tidak ada row product_images yang dibuat untuk banner
+3. Ketiga gerbang DoD hijau + bukti tercatat
 
 **Bukti**
 ```
