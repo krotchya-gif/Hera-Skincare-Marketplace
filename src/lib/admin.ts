@@ -205,6 +205,61 @@ export async function createProduct(payload: Partial<Product> & { images?: strin
   return data as unknown as Product;
 }
 
+// ─── T-68: sinkronisasi gambar produk (daftar URL final dari form) ───────────
+// - URL yang dibuang dari daftar → row product_images dihapus
+// - URL baru → insert (dedupe per URL)
+// - is_primary = urutan pertama; sort_order mengikuti urutan daftar
+// Memakai session client (admin) — policy "Admins can manage product images".
+export async function syncProductImages(productId: string, urls: string[]): Promise<boolean> {
+  const supabase = await createClient();
+  const clean = [...new Set(urls.filter((u) => typeof u === "string" && /^https?:\/\//i.test(u)))];
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("product_images")
+    .select("id, url")
+    .eq("product_id", productId);
+  if (fetchError) {
+    console.error("[syncProductImages fetch]", fetchError);
+    return false;
+  }
+
+  const existingUrls = new Set((existing ?? []).map((r) => r.url));
+  const finalUrls = new Set(clean);
+
+  const toDelete = (existing ?? []).filter((r) => !finalUrls.has(r.url)).map((r) => r.id);
+  if (toDelete.length > 0) {
+    const { error: delError } = await supabase.from("product_images").delete().in("id", toDelete);
+    if (delError) {
+      console.error("[syncProductImages delete]", delError);
+      return false;
+    }
+  }
+
+  const toInsert = clean
+    .filter((u) => !existingUrls.has(u))
+    .map((url) => ({ product_id: productId, url, is_primary: false, sort_order: 0 }));
+  if (toInsert.length > 0) {
+    const { error: insError } = await supabase.from("product_images").insert(toInsert);
+    if (insError) {
+      console.error("[syncProductImages insert]", insError);
+      return false;
+    }
+  }
+
+  for (let i = 0; i < clean.length; i++) {
+    const { error: updError } = await supabase
+      .from("product_images")
+      .update({ is_primary: i === 0, sort_order: i })
+      .eq("product_id", productId)
+      .eq("url", clean[i]);
+    if (updError) {
+      console.error("[syncProductImages order]", updError);
+      return false;
+    }
+  }
+  return true;
+}
+
 export async function updateProduct(id: string, payload: Partial<Product>): Promise<boolean> {
   const supabase = await createClient();
   const allowed = ["name", "description", "category_id", "brand", "price", "discount_price", "stock", "unit", "weight_gram", "dimension_p", "dimension_l", "dimension_t", "meta_title", "meta_description", "slug", "is_active"];

@@ -84,7 +84,7 @@ export default function ProductFormModal({
           weight_gram: form.weight_gram ? parseInt(form.weight_gram) : null,
           slug,
           is_active: isDraft ? false : form.is_active,
-          images: editProduct ? undefined : uploadedImages,
+          images: uploadedImages,
         };
 
         const url = editProduct ? `/api/admin/products/${editProduct.id}` : `/api/admin/products`;
@@ -284,8 +284,22 @@ export default function ProductFormModal({
             {uploadedImages.length > 0 && (
               <div className="flex gap-2 mb-3 flex-wrap">
                 {uploadedImages.map((url, i) => (
-                  <div key={i} className="w-16 h-16 bg-green-50 rounded-xl border border-gray-200 overflow-hidden relative">
+                  <div key={url} className="w-16 h-16 bg-green-50 rounded-xl border border-gray-200 overflow-hidden relative">
                     <Image src={url} alt={`Foto ${i + 1}`} fill sizes="64px" className="object-cover" />
+                    {/* T-68: badge utama + tombol hapus per gambar */}
+                    {i === 0 && (
+                      <span className="absolute top-0 left-0 bg-green-600 text-white text-[8px] font-bold px-1 py-0.5 rounded-br-md">
+                        Utama
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setUploadedImages((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full text-[9px] leading-none flex items-center justify-center hover:bg-red-500 transition-colors"
+                      aria-label={`Hapus foto ${i + 1}`}
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>

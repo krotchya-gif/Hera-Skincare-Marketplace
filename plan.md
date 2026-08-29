@@ -128,7 +128,7 @@ npm run build       # exit 0
 | T-65 | P1 | CSP whitelist endpoint regional GA4 + tampilkan error API di tab Analytics | DONE |
 | T-66 | P1 | GA4/GTM script pindah ke `<head>` (kini di body → verifikasi GSC gagal) | DONE |
 | T-67 | P1 | Storefront: halaman katalog semua produk `/produk` (filter kategori + sort + pagination) | BACKLOG |
-| T-68 | P1 | Manajemen gambar produk: hapus per thumbnail + sinkronisasi product_images saat edit | BACKLOG |
+| T-68 | P1 | Manajemen gambar produk: hapus per thumbnail + sinkronisasi product_images saat edit | DONE |
 | T-69 | P2 | Kartu Banner/Push di Marketing jadi navigasi ke tab masing-masing | DONE |
 | T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | DONE |
 
@@ -1911,7 +1911,8 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Keluh owner 2026-08-30: placeholder tidak bisa dihapus; upload baru "masuk slide 3" |
 
@@ -1933,6 +1934,22 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 1. Edit produk: hapus 1 thumbnail → simpan → row product_images hilang; tambah upload → simpan → row baru muncul dengan urutan benar
 2. Gambar pertama selalu is_primary
 3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
++ src/lib/admin.ts — syncProductImages(productId, urls): hapus row yang
+  URL-nya dibuang, insert URL baru (dedupe), is_primary = urutan pertama,
+  sort_order sesuai daftar (session client admin, sesuai policy)
+~ api/admin/products/[id] PUT — bila body.images array (setelah update
+  produk sukses) → sync; gagal sync → 400
+~ ProductFormModal — tombol hapus ✕ per thumbnail + badge "Utama" di
+  gambar pertama; EDIT kini mengirim images: uploadedImages (sebelumnya
+  undefined — akar "slide 3" & placeholder tak tergantikan)
+Catatan: file Storage yatim (upload dibatalkan) dibiarkan — tidak
+mengganggu; pembersihan opsional via dashboard.
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+E2E via browser menyusul di changelog.
+```
 
 ---
 

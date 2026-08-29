@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateProduct, deleteProduct } from "@/lib/admin";
+import { updateProduct, deleteProduct, syncProductImages } from "@/lib/admin";
 import { verifyAdminRole, handleAdminError } from "@/lib/auth-utils";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 import { createClient } from "@/utils/supabase/server";
@@ -57,6 +57,20 @@ export async function PUT(
     const success = await updateProduct(id, body);
     if (!success) {
       return NextResponse.json({ error: "Gagal mengupdate produk" }, { status: 400 });
+    }
+
+    // T-68: sinkronisasi gambar produk (daftar URL final dari form edit).
+    // Sebelumnya images tidak pernah dikirim saat edit → gambar baru hanya
+    // tersimpan di Storage tanpa record product_images.
+    if (Array.isArray(body.images)) {
+      const urls = body.images.filter((u: unknown): u is string => typeof u === "string");
+      const synced = await syncProductImages(id, urls);
+      if (!synced) {
+        return NextResponse.json(
+          { error: "Produk terupdate namun gagal menyinkronkan gambar." },
+          { status: 400 }
+        );
+      }
     }
     return NextResponse.json({ success: true });
   } catch (error) {
