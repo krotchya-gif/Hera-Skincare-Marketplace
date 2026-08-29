@@ -1786,7 +1786,7 @@ Catatan: 3 temuan lint baru saat pengerjaan (import Bell belum terpakai +
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
 | Prioritas | P1 |
 | Sumber | Diagnosa 2026-08-30 "angka analytics tidak muncul": GA4 ✓ (200, akses SA benar, tunggu latensi 24–48 jam); GSC 403 karena Search Console API belum di-enable di GCP project (action item owner, bukan kode) |
 
@@ -1833,7 +1833,8 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Kegagalan verifikasi GSC (2026-08-30): GA → "tracking code in the wrong location", GTM → "could not find container ID on the home page". Bukti HTML live: `gtag('config')`/`dataLayer`/GTM loader berada di BODY (@84.362/@84.788, `</head>` di 2.199) — hanya loader gtag.js yang di head |
 
@@ -1850,6 +1851,17 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 1. Live: `gtag('config', 'G-...')` + GTM loader berada di posisi < `</head>` (cek curl)
 2. Verifikasi GA4/GTM di GSC dapat dilakukan (atau minimal: kedua snippet 100% di head)
 3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ src/app/layout.tsx — elemen <head> baru di root layout berisi raw script
+  GA4 (src + config inline) & GTM loader (kondisional settings);
+  blok afterInteractive GA4/GTM di body DIHAPUS (anti dobel load);
+  Clarity/Ads/Pixel tetap afterInteractive (tidak dipersyaratkan GSC);
+  eslint-disable next-script-for-ga dengan alasan (posisi head > komponen)
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Verifikasi live pasca-deploy menyusul di changelog.
+```
 
 **Alternatif tanpa kode (bila lebih disukai owner):** verifikasi GSC via DNS TXT untuk domain property `calysta.fun` — tidak tergantung posisi snippet.
 

@@ -26,6 +26,29 @@ export default async function RootLayout({
 
   return (
     <html lang="id">
+      {/* T-66: GA4 + GTM dirender di <head> (bukan body) — verifikasi GSC
+          via Analytics/GTM mensyaratkan snippet berada di head home page.
+          Interpolasi ID aman: nilai hanya bisa diisi admin. */}
+      <head>
+        {seo.ga4_measurement_id && (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${seo.ga4_measurement_id}`} />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '${seo.ga4_measurement_id}');`,
+              }}
+            />
+          </>
+        )}
+        {seo.gtm_id && (
+          // eslint-disable-next-line @next/next/next-script-for-ga -- verifikasi GSC mensyaratkan container GTM di <head>; komponen @next/third-parties tidak menjamin posisi head
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${seo.gtm_id}');`,
+            }}
+          />
+        )}
+      </head>
       <body className="font-sans antialiased">
         <ToastProvider>
           <ErrorBoundary>
@@ -63,36 +86,8 @@ export default async function RootLayout({
           </>
         )}
 
-        {/* Google Analytics GA4 */}
-        {seo.ga4_measurement_id && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${seo.ga4_measurement_id}`}
-              strategy="afterInteractive"
-            />
-            <Script id="ga4-config" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${seo.ga4_measurement_id}');
-              `}
-            </Script>
-          </>
-        )}
-
-        {/* T-42: Google Tag Manager */}
-        {seo.gtm_id && (
-          <Script id="gtm" strategy="afterInteractive">
-            {`
-              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-              })(window,document,'script','dataLayer','${seo.gtm_id}');
-            `}
-          </Script>
-        )}
+        {/* GA4 + GTM kini di <head> (T-66) — blok afterInteractive lama dihapus
+            agar tidak dobel load */}
 
         {/* T-42: Microsoft Clarity */}
         {seo.clarity_id && (
