@@ -126,6 +126,7 @@ npm run build       # exit 0
 | T-63 | P1 | Fitur banner promosi: tabel banners + admin CRUD (tab Banner di marketing) + carousel storefront | DONE |
 | T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | DONE |
 | T-65 | P1 | CSP whitelist endpoint regional GA4 + tampilkan error API di tab Analytics | BACKLOG |
+| T-66 | P1 | GA4/GTM script pindah ke `<head>` (kini di body → verifikasi GSC gagal) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -1810,6 +1811,32 @@ Catatan: 3 temuan lint baru saat pengerjaan (import Bell belum terpakai +
 3. Pastikan "GSC Site URL" di pengaturan persis sama dengan URL/property terverifikasi (`https://marketplace.calysta.fun/` atau `sc-domain:calysta.fun`)
 4. Verifikasi GSC disarankan via DNS TXT (domain property) — metode GA4/GTM menuntut URL-prefix + akun sama
 5. Data GA4 muncul otomatis setelah latensi 24–48 jam (akses SA sudah terbukti 200 OK)
+
+---
+
+### T-66 — GA4/GTM script pindah ke `<head>` (verifikasi GSC gagal karena snippet di body)
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Kegagalan verifikasi GSC (2026-08-30): GA → "tracking code in the wrong location", GTM → "could not find container ID on the home page". Bukti HTML live: `gtag('config')`/`dataLayer`/GTM loader berada di BODY (@84.362/@84.788, `</head>` di 2.199) — hanya loader gtag.js yang di head |
+
+**Tujuan:** `next/script strategy="afterInteractive"` me-render script di body — GSC mensyaratkan snippet GA4 (src + config) dan container GTM berada di **`<head>`** home page. Pindahkan keduanya ke head agar verifikasi GA4/GTM lolos.
+
+**Scope-IN**
+- `src/app/layout.tsx` — GA4 (src + config inline) dan GTM loader dirender sebagai raw `<script>` di dalam elemen `<head>` root layout (deterministic untuk GSC; tetap kondisional `seo.ga4_measurement_id` / `seo.gtm_id`); Clarity/Ads/Pixel biarkan afterInteractive (tidak dipersyaratkan GSC)
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Nilai ID di DB/settings, sistem push, halaman lain
+
+**Kriteria Selesai**
+1. Live: `gtag('config', 'G-...')` + GTM loader berada di posisi < `</head>` (cek curl)
+2. Verifikasi GA4/GTM di GSC dapat dilakukan (atau minimal: kedua snippet 100% di head)
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Alternatif tanpa kode (bila lebih disukai owner):** verifikasi GSC via DNS TXT untuk domain property `calysta.fun` — tidak tergantung posisi snippet.
 
 **Bukti**
 ```
