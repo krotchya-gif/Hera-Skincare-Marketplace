@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { CheckCircle2, Wallet } from "lucide-react";
 import ConfirmPaymentButton from "./ConfirmPaymentButton";
 import XenditPaySection from "./XenditPaySection";
 
@@ -46,7 +47,7 @@ export default async function BayarPage({ params }: { params: Promise<{ id: stri
       <div className="max-w-lg mx-auto px-4 py-8 space-y-4">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">{sudahLunas ? "✅" : "💰"}</span>
+            {sudahLunas ? <CheckCircle2 className="w-8 h-8 text-green-600" /> : <Wallet className="w-8 h-8 text-green-600" />}
           </div>
           <h1 className="text-xl font-bold text-gray-900 mb-1">
             {sudahLunas ? "Pembayaran Diterima" : "Pembayaran"}

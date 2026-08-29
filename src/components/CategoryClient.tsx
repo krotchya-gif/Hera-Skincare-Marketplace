@@ -7,6 +7,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/components/Toast";
 import { getProductEmoji } from "@/components/HomeClient";
+import { CategoryIcon } from "@/components/CategoryIcon";
+import { getProductImage } from "@/lib/product-image";
 import { createClient } from "@/utils/supabase/client";
 import { addToCart, getWishlist, toggleWishlist } from "@/lib/cart-utils";
 import {
@@ -14,6 +16,9 @@ import {
   Heart,
   SlidersHorizontal,
   X,
+  MapPin,
+  Package,
+  Search,
 } from "lucide-react";
 import type { Category, Product, PaginatedResult } from "@/types/database";
 
@@ -34,6 +39,7 @@ function ProductCard({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
 
   const emoji = getProductEmoji(product.slug, product.categories?.icon);
+  const image = getProductImage(product);
   const finalPrice = product.discount_price ?? product.price;
   const hasDiscount = !!product.discount_price && product.discount_price < product.price;
   const discountPercent = hasDiscount ? Math.round(((product.price - product.discount_price!) / product.price) * 100) : 0;
@@ -55,7 +61,7 @@ function ProductCard({ product }: { product: Product }) {
           id: product.id,
           name: product.name,
           price: product.discount_price ?? product.price,
-          emoji: emoji,
+          image: image ?? undefined,
           stock: product.stock,
           slug: product.slug ?? undefined,
           originalPrice: product.discount_price ? product.price : null,
@@ -93,7 +99,17 @@ function ProductCard({ product }: { product: Product }) {
     <Link href={`/produk/${product.slug}`} className="block">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all group cursor-pointer">
         <div className="relative aspect-square bg-green-50 flex items-center justify-center">
-          <span className="text-5xl md:text-6xl">{emoji}</span>
+          {image ? (
+            // eslint-disable-next-line @next/next/no-img-element -- gambar produk dari storage/cdn
+            <img
+              src={image}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+          ) : (
+            <CategoryIcon name={emoji} className="w-16 h-16 text-emerald-600/70" />
+          )}
 
           {hasDiscount && (
             <span className="absolute top-2 left-2 animate-shimmer-glow text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -137,8 +153,8 @@ function ProductCard({ product }: { product: Product }) {
               </p>
             )}
           </div>
-          <p className="text-gray-400 text-xs mt-1">📍 Jakarta Selatan</p>
-          <p className="text-gray-400 text-xs">📦 Gratis Ongkir</p>
+          <p className="text-gray-400 text-xs mt-1"><MapPin className="w-3 h-3 inline-block mr-0.5" /> Jakarta Selatan</p>
+          <p className="text-gray-400 text-xs"><Package className="w-3 h-3 inline-block mr-0.5" /> Gratis Ongkir</p>
         </div>
       </div>
     </Link>
@@ -216,7 +232,7 @@ export default function CategoryClient({ category, initialResult, slug, searchQu
 
         {/* Category Header */}
         <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl p-6 md:p-8 text-white mb-6 flex items-center gap-6">
-          <span className="text-5xl md:text-6xl">{category.icon || "📦"}</span>
+          <span className="text-emerald-100"><CategoryIcon name={category.icon} className="w-14 h-14 md:w-16 md:h-16" /></span>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-1">{category.name}</h1>
             <p className="text-green-100 text-sm max-w-lg">{description}</p>
@@ -339,7 +355,7 @@ export default function CategoryClient({ category, initialResult, slug, searchQu
             {/* Product Grid */}
             {products.length === 0 ? (
               <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-                <span className="text-5xl block mb-3">🔍</span>
+                <Search className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                 <p className="text-gray-900 font-semibold mb-1">Produk tidak ditemukan</p>
                 <p className="text-gray-500 text-sm">Coba ubah filter pencarian Anda</p>
               </div>

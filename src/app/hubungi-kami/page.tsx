@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { STORE_NAME, STORE_EMAIL, STORE_PHONE, STORE_ADDRESS } from "@/utils/storeConfig";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 export default function HubungiKamiPage() {
   const [contact, setContact] = useState<{
@@ -59,7 +60,9 @@ export default function HubungiKamiPage() {
 
         <div className="grid gap-4">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start gap-4">
-            <span className="text-2xl">📧</span>
+            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 shrink-0">
+              <Mail className="w-5 h-5" />
+            </div>
             <div>
               <h2 className="font-semibold text-gray-900 text-sm">Email</h2>
               <a href={`mailto:${finalEmail}`} className="text-sm text-green-600 hover:underline">{finalEmail}</a>
@@ -68,7 +71,9 @@ export default function HubungiKamiPage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start gap-4">
-            <span className="text-2xl">📞</span>
+            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 shrink-0">
+              <Phone className="w-5 h-5" />
+            </div>
             <div>
               <h2 className="font-semibold text-gray-900 text-sm">Telepon</h2>
               <a href={`tel:${finalPhone}`} className="text-sm text-green-600 hover:underline">{finalPhone}</a>
@@ -77,7 +82,9 @@ export default function HubungiKamiPage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start gap-4">
-            <span className="text-2xl">📍</span>
+            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 shrink-0">
+              <MapPin className="w-5 h-5" />
+            </div>
             <div>
               <h2 className="font-semibold text-gray-900 text-sm">Alamat</h2>
               <p className="text-sm text-gray-600">{finalAddress}</p>

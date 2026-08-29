@@ -20,6 +20,9 @@ import {
   Check,
   Copy,
   X,
+  Package,
+  Home,
+  Wallet,
 } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -44,7 +47,6 @@ interface CheckoutItem {
   price: number;
   quantity: number;
   image?: string;
-  emoji?: string | null;
   variantId?: string | null;
   variant?: string | null;
 }
@@ -142,12 +144,12 @@ export default function CheckoutPage() {
           if (payment?.methods) {
             const methods = [{
               group: "Pembayaran",
-              icon: "💳",
+              icon: "wallet",
               options: [
                 {
                   code: "xendit",
                   name: "Bayar Online via Xendit (QRIS/E-Wallet/VA)",
-                  logo: "⚡"
+                  logo: "Zap"
                 },
                 ...payment.methods.map((name: string) => ({
                   code: name.toLowerCase().replace(/[\s()]/g, "-"),
@@ -540,7 +542,7 @@ export default function CheckoutPage() {
                   {paymentMethods.map((group) => (
                     <div key={group.group} className="border border-gray-100 rounded-xl overflow-hidden">
                       <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-                        <span>{group.icon}</span>
+                        {group.icon === "wallet" ? <Wallet className="w-4 h-4 text-green-600" /> : <span>{group.icon}</span>}
                         <span className="font-semibold text-gray-800 text-sm">{group.group}</span>
                       </div>
                       <div className="divide-y divide-gray-100">
@@ -572,14 +574,21 @@ export default function CheckoutPage() {
             {/* Step 4: Konfirmasi */}
             {step === 4 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">📋 Konfirmasi Pesanan</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Konfirmasi Pesanan</h2>
 
                 <div className="mb-4">
                   <p className="text-sm font-semibold text-gray-700 mb-3">Produk yang Dipesan</p>
                   <div className="space-y-2">
                     {checkoutItems.map((item) => (
                       <div key={item.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                        <span className="text-2xl">{item.emoji}</span>
+                        {item.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- gambar produk dari storage/cdn
+                          <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover shrink-0" loading="lazy" />
+                        ) : (
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 shrink-0">
+                            <Package className="w-5 h-5" />
+                          </div>
+                        )}
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900">{item.name}</p>
                           {item.variant && (
@@ -654,17 +663,17 @@ export default function CheckoutPage() {
 
                 <div className="grid grid-cols-3 gap-3 mb-8 text-center">
                   <div className="bg-green-50 rounded-xl p-3">
-                    <span className="text-2xl block mb-1">📦</span>
+                    <Package className="w-6 h-6 mx-auto mb-1 text-green-600" />
                     <p className="text-xs font-medium text-gray-700">Dikemas</p>
                     <p className="text-xs text-gray-500">Hari ini</p>
                   </div>
                   <div className="bg-green-50 rounded-xl p-3">
-                    <span className="text-2xl block mb-1">🚚</span>
+                    <Truck className="w-6 h-6 mx-auto mb-1 text-green-600" />
                     <p className="text-xs font-medium text-gray-700">Dikirim</p>
                     <p className="text-xs text-gray-500">Besok</p>
                   </div>
                   <div className="bg-green-50 rounded-xl p-3">
-                    <span className="text-2xl block mb-1">🏠</span>
+                    <Home className="w-6 h-6 mx-auto mb-1 text-green-600" />
                     <p className="text-xs font-medium text-gray-700">Tiba</p>
                     <p className="text-xs text-gray-500">{shippingService?.etd ?? "2-5 hari"}</p>
                   </div>
@@ -710,7 +719,7 @@ export default function CheckoutPage() {
                   {isSubmitting ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : step === 4 ? (
-                    "✅ Buat Pesanan"
+                    "Buat Pesanan"
                   ) : (
                     "Lanjut →"
                   )}
@@ -728,7 +737,14 @@ export default function CheckoutPage() {
                 <div className="space-y-2 mb-4">
                   {checkoutItems.map((item) => (
                     <div key={item.id} className="flex items-center gap-2">
-                      <span className="text-xl">{item.emoji}</span>
+                      {item.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- gambar produk dari storage/cdn
+                        <img src={item.image} alt={item.name} className="w-9 h-9 rounded-lg object-cover shrink-0" loading="lazy" />
+                      ) : (
+                        <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center text-green-600 shrink-0">
+                          <Package className="w-4 h-4" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-700 line-clamp-1">{item.name}</p>
                         <p className="text-xs text-gray-500">x{item.quantity}</p>

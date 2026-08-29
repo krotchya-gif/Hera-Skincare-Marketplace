@@ -2,6 +2,7 @@
 
 import { useToast } from "@/components/Toast";
 import { formatRp } from "@/utils/format";
+import { Tag } from "lucide-react";
 
 interface VoucherCardProps {
   code: string;
@@ -32,8 +33,8 @@ export default function VoucherCard({ code, type, value, min_purchase, quota, us
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="flex">
-        <div className="w-20 bg-gradient-to-b from-green-500 to-green-700 flex items-center justify-center text-white font-bold text-lg">
-          {isPercent ? `${value}%` : "💰"}
+        <div className="w-20 bg-gradient-to-b from-green-500 to-green-700 flex items-center justify-center text-white">
+          <Tag className="w-6 h-6" />
         </div>
         <div className="flex-1 p-4">
           <div className="flex items-start justify-between">

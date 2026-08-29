@@ -3,7 +3,8 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  emoji?: string;
+  /** T-47: URL gambar produk (pengganti emoji) */
+  image?: string;
   variant?: string | null;
   stock?: number;
   slug?: string;
@@ -32,7 +33,7 @@ export function addToCart(
     id: string;
     name: string;
     price: number;
-    emoji?: string;
+    image?: string;
     stock?: number;
     slug?: string;
     originalPrice?: number | null;
@@ -52,13 +53,14 @@ export function addToCart(
       product.stock ?? 99,
       cart[existingIndex].quantity + qty
     );
+    if (product.image) cart[existingIndex].image = product.image;
   } else {
     cart.push({
       id: product.id,
       name: product.name,
       price: product.price,
       quantity: qty,
-      emoji: product.emoji,
+      image: product.image,
       variant: variant ?? null,
       stock: product.stock,
       slug: product.slug,

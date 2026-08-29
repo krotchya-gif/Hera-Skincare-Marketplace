@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useTransition } from "react";
 import StatusBadge from "@/components/admin/StatusBadge";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatRp } from "@/utils/format";
 import { createClient } from "@/utils/supabase/client";
@@ -121,13 +122,13 @@ function CustomerDetailModal({
                   : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
               }`}
             >
-              {customer.status === "diblokir" ? "✅ Aktifkan Akun" : "🚫 Blokir Akun"}
+              {customer.status === "diblokir" ? "Aktifkan Akun" : "Blokir Akun"}
             </button>
           </div>
 
           {/* Order History */}
           <div className="pt-2">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">📋 Riwayat Belanja</h4>
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">Riwayat Belanja</h4>
             {ordersLoading ? (
               <div className="text-center py-4"><div className="w-5 h-5 border-2 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto" /></div>
             ) : customerOrders.length === 0 ? (
@@ -235,9 +236,9 @@ export default function CustomersPage() {
   const totalPages = Math.ceil(totalCount / 10);
 
   const headerStats = [
-    { label: "Total Pelanggan", value: stats.total.toLocaleString(), icon: "👥", color: "bg-blue-50 text-blue-700" },
-    { label: "Pelanggan Baru (Est. Bln Ini)", value: stats.newThisMonth.toLocaleString(), icon: "🆕", color: "bg-green-50 text-green-700" },
-    { label: "Pelanggan Aktif", value: stats.active.toLocaleString(), icon: "✅", color: "bg-purple-50 text-purple-700" },
+    { label: "Total Pelanggan", value: stats.total.toLocaleString(), icon: "users", color: "bg-blue-50 text-blue-700" },
+    { label: "Pelanggan Baru (Est. Bln Ini)", value: stats.newThisMonth.toLocaleString(), icon: "user-plus", color: "bg-green-50 text-green-700" },
+    { label: "Pelanggan Aktif", value: stats.active.toLocaleString(), icon: "check", color: "bg-purple-50 text-purple-700" },
   ];
 
   return (
@@ -251,7 +252,7 @@ export default function CustomersPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {headerStats.map((s) => (
           <div key={s.label} className={`${s.color} rounded-2xl p-5 flex items-center gap-4`}>
-            <span className="text-3xl">{s.icon}</span>
+            <CategoryIcon name={s.icon} className="w-7 h-7" />
             <div>
               <p className="text-2xl font-bold">{s.value}</p>
               <p className="text-sm font-medium opacity-80">{s.label}</p>

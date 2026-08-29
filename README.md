@@ -1,6 +1,6 @@
 # Hera Skincare Marketplace
 
-Full-stack marketplace untuk produk rumah tangga dan perawatan pribadi. **Next.js 16** + **Supabase**.
+Full-stack marketplace untuk produk skincare & perawatan pribadi. **Next.js 16** + **Supabase**.
 
 ## Tech Stack
 

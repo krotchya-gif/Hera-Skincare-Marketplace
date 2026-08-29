@@ -124,9 +124,9 @@ export default function ReviewsPage() {
   // Client side rating filters
   const filtered = reviews.filter((r) => {
     if (filter === "Semua" || filter === "Tampil" || filter === "Disembunyikan") return true;
-    if (filter === "5 ⭐") return r.rating === 5;
-    if (filter === "4 ⭐") return r.rating === 4;
-    if (filter === "≤3 ⭐") return r.rating <= 3;
+    if (filter === "5 Bintang") return r.rating === 5;
+    if (filter === "4 Bintang") return r.rating === 4;
+    if (filter === "≤3 Bintang") return r.rating <= 3;
     return true;
   });
 
@@ -253,7 +253,7 @@ export default function ReviewsPage() {
       {/* Filter */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <div className="flex flex-wrap gap-2">
-          {["Semua", "Tampil", "Disembunyikan", "5 ⭐", "4 ⭐", "≤3 ⭐"].map((f) => (
+          {["Semua", "Tampil", "Disembunyikan", "5 Bintang", "4 Bintang", "≤3 Bintang"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -293,7 +293,7 @@ export default function ReviewsPage() {
                       </div>
                       <span className="text-xs text-gray-400">{new Date(review.created_at).toLocaleDateString("id-ID")}</span>
                     </div>
-                    <p className="text-xs text-green-600 font-medium mt-0.5">📦 {review.products?.name || "Produk"}</p>
+                    <p className="text-xs text-green-600 font-medium mt-0.5">{review.products?.name || "Produk"}</p>
                     <p className="text-sm text-gray-600 mt-2 leading-relaxed">{review.comment}</p>
                   </div>
                 </div>

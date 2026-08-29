@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import { STORE_NAME } from "@/utils/storeConfig";
+import { Search, ShoppingCart, ClipboardList, MapPin, Truck, CreditCard, CheckCircle2, PackageCheck } from "lucide-react";
 
 export const metadata = {
   title: `Cara Belanja — ${STORE_NAME}`,
@@ -9,14 +10,14 @@ export const metadata = {
 };
 
 const steps = [
-  { number: 1, emoji: "🔍", title: "Cari Produk", desc: "Gunakan fitur pencarian atau jelajahi kategori untuk menemukan produk yang Anda butuhkan." },
-  { number: 2, emoji: "🛒", title: "Tambahkan ke Keranjang", desc: "Pilih varian (jika ada), atur jumlah, lalu klik 'Tambah ke Keranjang'." },
-  { number: 3, emoji: "📝", title: "Checkout", desc: "Buka halaman keranjang, pilih produk yang ingin dibeli, lalu klik 'Lanjut ke Checkout'." },
-  { number: 4, emoji: "📍", title: "Isi Alamat", desc: "Masukkan atau pilih alamat pengiriman yang sudah tersimpan." },
-  { number: 5, emoji: "🚚", title: "Pilih Kurir", desc: "Pilih layanan pengiriman sesuai kebutuhan (Reguler, Express, atau Same Day)." },
-  { number: 6, emoji: "💳", title: "Pilih Pembayaran", desc: "Pilih metode pembayaran yang tersedia: Transfer Bank, E-Wallet, atau COD." },
-  { number: 7, emoji: "✅", title: "Konfirmasi & Bayar", desc: "Periksa kembali pesanan Anda, lalu klik 'Buat Pesanan'. Lakukan pembayaran sesuai instruksi." },
-  { number: 8, emoji: "📦", title: "Terima Pesanan", desc: "Pesanan akan diproses dan dikirim. Anda bisa melacak status pesanan di halaman Profil." },
+  { number: 1, icon: <Search className="w-5 h-5" />, title: "Cari Produk", desc: "Gunakan fitur pencarian atau jelajahi kategori untuk menemukan produk yang Anda butuhkan." },
+  { number: 2, icon: <ShoppingCart className="w-5 h-5" />, title: "Tambahkan ke Keranjang", desc: "Pilih varian (jika ada), atur jumlah, lalu klik 'Tambah ke Keranjang'." },
+  { number: 3, icon: <ClipboardList className="w-5 h-5" />, title: "Checkout", desc: "Buka halaman keranjang, pilih produk yang ingin dibeli, lalu klik 'Lanjut ke Checkout'." },
+  { number: 4, icon: <MapPin className="w-5 h-5" />, title: "Isi Alamat", desc: "Masukkan atau pilih alamat pengiriman yang sudah tersimpan." },
+  { number: 5, icon: <Truck className="w-5 h-5" />, title: "Pilih Kurir", desc: "Pilih layanan pengiriman sesuai kebutuhan (Reguler, Express, atau Same Day)." },
+  { number: 6, icon: <CreditCard className="w-5 h-5" />, title: "Pilih Pembayaran", desc: "Pilih metode pembayaran yang tersedia: Transfer Bank, E-Wallet, atau COD." },
+  { number: 7, icon: <CheckCircle2 className="w-5 h-5" />, title: "Konfirmasi & Bayar", desc: "Periksa kembali pesanan Anda, lalu klik 'Buat Pesanan'. Lakukan pembayaran sesuai instruksi." },
+  { number: 8, icon: <PackageCheck className="w-5 h-5" />, title: "Terima Pesanan", desc: "Pesanan akan diproses dan dikirim. Anda bisa melacak status pesanan di halaman Profil." },
 ];
 
 export default function CaraBelanjaPage() {
@@ -32,8 +33,8 @@ export default function CaraBelanjaPage() {
         <div className="space-y-3">
           {steps.map((step) => (
             <div key={step.number} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start gap-4">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-                <span className="text-lg">{step.emoji}</span>
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0 text-green-600">
+                {step.icon}
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-0.5">

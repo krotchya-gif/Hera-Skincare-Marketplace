@@ -20,30 +20,21 @@ import {
   Heart,
   X,
   ArrowRight,
+  Droplets,
+  Sparkles,
+  Flower2,
+  Package,
 } from "lucide-react";
 import type { Product, Category } from "@/types/database";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
 import { formatRp } from "@/utils/format";
 import { addToCart, getWishlist, toggleWishlist } from "@/lib/cart-utils";
+import { getProductImage } from "@/lib/product-image";
 
 export function getProductEmoji(slug: string | null, categoryIcon?: string | null): string {
-  if (!slug) return categoryIcon || "📦";
-  const map: Record<string, string> = {
-    "sabun-cair-hera-skincare": "🧴",
-    "pembersih-lantai-harum": "🧹",
-    "hand-sanitizer-500ml": "🧼",
-    "sabun-cuci-piring": "🍽️",
-    "pewangi-ruangan-premium": "🌸",
-    "kondisioner-rambut": "💆",
-    "pembersih-kaca": "🪟",
-    "losion-tubuh-aloe": "🧴",
-    "vitamin-c-500mg": "💊",
-    "deterjen-pakaian": "👕",
-    "sunscreen-spf50": "🧴",
-    "minyak-kayu-putih": "🌿",
-    "pembersih-toilet": "🚽"
-  };
-  return map[slug] || categoryIcon || "📦";
+  // T-47: emoji dihapus — fallback menggunakan icon Lucide kategori
+  return categoryIcon || "circle";
 }
 
 // ─── Countdown Timer ─────────────────────────────────────────────
@@ -97,7 +88,7 @@ function HeroBanner() {
             <span className="text-gradient-premium">Berkualitas</span>
           </h1>
           <p className="text-emerald-100/80 text-xs sm:text-sm md:text-base mb-5 sm:mb-6 max-w-md mx-auto md:mx-0 leading-relaxed">
-            Temukan ribuan produk rumah tangga premium — sabun, pembersih, perawatan tubuh, dan lebih banyak lagi.
+            Temukan produk kecantikan & perawatan kulit premium — skincare, makeup, dan perawatan tubuh pilihan.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
             <Link
@@ -119,13 +110,13 @@ function HeroBanner() {
         </div>
 
         <div className="flex gap-3 md:gap-4 shrink-0 animate-fade-in-up delay-200">
-          {["🧴", "🧼", "🌸"].map((emoji, i) => (
+          {[<Droplets key="d" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />, <Sparkles key="s" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />, <Flower2 key="f" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />].map((icon, i) => (
             <div
               key={i}
               className={`bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 md:p-6 border border-white/15 shadow-xl hover:bg-white/15 transition-all duration-300 ${i === 1 ? "-translate-y-3 md:-translate-y-5" : ""}`}
               style={{ animationDelay: `${i * 150}ms` }}
             >
-              <span className="text-3xl sm:text-4xl md:text-5xl block mb-2">{emoji}</span>
+              <span className="block mb-2 text-white/90">{icon}</span>
               <div className="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-white/80 to-emerald-200 rounded-full transition-all duration-1000"
@@ -192,6 +183,7 @@ function ProductCard({
   const [added, setAdded] = useState(false);
 
   const emoji = getProductEmoji(product.slug, product.categories?.icon);
+  const image = getProductImage(product);
   const finalPrice = product.discount_price ?? product.price;
   const hasDiscount = !!product.discount_price && product.discount_price < product.price;
   const discountPercent = hasDiscount ? Math.round(((product.price - product.discount_price!) / product.price) * 100) : 0;
@@ -213,7 +205,7 @@ function ProductCard({
           id: product.id,
           name: product.name,
           price: product.discount_price ?? product.price,
-          emoji: emoji,
+          image: image ?? undefined,
           stock: product.stock,
           slug: product.slug ?? undefined,
           originalPrice: product.discount_price ? product.price : null,
@@ -230,9 +222,19 @@ function ProductCard({
   return (
     <Link href={`/produk/${product.slug}`} className="block">
       <div className="bg-white rounded-2xl overflow-hidden card-premium group cursor-pointer">
-        {/* Image area */}
+        {/* Image area — T-47: gambar produk, fallback icon Lucide */}
         <div className="relative aspect-square bg-gradient-to-br from-emerald-50/80 via-green-50/60 to-teal-50/40 flex items-center justify-center">
-          <span className="text-4xl sm:text-5xl md:text-6xl group-hover:scale-110 transition-transform duration-500">{emoji}</span>
+          {image ? (
+            // eslint-disable-next-line @next/next/no-img-element -- gambar produk dari storage/cdn
+            <img
+              src={image}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+          ) : (
+            <CategoryIcon name={emoji} className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 text-emerald-600/70 group-hover:scale-110 transition-transform duration-500" />
+          )}
 
           {showDiscount && hasDiscount && (
             <span className="absolute top-2 left-2 animate-shimmer-glow text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-lg shadow-sm">
@@ -305,7 +307,7 @@ function ProductCard({
             </span>
           )}
           <p className="text-gray-400 text-[10px] sm:text-xs mt-1.5 flex items-center gap-1">
-            <span className="text-emerald-500">📦</span> Gratis Ongkir
+            <span className="text-emerald-500"><Package className="w-3.5 h-3.5 inline-block" /></span> Gratis Ongkir
           </p>
         </div>
       </div>
@@ -409,7 +411,7 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
                 className="bg-white rounded-2xl shadow-sm border border-gray-100/80 p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 hover:shadow-lg hover:-translate-y-1 hover:border-emerald-200 transition-all duration-300 group animate-scale-in"
                 style={{ animationDelay: `${(i + 1) * 80}ms` }}
               >
-                <span className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">{cat.icon || "📦"}</span>
+                <span className="text-emerald-600/80 group-hover:scale-110 transition-transform duration-300"><CategoryIcon name={cat.icon} className="w-7 h-7 sm:w-8 sm:h-8" /></span>
                 <p className="text-[10px] sm:text-xs font-medium text-gray-700 text-center leading-tight group-hover:text-emerald-700 transition-colors duration-200">
                   {cat.name}
                 </p>
@@ -446,7 +448,7 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
                     onClick={() => setShowAllCategories(false)}
                     className="flex flex-col items-center gap-2 p-4 bg-gray-50/80 rounded-2xl hover:bg-emerald-50 hover:border-emerald-200 border border-transparent transition-all duration-200 active:scale-95"
                   >
-                    <span className="text-3xl">{cat.icon || "📦"}</span>
+                    <span className="text-emerald-600/70"><CategoryIcon name={cat.icon} className="w-7 h-7" /></span>
                     <p className="text-xs font-medium text-gray-700 text-center">{cat.name}</p>
                   </Link>
                 ))}

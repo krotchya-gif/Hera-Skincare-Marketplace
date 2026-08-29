@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { STORE_NAME, STORE_EMAIL } from "@/utils/storeConfig";
 import { createClient } from "@/utils/supabase/server";
+import { MapPin } from "lucide-react";
 
 export const metadata = {
   title: `Karir — ${STORE_NAME}`,
@@ -48,7 +49,7 @@ export default async function KarirPage() {
                   <h3 className="font-semibold text-gray-900 text-sm">{job.title}</h3>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="text-xs text-gray-500">{job.type}</span>
-                    <span className="text-xs text-gray-500">📍 {job.location}</span>
+                    <span className="text-xs text-gray-500"><MapPin className="w-3 h-3 inline-block mr-0.5" /> {job.location}</span>
                   </div>
                 </div>
               ))}

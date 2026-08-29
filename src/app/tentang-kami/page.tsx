@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 
 export const metadata = {
   title: `Tentang Kami — ${STORE_NAME}`,
-  description: `Pelajari lebih lanjut tentang ${STORE_NAME}, marketplace produk rumah tangga premium terpercaya.`,
+  description: `Pelajari lebih lanjut tentang ${STORE_NAME}, marketplace skincare & perawatan pribadi premium terpercaya.`,
 };
 
 export default async function TentangKamiPage() {
@@ -22,8 +22,8 @@ export default async function TentangKamiPage() {
     misi?: string;
   }) || {};
 
-  const content = page.content || `${STORE_NAME} adalah marketplace produk rumah tangga premium yang berkomitmen menyediakan produk berkualitas tinggi dengan harga terjangkau.`;
-  const visi = page.visi || `Menjadi marketplace produk rumah tangga terpercaya yang membantu setiap keluarga Indonesia mendapatkan produk terbaik untuk kebutuhan sehari-hari.`;
+  const content = page.content || `${STORE_NAME} adalah marketplace skincare & perawatan pribadi premium yang berkomitmen menyediakan produk berkualitas tinggi dengan harga terjangkau.`;
+  const visi = page.visi || `Menjadi marketplace skincare & perawatan pribadi terpercaya yang membantu setiap orang Indonesia mendapatkan produk terbaik untuk perawatan diri.`;
   const misiRaw = page.misi || "";
   const misiList = misiRaw ? misiRaw.split("\n").filter(Boolean) : [];
 
@@ -53,7 +53,7 @@ export default async function TentangKamiPage() {
               ? misiList.map((item, i) => <li key={i}>{item}</li>)
               : (
                 <>
-                  <li>Menyediakan produk rumah tangga berkualitas dengan harga kompetitif</li>
+                  <li>Menyediakan produk skincare & perawatan pribadi berkualitas dengan harga kompetitif</li>
                   <li>Memberikan pengalaman belanja yang mudah, aman, dan menyenangkan</li>
                 </>
               )}

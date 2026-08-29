@@ -101,7 +101,7 @@ function AddressManager() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-gray-900 text-lg">📍 Alamat Pengiriman</h2>
+        <h2 className="font-bold text-gray-900 text-lg">Alamat Pengiriman</h2>
         <button onClick={openNew} className="flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors">
           <Plus className="w-4 h-4" /> Tambah Alamat
         </button>
@@ -594,8 +594,8 @@ export default function ProfilClient({ initialUser, initialProfile, orders }: Pr
                         const firstItem = order.order_items?.[0];
                         return (
                           <div key={order.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                            <div>
-                              <span className="text-2xl">🧴</span>
+                            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-700 shrink-0">
+                              <Package className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-900 font-mono">#{order.order_number}</p>
@@ -685,7 +685,9 @@ export default function ProfilClient({ initialUser, initialProfile, orders }: Pr
                             <div className="space-y-2 mb-3">
                               {order.order_items?.map((item, i) => (
                                 <div key={i} className="flex items-center gap-3">
-                                  <span className="text-xl">🧴</span>
+                                  <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-green-600 shrink-0">
+                                    <Package className="w-4 h-4" />
+                                  </div>
                                   <div className="flex-1">
                                     <p className="text-sm text-gray-800">{item.product_name}</p>
                                     <p className="text-xs text-gray-500">x{item.qty} · {formatRp(item.price)}</p>

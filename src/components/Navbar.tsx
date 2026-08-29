@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { STORE_NAME } from "@/utils/storeConfig";
 import { createClient } from "@/utils/supabase/client";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import {
   Search,
   Heart,
@@ -422,8 +423,8 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
                       onClick={() => setCategoryOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50/70 group transition-all duration-200"
                     >
-                      <span className="text-xl w-8 h-8 flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-emerald-100 transition-colors duration-200">
-                        {cat.icon || "📦"}
+                      <span className="w-8 h-8 flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-emerald-100 transition-colors duration-200">
+                        <CategoryIcon name={cat.icon} className="w-4 h-4 text-gray-600 group-hover:text-emerald-700 transition-colors" />
                       </span>
                       <div>
                         <p className="text-sm font-medium text-gray-800 group-hover:text-emerald-700 transition-colors">
@@ -609,7 +610,7 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
                 className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-gray-600 hover:bg-emerald-50/50 hover:text-emerald-700 transition-all duration-200"
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="text-base w-5 text-center">{cat.icon || "📦"}</span>
+                  <span className="w-5 flex items-center justify-center"><CategoryIcon name={cat.icon} className="w-4 h-4" /></span>
                   <span>{cat.name}</span>
                 </div>
                 <ChevronRight className="w-3 h-3 opacity-45" />
@@ -656,10 +657,10 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-45 bg-white/90 backdrop-blur-xl border-t border-gray-200/60 safe-area-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
           <div className="flex items-center justify-around py-1.5">
             {[
-              { href: "/", label: "Beranda", emoji: "🏠" },
-              { href: "/voucher", label: "Voucher", emoji: "🏷️" },
-              { href: "/keranjang", label: "Keranjang", emoji: "🛒", badge: cartCount },
-              { href: "/profil", label: "Profil", emoji: "👤" },
+              { href: "/", label: "Beranda", icon: Home },
+              { href: "/voucher", label: "Voucher", icon: Tag },
+              { href: "/keranjang", label: "Keranjang", icon: ShoppingCart, badge: cartCount },
+              { href: "/profil", label: "Profil", icon: User },
             ].map((tab) => (
               <Link
                 key={tab.href}
@@ -669,11 +670,11 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
                 }`}
               >
                 <span
-                  className={`text-xl ${
+                  className={`${
                     pathname === tab.href ? "scale-110" : ""
                   } transition-transform duration-200`}
                 >
-                  {tab.emoji}
+                  <tab.icon className="w-5 h-5" />
                 </span>
                 {tab.badge && tab.badge > 0 ? (
                   <span className="absolute -top-0.5 right-1.5 min-w-[16px] h-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full text-white text-[9px] flex items-center justify-center font-bold px-1 shadow-sm">

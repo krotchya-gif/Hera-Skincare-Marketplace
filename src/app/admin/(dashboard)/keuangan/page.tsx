@@ -18,7 +18,7 @@ import {
 } from "recharts";
 import StatCard from "@/components/admin/StatCard";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { Download } from "lucide-react";
+import { Download, Wallet, CheckCircle2, BarChart3, Gift } from "lucide-react";
 
 const periods = ["Hari Ini", "7 Hari", "30 Hari", "Bulan Ini", "Tahun Ini", "Custom"];
 
@@ -144,10 +144,10 @@ export default function FinancePage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard title="Pendapatan Bersih" value={`Rp ${data.totalRevenue.toLocaleString("id-ID")}`} change="12.5%" changeType="up" icon="💰" iconBg="bg-green-50" />
-        <StatCard title="Pesanan Selesai" value={data.totalOrders.toString()} change="8.2%" changeType="up" icon="✅" iconBg="bg-blue-50" />
-        <StatCard title="Rata-rata Pesanan" value={`Rp ${data.avgOrderValue.toLocaleString("id-ID")}`} change="3.1%" changeType="up" icon="📊" iconBg="bg-purple-50" />
-        <StatCard title="Total Diskon" value={`Rp ${data.totalDiscount.toLocaleString("id-ID")}`} change="18.0%" changeType="up" icon="🎁" iconBg="bg-orange-50" />
+        <StatCard title="Pendapatan Bersih" value={`Rp ${data.totalRevenue.toLocaleString("id-ID")}`} change="12.5%" changeType="up" icon={<Wallet className="w-5 h-5" />} iconBg="bg-green-50" />
+        <StatCard title="Pesanan Selesai" value={data.totalOrders.toString()} change="8.2%" changeType="up" icon={<CheckCircle2 className="w-5 h-5" />} iconBg="bg-blue-50" />
+        <StatCard title="Rata-rata Pesanan" value={`Rp ${data.avgOrderValue.toLocaleString("id-ID")}`} change="3.1%" changeType="up" icon={<BarChart3 className="w-5 h-5" />} iconBg="bg-purple-50" />
+        <StatCard title="Total Diskon" value={`Rp ${data.totalDiscount.toLocaleString("id-ID")}`} change="18.0%" changeType="up" icon={<Gift className="w-5 h-5" />} iconBg="bg-orange-50" />
       </div>
 
       {/* Charts */}

@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         email: "info@heraskincare.com",
         phone: "+6281234567890",
         city: "Jakarta Selatan",
-        description: "Marketplace produk rumah tangga premium.",
+        description: "Marketplace skincare & perawatan pribadi premium.",
         address: "Alamat Gudang Hera Skincare",
         operational_hours: { start: "08:00", end: "21:00", days: ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"] },
         social_media: { instagram: "", tiktok: "", facebook: "" }

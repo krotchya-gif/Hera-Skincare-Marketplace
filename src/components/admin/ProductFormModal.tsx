@@ -179,7 +179,7 @@ export default function ProductFormModal({
                 >
                   <option value="">Pilih kategori</option>
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                    <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
               </div>

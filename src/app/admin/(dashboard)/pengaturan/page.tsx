@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { Plus, Loader2, Upload } from "lucide-react";
+import { Plus, Loader2, Upload, Camera, Music2, ThumbsUp } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import { AI_CRAWLERS } from "@/lib/ai-crawlers";
 import {
@@ -709,7 +709,7 @@ export default function SettingsPage() {
               <label className="block text-xs font-medium text-gray-600 mb-3">Sosial Media</label>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-24">📸 Instagram</span>
+                  <span className="text-xs text-gray-500 w-24"><Camera className="w-3.5 h-3.5 inline-block mr-1" /> Instagram</span>
                   <input 
                     className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" 
                     placeholder="URL profil..." 
@@ -718,7 +718,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-24">🎵 TikTok</span>
+                  <span className="text-xs text-gray-500 w-24"><Music2 className="w-3.5 h-3.5 inline-block mr-1" /> TikTok</span>
                   <input 
                     className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" 
                     placeholder="URL profil..." 
@@ -727,7 +727,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-24">👤 Facebook</span>
+                  <span className="text-xs text-gray-500 w-24"><ThumbsUp className="w-3.5 h-3.5 inline-block mr-1" /> Facebook</span>
                   <input 
                     className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" 
                     placeholder="URL profil..." 
@@ -768,7 +768,7 @@ export default function SettingsPage() {
             <div className="space-y-3">
               {couriers.map((c) => (
                 <div key={c} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <span className="text-sm font-medium text-gray-700">🚚 {c}</span>
+                  <span className="text-sm font-medium text-gray-700">{c}</span>
                   <Toggle active={courierToggles[c]} onToggle={() => setCourierToggles((prev) => ({ ...prev, [c]: !prev[c] }))} />
                 </div>
               ))}
@@ -824,7 +824,7 @@ export default function SettingsPage() {
             <div className="space-y-3">
               {paymentMethods.map((pm) => (
                 <div key={pm} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <span className="text-sm font-medium text-gray-700">💳 {pm}</span>
+                  <span className="text-sm font-medium text-gray-700">{pm}</span>
                   <Toggle active={paymentToggles[pm]} onToggle={() => setPaymentToggles((prev) => ({ ...prev, [pm]: !prev[pm] }))} />
                 </div>
               ))}
@@ -1221,7 +1221,7 @@ export default function SettingsPage() {
                   onChange={(e) => setSeoDefaultKeywords(e.target.value)}
                   type="text"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
-                  placeholder="hera skincare, marketplace, produk rumah tangga, belanja online"
+                  placeholder="hera skincare, marketplace skincare, perawatan kulit, belanja online"
                 />
                 <p className="text-[10px] text-gray-400 mt-1">Pisahkan dengan koma</p>
               </div>

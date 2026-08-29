@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getProductEmoji } from "@/components/HomeClient";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { createClient } from "@/utils/supabase/client";
 import {
   ChevronRight,
@@ -21,6 +22,10 @@ import {
   Store,
   Package,
   GitCompare,
+  BadgeCheck,
+  Factory,
+  FlaskConical,
+  Leaf,
 } from "lucide-react";
 import type { Product, Review } from "@/types/database";
 import type { ProductQuestion } from "@/lib/products";
@@ -112,10 +117,11 @@ export default function ProductDetailClient({
   const [addedToCart, setAddedToCart] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
 
-  // Images resolution
+  // T-47: Gambar produk (primary dulu); fallback icon kategori Lucide
   const imageList = product.product_images && product.product_images.length > 0
     ? product.product_images.map((img) => img.url)
-    : [getProductEmoji(product.slug, product.categories?.icon)];
+    : [];
+  const categoryIconName = getProductEmoji(product.slug, product.categories?.icon);
 
   const maxStock = currentVariant ? currentVariant.stock : product.stock;
   const displayPrice = currentVariant ? currentVariant.price : (product.discount_price ?? product.price);
@@ -156,7 +162,7 @@ export default function ProductDetailClient({
           id: product.id,
           name: product.name,
           price: itemPrice,
-          emoji: imageList[0].startsWith("http") ? "🧴" : imageList[0],
+          image: imageList[0] ?? undefined,
           stock: maxStock,
           slug: product.slug ?? undefined,
           originalPrice: currentVariant ? null : (product.discount_price ? product.price : null),
@@ -201,7 +207,7 @@ export default function ProductDetailClient({
           {/* Left: Gallery */}
           <div>
             <div className="bg-white rounded-2xl border border-gray-100 aspect-square flex items-center justify-center mb-3 relative overflow-hidden shadow-sm">
-              {imageList[activeImage].startsWith("http") ? (
+              {imageList.length > 0 ? (
                 <Image
                   src={imageList[activeImage]}
                   alt={product.name}
@@ -210,7 +216,7 @@ export default function ProductDetailClient({
                   className="object-contain"
                 />
               ) : (
-                <span className="text-8xl md:text-9xl">{imageList[activeImage]}</span>
+                <CategoryIcon name={categoryIconName} className="w-32 h-32 text-emerald-600/50" />
               )}
               {hasDiscount && (
                 <span className="absolute top-4 left-4 animate-shimmer-glow text-white text-sm font-bold px-3 py-1 rounded-full shadow-sm">
@@ -260,15 +266,11 @@ export default function ProductDetailClient({
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
-                  className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center text-2xl bg-white overflow-hidden transition-all relative ${
+                  className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center bg-white overflow-hidden transition-all relative ${
                     activeImage === i ? "border-green-500 shadow-sm" : "border-gray-200 hover:border-green-300"
                   }`}
                 >
-                  {img.startsWith("http") ? (
-                    <Image src={img} alt="" fill sizes="64px" className="object-cover" />
-                  ) : (
-                    img
-                  )}
+                  <Image src={img} alt="" fill sizes="64px" className="object-cover" />
                 </button>
               ))}
             </div>
@@ -465,13 +467,13 @@ export default function ProductDetailClient({
                 <p>{product.description || "Tidak ada deskripsi produk."}</p>
                 <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { icon: "✅", label: "100% Original" },
-                    { icon: "🏭", label: "Produk Indonesia" },
-                    { icon: "🔬", label: "Dermatologi Tested" },
-                    { icon: "🌿", label: "Bahan Alami" },
+                    { icon: <BadgeCheck className="w-5 h-5 text-green-600" />, label: "100% Original" },
+                    { icon: <Factory className="w-5 h-5 text-green-600" />, label: "Produk Indonesia" },
+                    { icon: <FlaskConical className="w-5 h-5 text-green-600" />, label: "Dermatologi Tested" },
+                    { icon: <Leaf className="w-5 h-5 text-green-600" />, label: "Bahan Alami" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-2 bg-green-50 rounded-xl p-3">
-                      <span className="text-xl">{item.icon}</span>
+                      {item.icon}
                       <span className="text-xs font-medium text-gray-700">{item.label}</span>
                     </div>
                   ))}
@@ -569,13 +571,19 @@ export default function ProductDetailClient({
             <h2 className="text-lg font-bold text-gray-900 mb-4">Produk Serupa</h2>
             <div className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory">
               {relatedProducts.map((p) => {
-                const pEmoji = getProductEmoji(p.slug, p.categories?.icon);
+                const pIcon = getProductEmoji(p.slug, p.categories?.icon);
+                const pImage = p.product_images?.[0]?.url;
                 return (
                   <div key={p.id} className="min-w-[160px] md:min-w-[200px] snap-start">
                     <Link href={`/produk/${p.slug}`}>
                       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all">
                         <div className="aspect-square bg-green-50 flex items-center justify-center">
-                          <span className="text-4xl">{pEmoji}</span>
+                          {pImage ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- gambar produk dari storage/cdn
+                            <img src={pImage} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <CategoryIcon name={pIcon} className="w-12 h-12 text-emerald-600/60" />
+                          )}
                         </div>
                         <div className="p-3">
                           <p className="text-xs font-medium text-gray-900 line-clamp-2 mb-1">{p.name}</p>

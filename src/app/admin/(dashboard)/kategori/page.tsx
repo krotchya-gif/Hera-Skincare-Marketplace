@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { Plus, Edit, Trash2, X, Check, AlertCircle, RefreshCw } from "lucide-react";
+import { CategoryIcon, SUGGESTED_ICONS, CATEGORY_ICON_NAMES } from "@/components/CategoryIcon";
 
 interface CategoryItem {
   id: string;
@@ -112,14 +113,48 @@ function CategoryFormModal({
             <p className="text-[10px] text-gray-400 mt-1">Auto-generate dari nama jika dikosongkan</p>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">Icon (emoji)</label>
-            <input
-              value={icon}
-              onChange={(e) => setIcon(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
-              placeholder="🧴"
-              maxLength={2}
-            />
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Icon (Lucide)</label>
+            <div className="grid grid-cols-6 gap-1.5 max-h-40 overflow-y-auto border border-gray-200 rounded-xl p-2 mb-2">
+              {CATEGORY_ICON_NAMES.map((iconName) => (
+                <button
+                  key={iconName}
+                  type="button"
+                  onClick={() => setIcon(iconName)}
+                  className={`w-full aspect-square rounded-lg flex items-center justify-center transition-all ${
+                    icon === iconName
+                      ? "bg-green-600 text-white shadow-sm"
+                      : "bg-gray-50 text-gray-500 hover:bg-green-50 hover:text-green-600"
+                  }`}
+                  title={iconName}
+                >
+                  <CategoryIcon name={iconName} className="w-4 h-4" />
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-400 mb-1">Disarankan:</p>
+            <div className="flex flex-wrap gap-1.5">
+              {SUGGESTED_ICONS.map((iconName) => (
+                <button
+                  key={iconName}
+                  type="button"
+                  onClick={() => setIcon(iconName)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium border transition-all ${
+                    icon === iconName
+                      ? "bg-green-600 text-white border-green-600"
+                      : "border-gray-200 text-gray-600 hover:border-green-300 hover:text-green-600"
+                  }`}
+                >
+                  <CategoryIcon name={iconName} className="w-3 h-3" />
+                  {iconName}
+                </button>
+              ))}
+            </div>
+            {icon && (
+              <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                Terpilih: <CategoryIcon name={icon} className="w-4 h-4 text-green-600" />
+                <span className="font-mono text-[10px]">{icon}</span>
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1.5">Urutan</label>
@@ -232,8 +267,8 @@ export default function CategoriesPage() {
             .map((cat) => (
               <div key={cat.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-2xl">
-                    {cat.icon || "📦"}
+                  <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-700">
+                    <CategoryIcon name={cat.icon} className="w-5 h-5" />
                   </div>
                   <div className="flex gap-1">
                     <button

@@ -14,6 +14,13 @@ import {
   Check,
   Activity,
   Link2,
+  Users,
+  UserCheck,
+  Tag,
+  TrendingUp,
+  Wallet,
+  ShoppingBag,
+  UserPlus,
 } from "lucide-react";
 import type { Voucher, EventLog, UtmVisit } from "@/types/database";
 import { getEventLabel } from "@/lib/tracking";
@@ -227,13 +234,13 @@ export default function MarketingPage() {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: "Total Pelanggan", value: customerCount.toLocaleString(), icon: "👥", color: "border-blue-100 bg-blue-50/30" },
-              { label: "Pelanggan Aktif", value: activeCustomerCount.toLocaleString(), icon: "🟢", color: "border-green-100 bg-green-50/30" },
-              { label: "Voucher Aktif", value: activeVouchers.toString(), icon: "🏷️", color: "border-yellow-100 bg-yellow-50/30" },
-              { label: "Total Penggunaan Voucher", value: totalVoucherUses.toString(), icon: "📈", color: "border-purple-100 bg-purple-50/30" },
+              { label: "Total Pelanggan", value: customerCount.toLocaleString(), icon: <Users className="w-6 h-6" />, color: "border-blue-100 bg-blue-50/30" },
+              { label: "Pelanggan Aktif", value: activeCustomerCount.toLocaleString(), icon: <UserCheck className="w-6 h-6" />, color: "border-green-100 bg-green-50/30" },
+              { label: "Voucher Aktif", value: activeVouchers.toString(), icon: <Tag className="w-6 h-6" />, color: "border-yellow-100 bg-yellow-50/30" },
+              { label: "Total Penggunaan Voucher", value: totalVoucherUses.toString(), icon: <TrendingUp className="w-6 h-6" />, color: "border-purple-100 bg-purple-50/30" },
             ].map((s) => (
               <div key={s.label} className={`border border-gray-100 rounded-2xl p-5 shadow-sm bg-white ${s.color}`}>
-                <span className="text-2xl block mb-2">{s.icon}</span>
+                <span className="text-green-600 block mb-2">{s.icon}</span>
                 <p className="text-2xl font-bold text-gray-900">{s.value}</p>
                 <p className="text-xs text-gray-500 font-medium mt-1">{s.label}</p>
               </div>
@@ -267,7 +274,7 @@ export default function MarketingPage() {
                   <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${
                     ch.status === "Segera" ? "bg-gray-100 text-gray-500" : "bg-green-100 text-green-700"
                   }`}>
-                    {ch.status === "Segera" ? "🚧 Dalam Pengembangan" : "✅ Aktif"}
+                    {ch.status === "Segera" ? "Dalam Pengembangan" : "Aktif"}
                   </span>
                 </div>
               </button>
@@ -277,7 +284,7 @@ export default function MarketingPage() {
           {/* Voucher Campaign Performance Table */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-sm">🏷️ Performa Kampanye Voucher</h3>
+              <h3 className="font-bold text-gray-900 text-sm">Performa Kampanye Voucher</h3>
               <p className="text-xs text-gray-400 mt-0.5">Analisis konversi penggunaan kode voucher aktif</p>
             </div>
             <div className="overflow-x-auto">
@@ -352,13 +359,13 @@ export default function MarketingPage() {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: "Pendapatan", value: finance ? formatRupiah(finance.totalRevenue) : "—", icon: "💰" },
-              { label: "Pesanan", value: finance ? finance.totalOrders.toLocaleString() : "—", icon: "📦" },
-              { label: "Rata-rata Pesanan", value: finance ? formatRupiah(finance.avgOrderValue) : "—", icon: "📊" },
-              { label: "Pelanggan Baru Bulan Ini", value: newCustomerCount.toLocaleString(), icon: "👤" },
+              { label: "Pendapatan", value: finance ? formatRupiah(finance.totalRevenue) : "—", icon: <Wallet className="w-6 h-6" /> },
+              { label: "Pesanan", value: finance ? finance.totalOrders.toLocaleString() : "—", icon: <ShoppingBag className="w-6 h-6" /> },
+              { label: "Rata-rata Pesanan", value: finance ? formatRupiah(finance.avgOrderValue) : "—", icon: <BarChart3 className="w-6 h-6" /> },
+              { label: "Pelanggan Baru Bulan Ini", value: newCustomerCount.toLocaleString(), icon: <UserPlus className="w-6 h-6" /> },
             ].map((s) => (
               <div key={s.label} className="border border-gray-100 rounded-2xl p-5 shadow-sm bg-white">
-                <span className="text-2xl block mb-2">{s.icon}</span>
+                <span className="text-green-600 block mb-2">{s.icon}</span>
                 <p className="text-2xl font-bold text-gray-900">{s.value}</p>
                 <p className="text-xs text-gray-500 font-medium mt-1">{s.label}</p>
               </div>
@@ -484,7 +491,7 @@ export default function MarketingPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between p-5 border-b border-gray-100">
             <div>
-              <h3 className="font-bold text-gray-900 text-sm">📡 Event Monitor</h3>
+              <h3 className="font-bold text-gray-900 text-sm">Event Monitor</h3>
               <p className="text-xs text-gray-400 mt-0.5">100 event terakhir dari halaman publik (view produk, keranjang, checkout, order, payment)</p>
             </div>
             <button
@@ -558,7 +565,7 @@ export default function MarketingPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* Builder */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h3 className="font-bold text-gray-900 text-sm mb-1">🔗 Builder Link UTM</h3>
+            <h3 className="font-bold text-gray-900 text-sm mb-1">Builder Link UTM</h3>
             <p className="text-xs text-gray-400 mb-4">Generate link campaign dengan parameter UTM</p>
             <div className="space-y-3">
               <div>
@@ -637,7 +644,7 @@ export default function MarketingPage() {
           {/* Laporan per source */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-sm">📊 Laporan UTM per Source</h3>
+              <h3 className="font-bold text-gray-900 text-sm">Laporan UTM per Source</h3>
               <p className="text-xs text-gray-400 mt-0.5">Kunjungan, order, dan revenue per source campaign</p>
             </div>
             <div className="overflow-x-auto">

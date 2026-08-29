@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useTransition } from "react";
 import StatusBadge from "@/components/admin/StatusBadge";
 import OrderDetailModal from "@/components/admin/OrderDetailModal";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { Search, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatRp } from "@/utils/format";
 import type { Order } from "@/types/database";
@@ -76,11 +77,11 @@ export default function OrdersPage() {
   const totalPages = Math.ceil(totalCount / 10);
 
   const miniStats = [
-    { label: "Total Hari Ini", value: stats.todayCount, icon: "📋", color: "bg-blue-50 text-blue-600" },
-    { label: "Menunggu", value: stats.menunggu, icon: "⏳", color: "bg-yellow-50 text-yellow-600" },
-    { label: "Dikirim", value: stats.dikirim, icon: "🚚", color: "bg-purple-50 text-purple-700" },
-    { label: "Selesai", value: stats.selesai, icon: "✅", color: "bg-green-50 text-green-700" },
-    { label: "Dibatalkan", value: stats.dibatalkan, icon: "❌", color: "bg-red-50 text-red-600" },
+    { label: "Total Hari Ini", value: stats.todayCount, icon: "clipboard", color: "bg-blue-50 text-blue-600" },
+    { label: "Menunggu", value: stats.menunggu, icon: "clock", color: "bg-yellow-50 text-yellow-600" },
+    { label: "Dikirim", value: stats.dikirim, icon: "truck", color: "bg-purple-50 text-purple-700" },
+    { label: "Selesai", value: stats.selesai, icon: "check", color: "bg-green-50 text-green-700" },
+    { label: "Dibatalkan", value: stats.dibatalkan, icon: "x", color: "bg-red-50 text-red-600" },
   ];
 
   return (
@@ -94,7 +95,7 @@ export default function OrdersPage() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {miniStats.map((s) => (
           <div key={s.label} className={`${s.color} rounded-2xl p-4 flex items-center gap-3`}>
-            <span className="text-2xl">{s.icon}</span>
+            <CategoryIcon name={s.icon} className="w-6 h-6" />
             <div>
               <p className="text-xl font-bold">{s.value}</p>
               <p className="text-xs font-medium opacity-80">{s.label}</p>

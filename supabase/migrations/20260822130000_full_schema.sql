@@ -1620,3 +1620,159 @@ create policy "Admins can read utm visits"
 -- T-41: ORDERS — simpan utm_source dari campaign
 alter table public.orders add column if not exists utm_source text;
 create index if not exists idx_orders_utm_source on public.orders(utm_source);
+
+-- ============================================================
+-- [TAMBAHAN T-47] Rebrand catalog → beauty skincare (2026-08-29)
+-- Diterapkan via MCP sebagai migration `20260829190000_rebrand_skincare_catalog`.
+-- Menimpa seed lama (produk rumah tangga + emoji) → state akhir = live DB.
+-- Icon kategori = NAMA ICON LUCIDE (string), bukan emoji.
+-- Gambar produk = picsum seeded (stabil & deterministik).
+-- ============================================================
+
+delete from public.flash_sale_products;
+delete from public.flash_sales;
+delete from public.product_images;
+delete from public.product_variants;
+delete from public.products;
+delete from public.categories;
+
+insert into public.categories (name, slug, icon, sort_order) values
+  ('Skincare', 'skincare', 'droplets', 1),
+  ('Makeup', 'makeup', 'palette', 2),
+  ('Perawatan Rambut', 'perawatan-rambut', 'flower-2', 3),
+  ('Parfum', 'parfum', 'sparkles', 4),
+  ('Perawatan Tubuh', 'perawatan-tubuh', 'bath', 5),
+  ('Alat & Aksesori', 'alat-aksesori', 'wand-2', 6)
+on conflict (slug) do nothing;
+
+with parents as (select id, slug from public.categories where parent_id is null)
+insert into public.categories (name, slug, icon, parent_id, sort_order)
+select sub.name, sub.slug, sub.icon, parents.id, sub.sort_order
+from parents
+cross join (values
+  ('skincare', 'Pembersih Wajah', 'pembersih-wajah', 'droplet', 1),
+  ('skincare', 'Toner', 'toner', 'glass-water', 2),
+  ('skincare', 'Serum', 'serum', 'flask-conical', 3),
+  ('skincare', 'Pelembap', 'pelembap', 'heart', 4),
+  ('skincare', 'Sunscreen', 'sunscreen', 'sun', 5),
+  ('skincare', 'Masker Wajah', 'masker-wajah', 'smile', 6),
+  ('makeup', 'Foundation', 'foundation', 'paint-bucket', 1),
+  ('makeup', 'Lipstick', 'lipstick', 'brush', 2),
+  ('makeup', 'Eyeshadow', 'eyeshadow', 'eye', 3),
+  ('makeup', 'Mascara', 'mascara', 'paintbrush', 4),
+  ('perawatan-rambut', 'Shampoo', 'shampoo', 'shower-head', 1),
+  ('perawatan-rambut', 'Kondisioner', 'kondisioner', 'feather', 2),
+  ('perawatan-rambut', 'Hair Mask', 'hair-mask', 'layers', 3),
+  ('perawatan-rambut', 'Hair Oil', 'hair-oil', 'leaf', 4),
+  ('parfum', 'Eau de Parfum', 'eau-de-parfum', 'flower', 1),
+  ('parfum', 'Eau de Toilette', 'eau-de-toilette', 'flower-2', 2),
+  ('parfum', 'Roll-on', 'roll-on', 'wind', 3),
+  ('perawatan-tubuh', 'Body Wash', 'body-wash', 'bath', 1),
+  ('perawatan-tubuh', 'Body Lotion', 'body-lotion', 'hand', 2),
+  ('perawatan-tubuh', 'Hand Cream', 'hand-cream', 'heart', 3),
+  ('perawatan-tubuh', 'Deodorant', 'deodorant', 'wind', 4),
+  ('alat-aksesori', 'Kuas Makeup', 'kuas-makeup', 'brush', 1),
+  ('alat-aksesori', 'Sponge', 'sponge', 'circle', 2),
+  ('alat-aksesori', 'Cermin', 'cermin', 'aperture', 3)
+) as sub(parent_slug, name, slug, icon, sort_order)
+where parents.slug = sub.parent_slug
+on conflict (slug) do nothing;
+
+with subcats as (select id, slug from public.categories where parent_id is not null)
+insert into public.products (name, slug, sku, description, category_id, brand, price, discount_price, stock, unit, weight_gram, is_active)
+select p.name, p.slug, p.sku, p.description, subcats.id, 'Hera Skincare', p.price, p.discount_price, p.stock, p.unit, p.weight_gram, true
+from subcats, (values
+  ('pembersih-wajah', 'Gentle Cleansing Foam', 'gentle-cleansing-foam', 'SKC-001',
+   'Cleanser lembut dengan formula pH-balanced yang membersihkan tanpa membuat kulit kering. Mengandung centella asiatica.',
+   45000, 39000, 120, 'tube', 120),
+  ('toner', 'Hydrating Rose Toner', 'hydrating-rose-toner', 'SKC-002',
+   'Toner wajah dengan rose water dan hyaluronic acid untuk hidrasi menyeluruh dan pori tampak halus.',
+   65000, NULL, 90, 'botol', 200),
+  ('serum', 'Vitamin C Brightening Serum', 'vitamin-c-brightening-serum', 'SKC-003',
+   'Serum vitamin C 10% + ferulic acid untuk mencerahkan, meratakan warna kulit, dan melindungi dari radikal bebas.',
+   120000, 99000, 80, 'botol', 50),
+  ('pelembap', 'Aloe Vera Gel Moisturizer', 'aloe-vera-gel-moisturizer', 'SKC-004',
+   'Gel pelembap ringan dengan aloe vera 92% — cepat meresap, cocok untuk kulit berminyak dan berjerawat.',
+   75000, NULL, 110, 'botol', 150),
+  ('sunscreen', 'Sunscreen SPF 50+ PA++++', 'sunscreen-spf50-plus', 'SKC-005',
+   'Sunscreen gel ringan SPF 50+ PA++++ water-resistant dengan tekstur tidak lengket dan whitecast-free.',
+   95000, 85000, 140, 'tube', 80),
+  ('masker-wajah', 'Collagen Hydrating Sheet Mask', 'collagen-sheet-mask', 'SKC-006',
+   'Sheet mask kolagen + niacinamide untuk kulit kenyal dan lembap instan. Isi 5 lembar.',
+   18000, 15000, 200, 'box', 120),
+  ('foundation', 'Dewy Glow Foundation', 'dewy-glow-foundation', 'MKP-001',
+   'Foundation dengan finish dewy natural, coverage medium-buildable, infused dengan vitamin E.',
+   145000, NULL, 60, 'botol', 90),
+  ('lipstick', 'Velvet Matte Lipstick', 'velvet-matte-lipstick', 'MKP-002',
+   'Lipstik matte velvet dengan tekstur ringan, pigmented, dan tahan lama hingga 8 jam.',
+   89000, 79000, 95, 'tube', 30),
+  ('eyeshadow', 'Smoky Eyeshadow Palette', 'smoky-eyeshadow-palette', 'MKP-003',
+   'Palet eyeshadow 12 warna netral dengan finish matte dan shimmer yang mudah di-blend.',
+   165000, NULL, 45, 'box', 180),
+  ('mascara', 'Volumizing Mascara', 'volumizing-mascara', 'MKP-004',
+   'Maskara waterproof dengan sikat curved untuk volume dan curl tanpa menggumpal.',
+   105000, NULL, 70, 'tube', 25),
+  ('shampoo', 'Silk Repair Shampoo', 'silk-repair-shampoo', 'HRB-001',
+   'Shampoo dengan keratin dan silk protein untuk memperbaiki rambut rusak dan kering.',
+   55000, NULL, 130, 'botol', 350),
+  ('kondisioner', 'Smooth & Shine Conditioner', 'smooth-shine-conditioner', 'HRB-002',
+   'Kondisioner dengan argan oil untuk rambut lembut, halus, dan berkilau tanpa terasa berat.',
+   55000, 48000, 130, 'botol', 350),
+  ('hair-oil', 'Argan Hair Elixir Oil', 'argan-hair-elixir-oil', 'HRB-003',
+   'Hair oil argan 100% untuk ujung rambut bercabang, menutrisi dan memberi kilau sehat.',
+   98000, NULL, 85, 'botol', 60),
+  ('eau-de-parfum', 'Bloom Eau de Parfum', 'bloom-eau-de-parfum', 'PRF-001',
+   'Parfum floral-fruity: peony, rose, dan white musk. Tahan lama hingga 12 jam. 50ml.',
+   250000, NULL, 40, 'botol', 220),
+  ('body-lotion', 'Shea Butter Body Lotion', 'shea-butter-body-lotion', 'TUB-001',
+   'Body lotion shea butter + vitamin E untuk kulit tubuh lembap dan halus sepanjang hari.',
+   68000, 59000, 100, 'botol', 300),
+  ('body-wash', 'Refreshing Body Wash', 'refreshing-body-wash', 'TUB-002',
+   'Body wash dengan ekstrak green tea dan menthol untuk kesegaran menyeluruh. 400ml.',
+   42000, NULL, 150, 'botol', 420)
+) as p(cat_slug, name, slug, sku, description, price, discount_price, stock, unit, weight_gram)
+where subcats.slug = p.cat_slug
+on conflict (slug) do nothing;
+
+with prods as (select id, slug from public.products)
+insert into public.product_variants (product_id, name, price, stock, sku)
+select prods.id, v.name, v.price, v.stock, v.sku
+from prods, (values
+  ('vitamin-c-brightening-serum', '10ml', 52000, 40, 'SKC-003-10'),
+  ('vitamin-c-brightening-serum', '30ml', 99000, 35, 'SKC-003-30'),
+  ('dewy-glow-foundation', 'Shade 01 Fair', 145000, 20, 'MKP-001-F01'),
+  ('dewy-glow-foundation', 'Shade 02 Natural', 145000, 22, 'MKP-001-F02'),
+  ('dewy-glow-foundation', 'Shade 03 Tan', 145000, 18, 'MKP-001-F03'),
+  ('silk-repair-shampoo', '200ml', 32000, 60, 'HRB-001-200'),
+  ('silk-repair-shampoo', '400ml', 55000, 70, 'HRB-001-400')
+) as v(product_slug, name, price, stock, sku)
+where prods.slug = v.product_slug
+on conflict do nothing;
+
+with prods as (select id, slug from public.products)
+insert into public.product_images (product_id, url, is_primary, sort_order)
+select prods.id, 'https://picsum.photos/seed/' || prods.slug || '-1/800/800', true, 0
+from prods
+on conflict do nothing;
+
+with prods as (select id, slug from public.products)
+insert into public.product_images (product_id, url, is_primary, sort_order)
+select prods.id, 'https://picsum.photos/seed/' || prods.slug || '-2/800/800', false, 1
+from prods
+on conflict do nothing;
+
+insert into public.flash_sales (name, starts_at, ends_at, is_active)
+values ('Flash Sale Skincare', now(), now() + interval '6 hours', true)
+on conflict do nothing;
+
+insert into public.flash_sale_products (flash_sale_id, product_id, flash_price, flash_stock)
+select fs.id, p.id, p.discount_price, 30
+from public.flash_sales fs, public.products p
+where fs.name = 'Flash Sale Skincare'
+  and p.discount_price is not null
+on conflict do nothing;
+
+-- T-47: store_info description disinkronkan ke tema skincare (state akhir = live)
+update public.store_settings
+set value = jsonb_set(value, '{description}', '"Marketplace skincare & perawatan pribadi premium."')
+where key = 'store_info';

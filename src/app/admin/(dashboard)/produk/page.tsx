@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useTransition } from "react";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useToast } from "@/components/Toast";
 import ProductFormModal from "@/components/admin/ProductFormModal";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import {
   Search,
   Plus,
@@ -13,6 +14,7 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  Package,
 } from "lucide-react";
 import type { Product, Category } from "@/types/database";
 
@@ -316,7 +318,7 @@ export default function ProductsPage() {
               ) : products.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-gray-400">
-                    <div className="text-4xl mb-2">📦</div>
+                    <Package className="w-10 h-10 mx-auto mb-2" />
                     <p className="font-medium">Belum ada produk</p>
                     <p className="text-xs mt-1">Tambahkan produk pertama Anda</p>
                   </td>
@@ -329,8 +331,8 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-xl shrink-0">
-                          {product.categories?.icon ?? "📦"}
+                        <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
+                          <CategoryIcon name={product.categories?.icon} className="w-4 h-4 text-green-700" />
                         </div>
                         <div>
                           <p className="font-medium text-gray-900 text-xs">{product.name}</p>

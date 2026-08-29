@@ -588,7 +588,7 @@ export default function PromotionsPage() {
       {/* Voucher Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-800">🏷️ Kode Voucher</h3>
+          <h3 className="font-semibold text-gray-800">Kode Voucher</h3>
           <button id="btn-create-voucher" onClick={() => setShowVoucherModal(true)} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-xl text-sm shadow-sm">
             <Plus className="w-4 h-4" /> Buat Voucher
           </button>
@@ -674,7 +674,7 @@ export default function PromotionsPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900">🔥 Flash Sale</h3>
+            <h3 className="font-semibold text-gray-900">Flash Sale</h3>
             <p className="text-xs text-gray-400">Daftar event flash sale</p>
           </div>
           <button

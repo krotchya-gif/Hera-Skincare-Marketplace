@@ -47,7 +47,7 @@ export default async function KategoriPage({ params, searchParams }: PageProps) 
       id: "all",
       name: searchTerm ? `Hasil Pencarian: "${searchTerm}"` : "Semua Produk",
       slug: "semua",
-      icon: "🔍",
+      icon: "search",
       parent_id: null,
       sort_order: 0,
       is_active: true,

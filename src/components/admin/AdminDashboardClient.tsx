@@ -16,7 +16,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Wallet, Package, Users, BarChart3, TrendingUp, TrendingDown } from "lucide-react";
 import Link from "next/link";
 import type { DashboardStats } from "@/types/database";
 
@@ -55,7 +55,7 @@ export default function AdminDashboardClient({ stats }: AdminDashboardClientProp
           value={formatRupiah(stats.totalRevenue)}
           change={`${stats.revenueChange}%`}
           changeType={stats.revenueChange >= 0 ? "up" : "down"}
-          icon="💰"
+          icon={<Wallet className="w-5 h-5" />}
           iconBg="bg-green-50"
         />
         <StatCard
@@ -63,7 +63,7 @@ export default function AdminDashboardClient({ stats }: AdminDashboardClientProp
           value={stats.totalOrders.toLocaleString()}
           change={`${stats.ordersChange}%`}
           changeType={stats.ordersChange >= 0 ? "up" : "down"}
-          icon="📦"
+          icon={<Package className="w-5 h-5" />}
           iconBg="bg-blue-50"
         />
         <StatCard
@@ -71,7 +71,7 @@ export default function AdminDashboardClient({ stats }: AdminDashboardClientProp
           value={stats.totalCustomers.toLocaleString()}
           change={`${stats.customersChange}%`}
           changeType={stats.customersChange >= 0 ? "up" : "down"}
-          icon="👥"
+          icon={<Users className="w-5 h-5" />}
           iconBg="bg-purple-50"
         />
         <StatCard
@@ -79,7 +79,7 @@ export default function AdminDashboardClient({ stats }: AdminDashboardClientProp
           value={stats.totalProductsSold.toLocaleString()}
           change={`${stats.productsSoldChange}%`}
           changeType={stats.productsSoldChange >= 0 ? "up" : "down"}
-          icon="📊"
+          icon={<BarChart3 className="w-5 h-5" />}
           iconBg="bg-orange-50"
         />
       </div>
@@ -94,7 +94,7 @@ export default function AdminDashboardClient({ stats }: AdminDashboardClientProp
               <p className="text-xs text-gray-400 mt-0.5">{chartPeriod} Terakhir</p>
             </div>
             <div className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full ${stats.revenueChange >= 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-              {stats.revenueChange >= 0 ? "📈" : "📉"} {stats.revenueChange >= 0 ? "Naik" : "Turun"} {Math.abs(stats.revenueChange)}%
+              {stats.revenueChange >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />} {stats.revenueChange >= 0 ? "Naik" : "Turun"} {Math.abs(stats.revenueChange)}%
             </div>
           </div>
           <ResponsiveContainer width="100%" height={220}>
@@ -331,8 +331,8 @@ export default function AdminDashboardClient({ stats }: AdminDashboardClientProp
                     >
                       {rank}
                     </div>
-                    <div className="w-8 h-8 bg-green-50 rounded-xl flex items-center justify-center text-base shrink-0">
-                      📦
+                    <div className="w-8 h-8 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
+                      <Package className="w-4 h-4 text-green-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-gray-900 truncate">

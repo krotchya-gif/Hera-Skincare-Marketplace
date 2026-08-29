@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Save, Loader2 } from "lucide-react";
+import { Plus, Save, Loader2, FileText } from "lucide-react";
 import { useToast } from "@/components/Toast";
 
 interface BlogArticle {
@@ -59,7 +59,7 @@ export default function BlogPage() {
   };
 
   const addArticle = () => {
-    setArticles([...articles, { slug: "", title: "", excerpt: "", emoji: "📝" }]);
+    setArticles([...articles, { slug: "", title: "", excerpt: "", emoji: "file" }]);
   };
 
   const removeArticle = (index: number) => {
@@ -118,7 +118,7 @@ export default function BlogPage() {
 
       {articles.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-          <span className="text-5xl block mb-3">📝</span>
+          <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
           <p className="font-semibold text-gray-900">Belum ada artikel</p>
           <p className="text-sm text-gray-500 mt-1">Klik &quot;Tambah Artikel&quot; untuk mulai menulis.</p>
         </div>
@@ -148,11 +148,11 @@ export default function BlogPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Emoji</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Ikon</label>
                   <input
                     value={article.emoji}
                     onChange={(e) => updateArticle(i, "emoji", e.target.value)}
-                    placeholder="📝"
+                    placeholder="(opsional)"
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 text-center"
                   />
                 </div>

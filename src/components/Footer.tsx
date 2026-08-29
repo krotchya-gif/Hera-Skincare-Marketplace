@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Leaf } from "lucide-react";
+import { Leaf, Camera, Music2, ThumbsUp, CreditCard, Landmark, Smartphone, Banknote } from "lucide-react";
 import { STORE_NAME } from "@/utils/storeConfig";
 
 export default function Footer() {
@@ -25,10 +25,10 @@ export default function Footer() {
     {
       title: "Kategori",
       links: [
-        { label: "Perawatan Tubuh", href: "/kategori/perawatan-tubuh" },
-        { label: "Perawatan Rumah", href: "/kategori/perawatan-rumah" },
-        { label: "Kesehatan", href: "/kategori/kesehatan" },
-        { label: "Kecantikan", href: "/kategori/kecantikan" },
+        { label: "Skincare", href: "/kategori/skincare" },
+        { label: "Makeup", href: "/kategori/makeup" },
+        { label: "Perawatan Rambut", href: "/kategori/perawatan-rambut" },
+        { label: "Parfum", href: "/kategori/parfum" },
       ],
     },
   ];
@@ -46,21 +46,21 @@ export default function Footer() {
               <span className="font-bold text-white tracking-tight">{STORE_NAME}</span>
             </Link>
             <p className="text-gray-400 text-xs leading-relaxed max-w-xs">
-              Marketplace produk rumah tangga premium. Kualitas terjamin, harga
+              Marketplace skincare &amp; kecantikan premium. Kualitas terjamin, harga
               terjangkau.
             </p>
             <div className="flex gap-2 mt-4">
               {[
-                { emoji: "📸", label: "Instagram" },
-                { emoji: "🎵", label: "TikTok" },
-                { emoji: "👤", label: "Facebook" },
+                { icon: <Camera className="w-4 h-4" />, label: "Instagram" },
+                { icon: <Music2 className="w-4 h-4" />, label: "TikTok" },
+                { icon: <ThumbsUp className="w-4 h-4" />, label: "Facebook" },
               ].map((sm, i) => (
                 <button
                   key={i}
                   aria-label={sm.label}
-                  className="w-9 h-9 bg-gray-800/80 rounded-xl flex items-center justify-center text-sm hover:bg-gradient-to-br hover:from-emerald-500 hover:to-emerald-600 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-emerald-500/20 border border-gray-700/50 hover:border-transparent"
+                  className="w-9 h-9 bg-gray-800/80 rounded-xl flex items-center justify-center hover:bg-gradient-to-br hover:from-emerald-500 hover:to-emerald-600 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-emerald-500/20 border border-gray-700/50 hover:border-transparent"
                 >
-                  {sm.emoji}
+                  {sm.icon}
                 </button>
               ))}
             </div>
@@ -91,9 +91,9 @@ export default function Footer() {
           </p>
           <div className="flex items-center gap-2">
             <span className="text-gray-500 text-[10px] sm:text-xs">Metode Pembayaran:</span>
-            {["💳", "🏦", "📱", "💵"].map((p, i) => (
-              <div key={i} className="bg-gray-800/60 backdrop-blur-sm px-2.5 py-1.5 rounded-lg text-xs border border-gray-700/40 hover:border-emerald-500/30 transition-all duration-200">
-                {p}
+            {[<CreditCard key="c" className="w-4 h-4" />, <Landmark key="l" className="w-4 h-4" />, <Smartphone key="s" className="w-4 h-4" />, <Banknote key="b" className="w-4 h-4" />].map((icon, i) => (
+              <div key={i} className="bg-gray-800/60 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-gray-700/40 hover:border-emerald-500/30 transition-all duration-200">
+                {icon}
               </div>
             ))}
           </div>

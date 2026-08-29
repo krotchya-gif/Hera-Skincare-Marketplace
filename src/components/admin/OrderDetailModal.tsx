@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useTransition } from "react";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { X } from "lucide-react";
+import { X, Package } from "lucide-react";
 import { formatRp } from "@/utils/format";
 import type { Order, OrderStatus } from "@/types/database";
 
@@ -167,7 +167,9 @@ export default function OrderDetailModal({
             <div className="space-y-3">
               {order.order_items?.map((item) => (
                 <div key={item.id} className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-2xl shrink-0">🧴</div>
+                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
+                    <Package className="w-5 h-5 text-green-600" />
+                  </div>
                   <div className="flex-1">
                     <p className="text-xs font-medium text-gray-900">{item.product_name}</p>
                     <p className="text-xs text-gray-400">Qty: {item.qty} · Satuan: {formatRp(item.price)}</p>

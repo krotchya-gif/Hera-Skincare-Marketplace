@@ -12,8 +12,10 @@ import { Trash2,
   Tag,
   ChevronRight,
   ShoppingBag,
+  ShoppingCart,
   Truck,
   Shield,
+  Package,
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 
@@ -23,7 +25,7 @@ interface LocalCartItem {
   price: number;
   originalPrice: number | null;
   quantity: number;
-  emoji: string | null;
+  image: string | null;
   variant: string | null;
   stock: number;
   slug: string | null;
@@ -205,13 +207,13 @@ export default function KeranjangPage() {
           <span className="text-gray-900 font-medium">Keranjang Belanja</span>
         </nav>
 
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
-          🛒 Keranjang Belanja
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <ShoppingCart className="w-6 h-6 text-green-600" /> Keranjang Belanja
         </h1>
 
         {cartItems.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-16 text-center">
-            <span className="text-7xl block mb-4">🛒</span>
+            <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
             <h2 className="text-xl font-bold text-gray-900 mb-2">Keranjang Kosong</h2>
             <p className="text-gray-500 text-sm mb-6">
               Yuk, tambahkan produk favoritmu ke keranjang!
@@ -270,8 +272,15 @@ export default function KeranjangPage() {
                       className="w-4 h-4 mt-1 accent-green-600 cursor-pointer shrink-0"
                     />
 
-                    <div className="w-20 h-20 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
-                      <span className="text-4xl">{item.emoji}</span>
+                    <div className="w-20 h-20 bg-green-50 rounded-xl overflow-hidden shrink-0">
+                      {item.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- gambar produk dari storage/cdn
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-3xl text-green-600/40">
+                          <Package className="w-8 h-8" />
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">
