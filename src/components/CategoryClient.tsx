@@ -172,14 +172,14 @@ export default function CategoryClient({ category, initialResult, slug, searchQu
   const fetchFilteredProducts = useCallback(async () => {
     try {
       const params = new URLSearchParams({
-        categorySlug: selectedSub || slug,
+        categorySlug: slug,
         sort: sortBy,
         page: page.toString(),
         pageSize: "8",
         ...(priceMin && { minPrice: priceMin }),
         ...(priceMax && { maxPrice: priceMax }),
         ...(searchTerm && { search: searchTerm }),
-        // TODO: subCategory filtering needs API support
+        // T-32: subCategory didukung API — filter tepat ke subkategori
         ...(selectedSub && { subCategory: selectedSub }),
       });
 

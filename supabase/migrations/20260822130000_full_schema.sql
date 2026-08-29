@@ -1482,3 +1482,66 @@ ALTER FUNCTION public.generate_order_number() SET search_path = '';
 REVOKE EXECUTE ON FUNCTION public.request_payment_confirmation(uuid) FROM anon, PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.confirm_order_received(uuid) FROM anon, PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.redeem_voucher(uuid) FROM anon, PUBLIC;
+
+-- ============================================================
+-- [TAMBAHAN T-31/T-33] Restore stok & sales summary (2026-08-29)
+-- Diterapkan via MCP sebagai migration `20260829150000_stock_restore_and_sales_view`.
+-- ============================================================
+
+-- T-31: Penanda restore stok (idempotency guard)
+alter table public.orders add column if not exists stock_restored boolean not null default false;
+
+-- T-31: RPC cancel order + restore stok (atomic, hanya sekali, hanya admin)
+create or replace function public.cancel_order_and_restore_stock(p_order_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_order public.orders%rowtype;
+  v_item record;
+begin
+  select * into v_order from public.orders where id = p_order_id for update;
+  if not found then return false; end if;
+
+  if not public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text, 'operator'::text]) then
+    return false;
+  end if;
+
+  if v_order.status in ('selesai', 'dibatalkan') then return false; end if;
+  if v_order.stock_restored then return false; end if;
+
+  for v_item in
+    select product_id, variant_id, qty
+    from public.order_items
+    where order_id = p_order_id
+  loop
+    if v_item.product_id is not null then
+      update public.products set stock = stock + v_item.qty, updated_at = now()
+      where id = v_item.product_id;
+    end if;
+    if v_item.variant_id is not null then
+      update public.product_variants set stock = stock + v_item.qty
+      where id = v_item.variant_id;
+    end if;
+  end loop;
+
+  update public.orders
+  set status = 'dibatalkan', stock_restored = true, updated_at = now()
+  where id = p_order_id;
+
+  return true;
+end;
+$$;
+
+revoke execute on function public.cancel_order_and_restore_stock(uuid) from anon, public;
+grant execute on function public.cancel_order_and_restore_stock(uuid) to authenticated;
+
+-- T-33: Ringkasan penjualan per produk (tanpa order dibatalkan)
+create or replace view public.product_sales_summary as
+select oi.product_id, coalesce(sum(oi.qty), 0) as sold
+from public.order_items oi
+join public.orders o on o.id = oi.order_id
+where o.status <> 'dibatalkan'
+group by oi.product_id;

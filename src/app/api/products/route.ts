@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const categorySlug = searchParams.get("categorySlug") || undefined;
+    const subCategory = searchParams.get("subCategory") || undefined;
     const search = searchParams.get("search") || undefined;
     const minPrice = searchParams.get("minPrice") ? parseFloat(searchParams.get("minPrice")!) : undefined;
     const maxPrice = searchParams.get("maxPrice") ? parseFloat(searchParams.get("maxPrice")!) : undefined;
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
 
     const result = await getProducts({
       categorySlug,
+      subCategory,
       search,
       minPrice,
       maxPrice,

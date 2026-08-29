@@ -199,6 +199,7 @@ export interface PaginatedResult<T> {
 
 export interface ProductFilters {
   categorySlug?: string;
+  subCategory?: string;
   search?: string;
   minPrice?: number;
   maxPrice?: number;

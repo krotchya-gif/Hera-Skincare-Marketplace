@@ -101,6 +101,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
   const supabase = await createClient();
   const {
     categorySlug,
+    subCategory,
     search,
     minPrice,
     maxPrice,
@@ -109,16 +110,13 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
     pageSize = 20,
   } = filters;
 
-  let query = supabase
-    .from("products")
-    .select(
-      `*, categories!products_category_id_fkey(id, name, slug, icon), product_images(id, url, is_primary, sort_order)`,
-      { count: "exact" }
-    )
-    .eq("is_active", true);
-
-  // Filter by category slug (hierarchical)
-  if (categorySlug) {
+  // T-32: Pilih scope kategori — subCategory lebih spesifik daripada categorySlug
+  let scopeCategoryId: string | null = null;
+  let scopeIds: Set<string> | null = null;
+  if (subCategory) {
+    const sub = await getCategoryBySlug(subCategory);
+    if (sub) scopeCategoryId = sub.id;
+  } else if (categorySlug) {
     const cat = await getCategoryBySlug(categorySlug);
     if (cat) {
       const { data: subcats } = await supabase
@@ -128,12 +126,33 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
         .eq("is_active", true);
 
       if (subcats && subcats.length > 0) {
+        // Induk dengan subkategori: tampilkan semua produk induk + subkategori
         const catIds = [cat.id, ...subcats.map((s) => s.id)];
-        query = query.in("category_id", catIds);
+        const { data: productsInScope } = await supabase
+          .from("products")
+          .select("id")
+          .in("category_id", catIds)
+          .eq("is_active", true);
+        scopeIds = new Set((productsInScope ?? []).map((p) => p.id as string));
       } else {
-        query = query.eq("category_id", cat.id);
+        scopeCategoryId = cat.id;
       }
     }
+  }
+
+  let query = supabase
+    .from("products")
+    .select(
+      `*, categories!products_category_id_fkey(id, name, slug, icon), product_images(id, url, is_primary, sort_order), product_sales_summary(sold)`,
+      { count: "exact" }
+    )
+    .eq("is_active", true);
+
+  if (scopeCategoryId) {
+    query = query.eq("category_id", scopeCategoryId);
+  }
+  if (scopeIds && scopeIds.size > 0) {
+    query = query.in("id", [...scopeIds]);
   }
 
   // Search
@@ -145,13 +164,16 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
   if (minPrice !== undefined) query = query.gte("price", minPrice);
   if (maxPrice !== undefined) query = query.lte("price", maxPrice);
 
-  // Sort
+  // Sort — T-33: "popular" via view product_sales_summary (tanpa order dibatalkan)
   switch (sort) {
     case "price_asc":
       query = query.order("price", { ascending: true });
       break;
     case "price_desc":
       query = query.order("price", { ascending: false });
+      break;
+    case "popular":
+      query = query.order("product_sales_summary.sold", { ascending: false, nullsFirst: false });
       break;
     case "newest":
     default:
@@ -170,7 +192,6 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
     return { data: [], count: 0, page, pageSize, totalPages: 0 };
   }
 
-  // ponytail: safe cast — Supabase row shape matches Product type
   return {
     data: (data as unknown as Product[]) ?? [],
     count: count ?? 0,

@@ -249,6 +249,17 @@ export async function updateOrderStatus(
     throw { status: 400, message: "Hanya pesanan dengan status 'Dikirim' yang dapat diselesaikan." };
   }
 
+  // T-31: Pembatalan order via RPC — restore stok atomic + idempotent
+  if (status === "dibatalkan") {
+    const { data: cancelled, error: cancelError } = await supabase
+      .rpc("cancel_order_and_restore_stock", { p_order_id: orderId });
+    if (cancelError) {
+      console.error("[updateOrderStatus cancel RPC]", cancelError);
+      return false;
+    }
+    return cancelled === true;
+  }
+
   const updatePayload: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
   if (trackingNumber) updatePayload.tracking_number = trackingNumber;
 

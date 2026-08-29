@@ -93,6 +93,9 @@ npm run build       # exit 0
 | T-27 | P1 | Escape HTML di notify.ts | DONE |
 | T-28 | P1 | Stats/best-seller filter order dibatalkan | DONE |
 | T-29 | P1 | Validasi admin/products POST/PUT (negatif, slug) | DONE |
+| T-31 | P0 | Restore stok saat order dibatalkan (RPC atomic + idempotent) | DONE |
+| T-32 | P1 | Filter subCategory di /api/products + getProducts | DONE |
+| T-33 | P2 | Sort popular via view product_sales_summary | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -799,6 +802,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | — | Perbaikan encoding: mojibake (double-encoded UTF-8) di plan.md & full_schema.sql dibersihkan — dipulihkan ke UTF-8 benar; emoji ikon kategori kini cocok dengan live DB; backup di temp/opencode/hera-backup | ox-alpha |
 | 2026-08-29 | T-17 s/d T-25 | Dimulai & selesai (DONE): perbaikan keamanan & keandalan — T-17 checkout harga promo (getEffectivePrices: flash > discount > price) · T-18 policy profiles aman (user: safe fields; admin: penuh) + product_qna authenticated · T-19 confirm-payment via RPC request_payment_confirmation + verifikasi admin di modal · T-20 webhook cek paid_amount · T-21 voucher_usage + RPC redeem_voucher (per-user limit) · T-22 rollback variant phantom + qty integer · T-23 role whitelist + guard super_admin terakhir · T-24 magic bytes upload · T-25 full_schema = live (migration 20260829140000_security_fixes via MCP); gerbang typecheck 0 · build 0 · lint 13 (turun dari baseline 14) | ox-alpha |
 | 2026-08-29 | T-26 s/d T-29 | Dimulai & selesai (DONE): T-26 proxy cookie disalin ke response (refresh token tidak hilang) · T-27 escapeHtml di email notify.ts · T-28 sold/best-seller/top-products exclude status dibatalkan + limit scan · T-29 validasi POST/PUT products (stock/discount negatif, slug regex + cek duplikat friendly); gerbang typecheck 0 · build 0 · lint 13 | ox-alpha |
+| 2026-08-29 | T-31 s/d T-33 | Dimulai & selesai (DONE): T-31 kolom orders.stock_restored + RPC cancel_order_and_restore_stock (atomic, hanya admin, idempotent) dipakai updateOrderStatus saat dibatalkan · T-32 filter subCategory di /api/products & getProducts (CategoryClient kirim categorySlug induk + subCategory terpisah, TODO dihapus) · T-33 view product_sales_summary + sort popular di getProducts (tanpa order dibatalkan); full_schema = live (migration 20260829150000_stock_restore_and_sales_view); gerbang typecheck 0 · build 0 · lint 13 | ox-alpha |
 
 ---
 
