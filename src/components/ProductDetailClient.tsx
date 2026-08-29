@@ -439,14 +439,14 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs — T-59: scrollable-horizontal di mobile agar halaman tidak melebar */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-8">
-          <div className="flex border-b border-gray-100">
+          <div className="flex border-b border-gray-100 overflow-x-auto no-scrollbar">
             {(["deskripsi", "spesifikasi", "ulasan", "qna"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-4 text-sm font-semibold capitalize transition-colors border-b-2 ${
+                className={`px-4 sm:px-6 py-4 text-sm font-semibold capitalize transition-colors border-b-2 whitespace-nowrap shrink-0 ${
                   activeTab === tab
                     ? "text-green-700 border-green-600"
                     : "text-gray-500 border-transparent hover:text-gray-700"

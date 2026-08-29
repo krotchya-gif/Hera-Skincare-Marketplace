@@ -119,7 +119,7 @@ npm run build       # exit 0
 | T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | DONE |
 | T-57 | P0 | RajaOngkir kuota 100 hit/hari — cache persisten DB + short-circuit gratis ongkir | DONE |
 | T-58 | P1 | Normalisasi NEXT_PUBLIC_SITE_URL (double slash di sitemap/robots/llms.txt) | DONE |
-| T-59 | P0 | Mobile: tab bar detail produk overflow → halaman melebar 448px (bisa geser horizontal) | BACKLOG |
+| T-59 | P0 | Mobile: tab bar detail produk overflow → halaman melebar 448px (bisa geser horizontal) | DONE |
 | T-60 | P2 | Mobile: galeri gambar detail produk rusak (next/image × picsum tidak di-whitelist) — DITURUNKAN: foto masih placeholder, otomatis tampil saat foto asli di-upload ke Supabase Storage | BACKLOG |
 | T-61 | P1 | Mobile keranjang: nama produk terpotong parah + harga patah 2 baris | BACKLOG |
 | T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | DONE |
@@ -1529,7 +1529,8 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P0 |
 | Sumber | Audit visual mobile 2026-08-29 — persis keluhan owner "kolom melebar" |
 
@@ -1545,6 +1546,16 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 **Kriteria Selesai**
 1. 375px: `document.scrollWidth ≤ viewport` di halaman detail (semua 4 tab terjangkau — scroll horizontal hanya di dalam row tab)
 2. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ src/components/ProductDetailClient.tsx (row tab) — container
+  overflow-x-auto no-scrollbar; tombol whitespace-nowrap shrink-0;
+  padding px-4 (sm:px-6)
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Verifikasi live pasca-deploy: scrollWidth halaman detail = 375 ✓ (riset
+browser menyusul commit)
+```
 
 ---
 
