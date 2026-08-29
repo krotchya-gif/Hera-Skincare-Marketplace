@@ -110,7 +110,7 @@ npm run build       # exit 0
 | T-47 | P1 | Rebrand catalog → skincare (kategori lucide, produk skincare, gambar, emoji → icon) | DONE |
 | T-48 | P1 | Sinkronisasi dokumentasi pasca T-47 (README 36 route, AGENTS.md) | DONE |
 | T-49 | P0 | Fix checkout voucher (voucher_code tidak terkirim ke /api/orders) | DONE |
-| T-50 | P0 | Validasi shipping_cost & total di /api/orders (tolak negatif) | BACKLOG |
+| T-50 | P0 | Validasi shipping_cost & total di /api/orders (tolak negatif) | DONE |
 | T-51 | P0 | Xendit create: simpan referensi invoice via service-role | BACKLOG |
 | T-52 | P0 | Perbaiki syntax error full_schema.sql (store_settings terpotong) | BACKLOG |
 | T-53 | P1 | Newsletter via API route (RLS-safe, tanpa success palsu) | BACKLOG |
@@ -965,7 +965,8 @@ build     : EXIT 0 (semua route ter-generate)
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
 | Prioritas | P0 |
 | Sumber | Audit menyeluruh 2026-08-29 — temuan HIGH-2 (terverifikasi kode) |
 
@@ -983,6 +984,26 @@ build     : EXIT 0 (semua route ter-generate)
 1. Payload `shipping_cost` negatif / `total <= 0` / `discount > subtotal` ditolak 400
 2. Alur checkout normal tidak berubah
 3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Perubahan ==
+~ src/app/api/orders/route.ts (blok validasi total → "Validasi ongkir, diskon & total")
+  - shipping_cost: undefined = 0 (kompatibel); selain itu wajib finite & >= 0 → 400
+  - discount > subtotal → 400
+  - expectedTotal <= 0 → 400
+  - equality check total tetap (client total harus cocok hasil recompute)
+
+== Gerbang ==
+lint      : 13 problems (baseline sama, 0 warning)
+typecheck : tsc --noEmit → EXIT 0
+build     : EXIT 0
+
+== Status kriteria ==
+1 ✅ (cabang 400 baru; perilaku lama `|| 0` utk undefined dipertahankan)
+2 ✅ (hanya cabang penolakan baru; payload sah tidak berubah)
+3 ✅
+```
 
 ---
 

@@ -152,9 +152,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ── Validasi total ────────────────────────────────────────
-    const shippingCost = Number(body.shipping_cost) || 0;
+    // ── Validasi ongkir, diskon & total (T-50) ────────────────
+    // Ongkir tidak pernah dipercaya mentah dari client: tolak nilai bukan
+    // angka finite / negatif. Field opsional (undefined) tetap diperlakukan 0.
+    const shippingCost =
+      body.shipping_cost === undefined ? 0 : Number(body.shipping_cost);
+    if (!Number.isFinite(shippingCost) || shippingCost < 0) {
+      return NextResponse.json({ error: "Biaya pengiriman tidak valid." }, { status: 400 });
+    }
+    if (calculatedDiscount > calculatedSubtotal) {
+      return NextResponse.json({ error: "Nilai diskon melebihi subtotal." }, { status: 400 });
+    }
     const expectedTotal = calculatedSubtotal + shippingCost - calculatedDiscount;
+    if (expectedTotal <= 0) {
+      return NextResponse.json({ error: "Total pesanan tidak valid." }, { status: 400 });
+    }
     if (Number(body.total) !== expectedTotal) {
       return NextResponse.json({ error: "Total pesanan tidak valid." }, { status: 400 });
     }
