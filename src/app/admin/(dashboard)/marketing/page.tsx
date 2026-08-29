@@ -259,8 +259,8 @@ export default function MarketingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {[
               { name: "Email Blast", icon: <Mail className="w-5 h-5" />, desc: "Kirim newsletter & promosi ke pelanggan", status: "Segera", color: "text-blue-600 bg-blue-50" },
-              { name: "Push Notification", icon: <MessageSquare className="w-5 h-5" />, desc: "Notifikasi langsung ke perangkat pelanggan", status: "Segera", color: "text-purple-600 bg-purple-50" },
-              { name: "Banner Iklan", icon: <Megaphone className="w-5 h-5" />, desc: "Kelola banner promosi di homepage", status: "Segera", color: "text-orange-600 bg-orange-50" },
+              { name: "Push Notification", icon: <MessageSquare className="w-5 h-5" />, desc: "Notifikasi langsung ke perangkat pelanggan", status: "Aktif", color: "text-purple-600 bg-purple-50", onClick: () => setTab("push") },
+              { name: "Banner Iklan", icon: <Megaphone className="w-5 h-5" />, desc: "Kelola banner promosi di homepage", status: "Aktif", color: "text-orange-600 bg-orange-50", onClick: () => setTab("banner") },
               { name: "Event Monitor", icon: <Activity className="w-5 h-5" />, desc: "Riwayat event konversi & retry pengiriman", status: "Aktif", color: "text-indigo-600 bg-indigo-50", onClick: () => setTab("events") },
               { name: "UTM Campaign", icon: <Link2 className="w-5 h-5" />, desc: "Builder link UTM + laporan per source", status: "Aktif", color: "text-teal-600 bg-teal-50", onClick: () => setTab("utm") },
               { name: "Voucher Campaign", icon: <Gift className="w-5 h-5" />, desc: "Buat kampanye voucher massal", status: "Aktif", color: "text-green-600 bg-green-50" },

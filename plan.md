@@ -129,7 +129,7 @@ npm run build       # exit 0
 | T-66 | P1 | GA4/GTM script pindah ke `<head>` (kini di body → verifikasi GSC gagal) | DONE |
 | T-67 | P1 | Storefront: halaman katalog semua produk `/produk` (filter kategori + sort + pagination) | BACKLOG |
 | T-68 | P1 | Manajemen gambar produk: hapus per thumbnail + sinkronisasi product_images saat edit | BACKLOG |
-| T-69 | P2 | Kartu Banner/Push di Marketing jadi navigasi ke tab masing-masing | BACKLOG |
+| T-69 | P2 | Kartu Banner/Push di Marketing jadi navigasi ke tab masing-masing | DONE |
 | T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
@@ -1940,7 +1940,8 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P2 |
 | Sumber | Keluh owner 2026-08-30: kartu masih "Dalam Pengembangan" padahal fiturnya sudah jadi tab |
 
@@ -1954,6 +1955,16 @@ region1.google-analytics.com, *.analytics.google.com (T-65).
 **Kriteria Selesai**
 1. Kedua kartu bisa diklik → pindah ke tab masing-masing, tanpa badge "Dalam Pengembangan"
 2. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ marketing/page.tsx (tab Ringkasan, array Marketing Channels) —
+  Push Notification: onClick setTab("push") + status Aktif;
+  Banner Iklan: onClick setTab("banner") + status Aktif;
+  Email Blast tetap Segera (fitur belum ada), Voucher Campaign tetap
+  tanpa onClick (tabel performanya di tab yang sama)
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
 
 ---
 
