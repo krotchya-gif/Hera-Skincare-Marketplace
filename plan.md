@@ -125,6 +125,7 @@ npm run build       # exit 0
 | T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | DONE |
 | T-63 | P1 | Fitur banner promosi: tabel banners + admin CRUD (tab Banner di marketing) + carousel storefront | DONE |
 | T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | DONE |
+| T-65 | P1 | CSP whitelist endpoint regional GA4 + tampilkan error API di tab Analytics | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -1777,6 +1778,38 @@ Catatan: 3 temuan lint baru saat pengerjaan (import Bell belum terpakai +
 3. Tanpa env VAPID → 503 graceful; langganan mati (404/410) ter-prune
 4. Migration live terverifikasi via MCP + full_schema sinkron
 5. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-65 — CSP whitelist endpoint regional GA4 + surface error API di tab Analytics
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Diagnosa 2026-08-30 "angka analytics tidak muncul": GA4 ✓ (200, akses SA benar, tunggu latensi 24–48 jam); GSC 403 karena Search Console API belum di-enable di GCP project (action item owner, bukan kode) |
+
+**Temuan pendukung:** CSP `connect-src` hanya meng-whitelist `www.google-analytics.com` — beacon GA4 dari Indonesia sering ke `region1.google-analytics.com` → berisiko terblokir di sebagian pengunjung. Selain itu, error API (mis. 403 GSC) ditelan menjadi "Tidak ada data" sehingga sulit diagnosis.
+
+**Scope-IN**
+- `next.config.ts` — `connect-src` += `https://*.google-analytics.com https://region1.google-analytics.com https://*.analytics.google.com`
+- `src/lib/google-analytics.ts` + tab Analytics — bila API error (403/404), tampilkan pesan singkat di UI (bukan "Tidak ada data" generik)
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Konfigurasi GA4/GSC di sisi Google (milik owner); script-src sudah cukup
+
+**Kriteria Selesai**
+1. Header CSP live memuat endpoint regional GA4; beacon tidak terblokir
+2. Error API terlihat di tab Analytics (memudahkan diagnosis owner)
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Action item owner (di luar kode — hasil diagnosa 2026-08-30):**
+1. Enable Search Console API: console.developers.google.com/apis/api/searchconsole.googleapis.com/overview?project=606093113323
+2. GSC → Settings → Users → tambah SA `herastoreskincare@anayltic-marketplace.iam.gserviceaccount.com` sebagai **Owner**
+3. Pastikan "GSC Site URL" di pengaturan persis sama dengan URL/property terverifikasi (`https://marketplace.calysta.fun/` atau `sc-domain:calysta.fun`)
+4. Verifikasi GSC disarankan via DNS TXT (domain property) — metode GA4/GTM menuntut URL-prefix + akun sama
+5. Data GA4 muncul otomatis setelah latensi 24–48 jam (akses SA sudah terbukti 200 OK)
 
 **Bukti**
 ```
