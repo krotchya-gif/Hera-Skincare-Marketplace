@@ -142,10 +142,14 @@ export async function searchDestinationAreas(
       const r = row as Record<string, unknown>;
       const id = r.id ?? r.subdistrict_id ?? r.area_id;
       if (!id) return null;
+      // Shape asli V2 (E2E 2026-08-29): {id, label, province_name, city_name,
+      // district_name, subdistrict_name, zip_code} — label sudah siap pakai
       const label =
-        [r.subdistrict, r.district, r.city, r.province]
+        (typeof r.label === "string" && r.label.trim()) ||
+        [r.subdistrict_name, r.district_name, r.city_name, r.province_name]
           .filter((v): v is string => typeof v === "string" && v.length > 0)
-          .join(", ") || String(id);
+          .join(", ") ||
+        String(id);
       return { id: String(id), label };
     })
     .filter((a): a is AreaOption => a !== null);
@@ -193,10 +197,14 @@ export async function fetchRajaOngkirCosts(
       const serviceCode = String(r.service ?? r.service_code ?? r.code ?? "").trim();
       const price = Number(r.cost ?? r.price ?? r.shipping_cost ?? 0);
       if (!serviceCode || !Number.isFinite(price) || price <= 0) continue;
+      // Shape asli (E2E 2026-08-29): {name, code, service, description, cost, etd}.
+      // Tier cargo berbasis band berat (mis. "JTR<130", "JTR>200") tidak
+      // relevan utk berat yang dihitung — sembunyikan dari opsi checkout.
+      if (serviceCode.includes("<") || serviceCode.includes(">")) continue;
       services.push({
         name: String(r.description ?? r.service_name ?? serviceCode),
         code: `${courier.code}:${serviceCode}`,
-        etd: String(r.etd ?? r.estimated_delivery ?? "-"),
+        etd: String(r.etd ?? "").trim() || "-",
         price,
         courier_code: courier.code,
         service_code: serviceCode,

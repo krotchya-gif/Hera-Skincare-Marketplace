@@ -839,6 +839,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-54 | Selesai (DONE): migration shipping_area_columns live+mirror (destination_area_id/label), settings += origin_area_id/label, lib/shipping.ts (sumber tunggal), /api/shipping/destination + /api/shipping/cost, AreaPicker di checkout/profil/admin, recompute ongkir server di /api/orders (mode flat: ongkir wajib == tarif settings); gerbang hijau; E2E dgn key owner UNVERIFIED (shape respons dinormalisasi defensif) | zcode |
 | 2026-08-29 | T-55 | Selesai (DONE) 4 sub: .1 rollback createOrder via service-role + addresses 404 · .2 validasi flash_stock · .3 whitelist status orders/customers · .4 notifikasi customer pindah ke RPC request_payment_confirmation (migration payment_report_customer_notification live+mirror). Commit per sub | zcode |
 | 2026-08-29 | T-56 | Selesai (DONE) 3 sub: .1 mask ga_service_account GET + preserve PUT · .2 sitemap/llms.txt/judul skincare · .3 housekeeping supabase/.temp + .claude/worktrees. Commit per sub (56.3 = disk only) | zcode |
+| 2026-08-29 | T-54 | Addendum E2E upstream: key RajaOngkir owner diuji langsung — search & cost 200 OK, shape asli terkonfirmasi (label/*_name, {service,description,cost,etd}); gosend tidak didukung; normalisasi lib/shipping.ts disesuaikan + filter tier cargo band; gerbang hijau | zcode |
 
 ---
 
@@ -1254,6 +1255,25 @@ build     : EXIT 0
    array of arrays sudah dipasang) — konfirmasi saat RAJAONGKIR_API_KEY diisi
 2. E2E: isi key → Admin→Pengiriman pilih area asal → isi alamat dgn picker →
    checkout: ongkir real per kurir → order terbuat dgn ongkir recompute server
+
+**Bukti E2E upstream (addendum, 2026-08-29 — key owner diisi di .env.local)**
+```
+Uji langsung API V2 dgn key asli (curl, bukan lewat app):
+- GET /destination/domestic-destination?search=... → 200 OK.
+  Shape: data[] = {id, label, province_name, city_name, district_name,
+  subdistrict_name, zip_code} — label siap-pakai
+- POST /calculate/domestic-cost (origin 17547 Jaksel → destination 4866
+  Bandung, weight 1000): 200 OK utk jne/jnt/sicepat/anteraja.
+  Shape: data[] = {name, code, service, description, cost, etd}
+- gosend → 422 "valid courier is jne, sicepat, ide, sap, jnt, ninja, tiki,
+  lion, anteraja, pos, ..." — Gosend TIDAK didukung endpoint ini (on-demand)
+~ lib/shipping.ts — normalisasi disesuaikan shape asli: search pakai
+  label/*_name; cost: sembunyikan tier cargo band ("JTR<130" dst.),
+  etd kosong → "-"
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Sisa UNVERIFIED (app-level): picker + checkout dgn key butuh dev server
+jalan; origin_area_id belum diisi owner di Admin→Pengiriman.
+```
 ```
 
 ---
