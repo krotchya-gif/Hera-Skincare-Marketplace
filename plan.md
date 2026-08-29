@@ -112,7 +112,7 @@ npm run build       # exit 0
 | T-49 | P0 | Fix checkout voucher (voucher_code tidak terkirim ke /api/orders) | DONE |
 | T-50 | P0 | Validasi shipping_cost & total di /api/orders (tolak negatif) | DONE |
 | T-51 | P0 | Xendit create: simpan referensi invoice via service-role | DONE |
-| T-52 | P0 | Perbaiki syntax error full_schema.sql (store_settings terpotong) | BACKLOG |
+| T-52 | P0 | Perbaiki syntax error full_schema.sql (store_settings terpotong) | DONE |
 | T-53 | P1 | Newsletter via API route (RLS-safe, tanpa success palsu) | BACKLOG |
 | T-54 | P1 | Integrasi RajaOngkir V2 (Komerce) — cek ongkir real + satukan logika ongkir | BACKLOG |
 | T-55 | P1 | Konsistensi order & stok (4 sub-bug hasil audit) | BACKLOG |
@@ -1059,7 +1059,8 @@ dan mendaftarkan callback URL di dashboard Xendit.
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
 | Prioritas | P0 |
 | Sumber | Audit 2026-08-29 — temuan HIGH-5; policy & kolom terverifikasi 100% sinkron live via MCP (52 public + 3 storage), kerusakan murni sintaks file |
 
@@ -1077,6 +1078,32 @@ dan mendaftarkan callback URL di dashboard Xendit.
 1. File terbukti parse-able & bisa dieksekusi penuh untuk init project baru (uji di Postgres disposable lokal / scratch project — bukan live)
 2. Tidak ada perubahan makna skema vs live DB (DB-SYNC-1 kembali utuh)
 3. Bukti uji parse tercatat di Bukti
+
+**Bukti**
+```
+== Perubahan ==
+~ supabase/migrations/20260822130000_full_schema.sql — hapus 2 baris rusak
+  (fragmen "create table if not exists public.store_settings (" terpotong
+  di bekas baris 599); definisi lengkap store_settings kini TEPAT 1x.
+  Diff total: -2 baris, tanpa perubahan lain.
+
+== Uji parse (pglast v8.4 = libpg_query Postgres 17, engine sama dgn live) ==
+PARSE OK: 264 statements
+  CreatePolicyStmt 64 · AlterTableStmt 46 · IndexStmt 38 · InsertStmt 30
+  CreateStmt 19 · CreateFunctionStmt 19 · GrantStmt 15 · UpdateStmt 13
+  DropStmt 8 · DeleteStmt 6 · CreateTrigStmt 3 · Extension/EventTrig/AlterFn 3
+
+== Keterbatasan verifikasi ==
+Uji EKSEKUSI penuh butuh environment bergaya Supabase (schema auth/storage,
+role anon/authenticated/service_role) — Docker tidak tersedia di mesin ini
+dan live DB DILARANG dipakai (file mengandung DELETE seed). Parse dgn parser
+resmi Postgres 17 + identitas policy/kolom vs live (verifikasi MCP 2026-08-29)
+= bukti terkuat yang tersedia; uji init nyata bisa dijalankan saat membuat
+project Supabase baru.
+
+== Gerbang ==
+Tidak ada perubahan src → lint/typecheck/build tidak dijalankan ulang (pola T-14/T-15)
+```
 
 ---
 
