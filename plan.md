@@ -1265,7 +1265,7 @@ build     : EXIT 0
 |--------|---------------|--------|
 | T-55.1 | Rollback `createOrder` delete orders/order_items via client user — RLS-ditolak (tidak ada policy DELETE) → order yatim tertinggal; cleanup via service-role; sekalian: addresses PUT/DELETE cek baris terdampak (bukan success palsu) | DONE |
 | T-55.2 | `flash_stock` tidak divalidasi server di `/api/orders` (hanya `products.stock`) — kuota flash bisa ditembus | DONE |
-| T-55.3 | Whitelist status: admin orders PUT (transisi valid via `updateOrderStatus`) & customers PUT (`aktif\|nonaktif\|diblokir`) | BACKLOG |
+| T-55.3 | Whitelist status: admin orders PUT (transisi valid via `updateOrderStatus`) & customers PUT (`aktif\|nonaktif\|diblokir`) | DONE |
 | T-55.4 | Notifikasi customer "Pembayaran Dilaporkan" dibuat di dalam RPC `request_payment_confirmation` (SECURITY DEFINER) — insert client pasti ditolak policy INSERT notifications admin-only | BACKLOG |
 
 **Kriteria Selesai (per sub)**
@@ -1287,6 +1287,15 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
   starts_at/ends_at) utk productIds; bila produk ada di >1 sale, pakai baris
   harga terendah (konsisten getEffectivePrices); qty > flash_stock → 400
   "Kuota flash sale ... tidak mencukupi"
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+**Bukti T-55.3**
+```
+~ lib/orders.ts (updateOrderStatus)  — whitelist OrderStatus di awal; string
+  arbitrer → throw 400 "Status pesanan tidak valid."
+~ api/admin/customers/[id]           — type guard CustomerStatus (aktif|
+  nonaktif|diblokir) → 400 bila di luar daftar; TS narrowing aman
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```
 

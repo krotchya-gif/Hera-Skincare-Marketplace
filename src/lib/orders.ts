@@ -220,6 +220,12 @@ export async function updateOrderStatus(
   status: OrderStatus,
   trackingNumber?: string
 ): Promise<boolean> {
+  // T-55.3: whitelist status — tolak string arbitrer sebelum transisi divalidasi
+  const VALID_STATUSES: OrderStatus[] = ["menunggu", "diproses", "dikirim", "selesai", "dibatalkan"];
+  if (!VALID_STATUSES.includes(status)) {
+    throw { status: 400, message: "Status pesanan tidak valid." };
+  }
+
   const supabase = await createClient();
 
   // Get current order status
