@@ -4,7 +4,9 @@ import { createClient } from "@/utils/supabase/server";
 // T-44: llms.txt — file teks untuk AI crawler (GEO/LLMO).
 // Pola mengacu docs seo.md: daftar halaman utama + deskripsi bisnis.
 function getBaseUrl(request: Request): string {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  // Priority 1: env var (T-58: strip trailing slash — cegah URL double slash)
+  if (process.env.NEXT_PUBLIC_SITE_URL)
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "");
   const forwarded = request.headers.get("x-forwarded-host");
   if (forwarded) return `https://${forwarded}`;
   const host = request.headers.get("host");

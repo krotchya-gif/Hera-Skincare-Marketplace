@@ -8,8 +8,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
 function getBaseUrl(request: Request): string {
-  // Priority 1: env var
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  // Priority 1: env var (T-58: strip trailing slash — cegah URL double slash)
+  if (process.env.NEXT_PUBLIC_SITE_URL)
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "");
   // Priority 2: x-forwarded-host header (Vercel/NGINX)
   const forwarded = request.headers.get("x-forwarded-host");
   if (forwarded) return `https://${forwarded}`;

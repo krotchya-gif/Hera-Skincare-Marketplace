@@ -118,6 +118,7 @@ npm run build       # exit 0
 | T-55 | P1 | Konsistensi order & stok (4 sub-bug hasil audit) | DONE |
 | T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | DONE |
 | T-57 | P0 | RajaOngkir kuota 100 hit/hari — cache persisten DB + short-circuit gratis ongkir | DONE |
+| T-58 | P1 | Normalisasi NEXT_PUBLIC_SITE_URL (double slash di sitemap/robots/llms.txt) | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -842,6 +843,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-56 | Selesai (DONE) 3 sub: .1 mask ga_service_account GET + preserve PUT · .2 sitemap/llms.txt/judul skincare · .3 housekeeping supabase/.temp + .claude/worktrees. Commit per sub (56.3 = disk only) | zcode |
 | 2026-08-29 | T-54 | Addendum E2E upstream: key RajaOngkir owner diuji langsung — search & cost 200 OK, shape asli terkonfirmasi (label/*_name, {service,description,cost,etd}); gosend tidak didukung; normalisasi lib/shipping.ts disesuaikan + filter tier cargo band; gerbang hijau | zcode |
 | 2026-08-29 | T-57 | Selesai (DONE): kuota RajaOngkir 100 hit/hari — migration shipping_cache (server-only, RLS tanpa policy) live+mirror; cache persisten per kurier (TTL 24 jam) & pencarian area (TTL 7 hari); gratis-ongkir = 0 hit API di cost+order route; AGENTS.md Live Systems diperbarui; gerbang hijau | zcode |
+| 2026-08-29 | T-58 | Selesai (DONE): strip trailing slash NEXT_PUBLIC_SITE_URL di 3 route SEO — perbaiki double slash terdeteksi di deployment live marketplace.calysta.fun; gerbang hijau | zcode |
 
 ---
 
@@ -1456,4 +1458,35 @@ Pol cache persisten juga bekerja antar cold-start/instance serverless
 
 == Gerbang ==
 lint 13 (baseline) · typecheck 0 · build 0 · full_schema parse OK (266 stmt)
+```
+
+---
+
+### T-58 — Normalisasi NEXT_PUBLIC_SITE_URL (double slash di sitemap/robots/llms.txt)
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
+| Prioritas | P1 |
+| Sumber | Cek deployment live https://marketplace.calysta.fun — sitemap/robots memancarkan URL double slash (`...fun//keranjang`, `...fun//sitemap.xml`) karena env Vercel diisi dengan trailing slash |
+
+**Tujuan:** `getBaseUrl()` di 3 route SEO mengembalikan env apa adanya; trailing slash di env menghasilkan URL ganda-garis. Normalisasi di kode agar kebal bentuk env (bukan mengandalkan disiplin isi env).
+
+**Scope-IN**
+- `src/app/sitemap.xml/route.ts`, `src/app/robots.txt/route.ts`, `src/app/llms.txt/route.ts` — strip trailing slash pada nilai `NEXT_PUBLIC_SITE_URL` di `getBaseUrl()`
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Isi env di Vercel (milik owner); template lain di seo.ts
+
+**Kriteria Selesai**
+1. URL di sitemap/robots/llms.txt tanpa double slash apa pun bentuk env
+2. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ 3 route SEO (sitemap.xml / robots.txt / llms.txt) — getBaseUrl():
+  NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "")
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```
