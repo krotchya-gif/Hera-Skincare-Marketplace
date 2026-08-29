@@ -120,7 +120,7 @@ npm run build       # exit 0
 | T-57 | P0 | RajaOngkir kuota 100 hit/hari — cache persisten DB + short-circuit gratis ongkir | DONE |
 | T-58 | P1 | Normalisasi NEXT_PUBLIC_SITE_URL (double slash di sitemap/robots/llms.txt) | DONE |
 | T-59 | P0 | Mobile: tab bar detail produk overflow → halaman melebar 448px (bisa geser horizontal) | BACKLOG |
-| T-60 | P0 | Mobile: galeri gambar detail produk rusak (next/image × picsum tidak di-whitelist) | BACKLOG |
+| T-60 | P2 | Mobile: galeri gambar detail produk rusak (next/image × picsum tidak di-whitelist) — DITURUNKAN: foto masih placeholder, otomatis tampil saat foto asli di-upload ke Supabase Storage | BACKLOG |
 | T-61 | P1 | Mobile keranjang: nama produk terpotong parah + harga patah 2 baris | BACKLOG |
 | T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | BACKLOG |
 
@@ -1547,10 +1547,12 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 | Field | Isi |
 |---|---|
 | Status | `BACKLOG` |
-| Prioritas | P0 |
+| Prioritas | P2 (diturunkan dari P0 — keputusan owner 2026-08-30) |
 | Sumber | Audit visual mobile 2026-08-29 — gambar utama + 2 thumbnail broken di SEMUA halaman detail |
 
-**Tujuan:** Gambar galeri detail rusak karena optimizer `next/image` menolak domain picsum.photos (tidak terdaftar di `images.remotePatterns`). Seed DB T-47 memakai picsum — domain harus di-whitelist, dan `w=3840` menandakan atribut `sizes` terlalu besar (boros bandwidth).
+**Keputusan owner (2026-08-30):** foto produk memang masih placeholder — temuan ini ditunda. Saat foto asli di-upload via admin (Supabase Storage `**.supabase.co` — sudah di-whitelist), galeri detail otomatis tampil tanpa perubahan kode. Whitelist picsum bersifat opsional (hanya relevan selama masa seed).
+
+**Tujuan (bila nanti dikerjakan):** Optimizer `next/image` menolak domain picsum.photos (tidak terdaftar di `images.remotePatterns`); `w=3840` menandakan atribut `sizes` terlalu besar (boros bandwidth — bagian ini tetap relevan untuk foto asli).
 
 **Scope-IN**
 - `next.config.ts` — tambah `images.remotePatterns` untuk `picsum.photos` (+ host redirect bila ada)
