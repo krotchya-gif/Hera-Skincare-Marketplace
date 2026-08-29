@@ -44,9 +44,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // Products sold (filtered by this month for dashboard relevance)
   // Note: order_items doesn't have created_at, so we join through orders
+  // T-28: exclude dibatalkan dari jumlah produk terjual
   const [{ data: thisMonthOrdersForItems }, { data: lastMonthOrdersForItems }] = await Promise.all([
-    supabase.from("orders").select("order_items(qty)").gte("created_at", thisMonthStart),
-    supabase.from("orders").select("order_items(qty)").gte("created_at", lastMonthStart).lte("created_at", lastMonthEnd),
+    supabase.from("orders").select("order_items(qty)").gte("created_at", thisMonthStart).neq("status", "dibatalkan"),
+    supabase.from("orders").select("order_items(qty)").gte("created_at", lastMonthStart).lte("created_at", lastMonthEnd).neq("status", "dibatalkan"),
   ]);
   const thisProductsSold = thisMonthOrdersForItems?.reduce((sum, o) => {
     const items = (o as unknown as { order_items?: { qty: number }[] })?.order_items ?? [];
@@ -65,12 +66,13 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     .order("created_at", { ascending: false })
     .limit(5);
 
-  // Top products (filtered by last 3 months for performance)
+  // Top products (filtered by last 3 months for performance) — T-28: tanpa order dibatalkan
   const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString();
   const { data: topOrdersRaw } = await supabase
     .from("orders")
     .select("order_items(product_name, qty, subtotal)")
-    .gte("created_at", threeMonthsAgo);
+    .gte("created_at", threeMonthsAgo)
+    .neq("status", "dibatalkan");
   const topProductsRaw = topOrdersRaw?.flatMap((o) =>
     (o as unknown as { order_items?: { product_name: string; qty: number; subtotal: number }[] })?.order_items ?? []
   ) ?? [];

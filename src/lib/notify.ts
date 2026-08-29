@@ -8,6 +8,16 @@
 
 import { createAdminClient } from "@/utils/supabase/admin";
 
+// T-27: Escape HTML — nama/alamat/input user tidak boleh masuk mentah ke HTML email
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export interface NotifyOrderInfo {
   order_number: string;
   user_id: string | null;
@@ -152,7 +162,7 @@ export async function sendOrderStatusNotification(
             email,
             `${tpl.subject} (#${order.order_number})`,
             `<div style="font-family:sans-serif;font-size:14px;line-height:1.6">${textLines
-              .map((l) => `<p>${l}</p>`)
+              .map((l) => `<p>${escapeHtml(l)}</p>`)
               .join("")}</div>`
           )
         : Promise.resolve(),

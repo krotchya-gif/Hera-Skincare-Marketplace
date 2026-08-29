@@ -60,7 +60,15 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // T-26: Salin cookie (refresh token) dari request ke response —
+  // tanpa ini, cookie baru dari getUser() hilang dan session sering refresh/expire.
+  const response = NextResponse.next({ request });
+  const responseCookies = response.cookies;
+  request.cookies.getAll().forEach(({ name, value }) => {
+    responseCookies.set(name, value);
+  });
+
+  return response;
 }
 
 export const config = {

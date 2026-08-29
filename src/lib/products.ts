@@ -16,11 +16,12 @@ export async function getProductStatsMap(productIds: string[]): Promise<Record<s
     .in("product_id", productIds)
     .eq("is_visible", true);
 
-  // Get sold counts from order_items
+  // Get sold counts from order_items — T-28: hanya order yang TIDAK dibatalkan
   const { data: soldData } = await supabase
     .from("order_items")
-    .select("product_id, qty")
-    .in("product_id", productIds);
+    .select("product_id, qty, orders!inner(status)")
+    .in("product_id", productIds)
+    .neq("orders.status", "dibatalkan");
 
   // Aggregate ratings
   const ratingSums: Record<string, { total: number; count: number }> = {};
@@ -366,11 +367,13 @@ export async function getProductRatingSummary(productId: string) {
 export async function getBestSellerProducts(limit = 8): Promise<Product[]> {
   const supabase = await createClient();
 
-  // Aggregate by product_id using raw query with sum
+  // T-28: join orders + filter TIDAK dibatalkan + batasi scan (bukan load semua)
   const { data: orderData } = await supabase
     .from("order_items")
-    .select("product_id, qty")
-    .not("product_id", "is", null);
+    .select("product_id, qty, orders!inner(status)")
+    .not("product_id", "is", null)
+    .neq("orders.status", "dibatalkan")
+    .limit(2000);
 
   if (!orderData || orderData.length === 0) {
     // Fallback: just return newest active products

@@ -89,6 +89,10 @@ npm run build       # exit 0
 | T-23 | P1 | Validasi role update_admin_role + guard super_admin | DONE |
 | T-24 | P2 | Upload magic bytes + sinkron mime | DONE |
 | T-25 | P0 | Sinkronisasi full_schema = live DB | DONE |
+| T-26 | P0 | Fix proxy cookie refresh → response | DONE |
+| T-27 | P1 | Escape HTML di notify.ts | DONE |
+| T-28 | P1 | Stats/best-seller filter order dibatalkan | DONE |
+| T-29 | P1 | Validasi admin/products POST/PUT (negatif, slug) | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -794,6 +798,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-16 | Dimulai & selesai (DONE): env disinkronkan ke proyek live leocryckwezmxusrorhm (.env.local URL + AGENTS.md §20/§22 AUTH-NOTE-1); konfirmasi super_admin ada & remote git origin ter-set | ox-alpha |
 | 2026-08-29 | — | Perbaikan encoding: mojibake (double-encoded UTF-8) di plan.md & full_schema.sql dibersihkan — dipulihkan ke UTF-8 benar; emoji ikon kategori kini cocok dengan live DB; backup di temp/opencode/hera-backup | ox-alpha |
 | 2026-08-29 | T-17 s/d T-25 | Dimulai & selesai (DONE): perbaikan keamanan & keandalan — T-17 checkout harga promo (getEffectivePrices: flash > discount > price) · T-18 policy profiles aman (user: safe fields; admin: penuh) + product_qna authenticated · T-19 confirm-payment via RPC request_payment_confirmation + verifikasi admin di modal · T-20 webhook cek paid_amount · T-21 voucher_usage + RPC redeem_voucher (per-user limit) · T-22 rollback variant phantom + qty integer · T-23 role whitelist + guard super_admin terakhir · T-24 magic bytes upload · T-25 full_schema = live (migration 20260829140000_security_fixes via MCP); gerbang typecheck 0 · build 0 · lint 13 (turun dari baseline 14) | ox-alpha |
+| 2026-08-29 | T-26 s/d T-29 | Dimulai & selesai (DONE): T-26 proxy cookie disalin ke response (refresh token tidak hilang) · T-27 escapeHtml di email notify.ts · T-28 sold/best-seller/top-products exclude status dibatalkan + limit scan · T-29 validasi POST/PUT products (stock/discount negatif, slug regex + cek duplikat friendly); gerbang typecheck 0 · build 0 · lint 13 | ox-alpha |
 
 ---
 
