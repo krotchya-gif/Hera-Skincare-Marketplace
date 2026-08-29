@@ -123,6 +123,8 @@ npm run build       # exit 0
 | T-60 | P2 | Mobile: galeri gambar detail produk rusak (next/image × picsum tidak di-whitelist) — DITURUNKAN: foto masih placeholder, otomatis tampil saat foto asli di-upload ke Supabase Storage | BACKLOG |
 | T-61 | P1 | Mobile keranjang: nama produk terpotong parah + harga patah 2 baris | BACKLOG |
 | T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | DONE |
+| T-63 | P1 | Fitur banner promosi: tabel banners + admin CRUD (tab Banner di marketing) + carousel storefront | DONE |
+| T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -1648,3 +1650,99 @@ Action item operasional (bukan bug, untuk owner):
 2. Alamat customer baru: pilih Area Tujuan via picker (harga presisi
    kecamatan); alamat lama perlu di-edit sekali untuk menambah area
 ```
+
+---
+
+### T-63 — Fitur banner promosi (admin CRUD + carousel storefront)
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
+| Prioritas | P1 |
+| Sumber | Instruksi owner 2026-08-30: fitur marketing belum ready (banner promosi, push notification) — kerjakan; gunakan tab di /admin/marketing bila halaman utama tidak cukup |
+
+**Keputusan desain:** tabel `banners` (placement hero/strip, sort_order, is_active, kolom window tanggal opsional — form v1 tanpa tanggal); admin CRUD sebagai **tab "Banner"** di /admin/marketing (pola CRUD flash-sales); storefront: carousel otomatis di homepage — kosong = tidak dirender; upload gambar via `/api/admin/upload` yang sudah ada.
+
+**Scope-IN**
+- Migration via MCP + mirror full_schema + types: tabel `banners` (RLS: publik baca aktif, admin kelola)
+- `src/lib/banners.ts` — getActiveBanners(placement)
+- API admin: `/api/admin/banners` (GET/POST), `/api/admin/banners/[id]` (PUT/DELETE), `/api/admin/banners/[id]/toggle` (PATCH)
+- `src/components/admin/BannerManager.tsx` — list + form modal + upload + toggle + hapus
+- `/admin/marketing` — tab "Banner"
+- `src/components/PromoBannerCarousel.tsx` + integrasi homepage
+- README/AGENTS.md (route +3) + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Halaman/fitur lain, upload route yang sudah ada
+
+**Kriteria Selesai**
+1. Admin bisa create/edit/hapus/toggle banner + upload gambar; tanpa banner storefront tidak berubah
+2. Banner aktif tampil di homepage dengan urutan sort_order + link berfungsi
+3. Migration live terverifikasi via MCP + full_schema sinkron
+4. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Migration live (via MCP) ==
+banners_table: tabel banners + idx_banners_active + 2 policy
+  (Banners publicly viewable SELECT is_active=true; Admins can manage ALL
+  via has_role) — terverifikasi live ✓; mirror full_schema
+  (parse OK 271 statement, libpg_query PG17)
+
+== File baru ==
++ src/lib/banners.ts                       — getActiveBanners(placement):
+  is_active + window tanggal + urut sort_order
++ src/app/api/admin/banners                — GET list (admin) / POST create
+  (validasi T-29-style: title ≤120, image http(s), placement enum, sort ≥0,
+  tanggal ISO & end > start)
++ src/app/api/admin/banners/[id]           — PUT (partial update + 404 bila
+  0 baris) / DELETE (404 bila tidak ada)
++ src/app/api/admin/banners/[id]/toggle    — PATCH (wajib boolean)
++ src/components/admin/BannerManager.tsx   — list + modal form + upload
+  (via /api/admin/upload, productId UUID placeholder → folder terpisah) +
+  toggle + hapus (confirm)
++ src/components/PromoBannerCarousel.tsx   — carousel homepage: auto-rotate
+  5 detik, panah + dots, Link internal / <a> eksternal, kosong = null
+
+== File diubah ==
+~ full_schema.sql (mirror) · types/database.ts (interface Banner)
+~ /admin/marketing — tab "Banner" ke-5 (TabKey/TABS + render BannerManager)
+~ page.tsx + HomeClient — getActiveBanners("hero") di Promise.all →
+  PromoBannerCarousel di bawah HeroBanner
+
+== Gerbang ==
+lint 13 (baseline) · typecheck 0 · build 0 · full_schema parse OK (271 stmt)
+Catatan: 3 temuan lint baru saat pengerjaan (import Bell belum terpakai +
+2 unescaped quotes) — diperbaiki sampai baseline kembali.
+```
+
+---
+
+### T-64 — Fitur push notification (Web Push VAPID)
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Instruksi owner 2026-08-30 (bersama T-63) |
+
+**Keputusan desain:** Web Push standar (VAPID) — dependency `web-push` (server-only); service worker `public/sw.js`; tabel `push_subscriptions` (user miliknya sendiri via RLS, admin baca); API: `/api/push/subscribe` (GET public-key, POST simpan, DELETE hapus — auth) + `/api/admin/push` (GET jumlah pelanggan, POST broadcast — admin); VAPID keys via env (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) — kosong = 503 graceful (pola Xendit); opt-in UI: kartu di homepage untuk user login; composer admin: **tab "Push"** di /admin/marketing; prune langganan mati 404/410.
+
+**Scope-IN**
+- `npm i web-push` (+ @types/web-push) + generate VAPID keys → env
+- Migration via MCP + mirror + types: `push_subscriptions`
+- `public/sw.js`; `src/lib/push.ts`
+- API `/api/push/subscribe` (GET/POST/DELETE) & `/api/admin/push` (GET/POST)
+- `src/components/PushOptIn.tsx` (homepage) + `src/components/admin/PushComposer.tsx` + tab "Push"
+- README/AGENTS.md (env + route +2) + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Sistem notifikasi in-app & email/WA yang sudah ada
+
+**Kriteria Selesai**
+1. User login bisa subscribe; langganan tersimpan di DB
+2. Admin kirim broadcast dari tab Push; pesan tampil di browser pelanggan
+3. Tanpa env VAPID → 503 graceful; langganan mati (404/410) ter-prune
+4. Migration live terverifikasi via MCP + full_schema sinkron
+5. Ketiga gerbang DoD hijau + bukti tercatat

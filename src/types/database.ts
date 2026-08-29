@@ -136,6 +136,22 @@ export interface ShippingAddress {
   destination_area_label?: string | null;
 }
 
+// T-63: banner promosi storefront
+export interface Banner {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  image_url: string;
+  link_url: string | null;
+  placement: "hero" | "strip";
+  sort_order: number;
+  is_active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface OrderItem {
   id: string;
   order_id: string;

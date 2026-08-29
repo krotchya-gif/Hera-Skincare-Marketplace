@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PromoBannerCarousel from "@/components/PromoBannerCarousel";
+import type { Banner } from "@/types/database";
 import { useToast } from "@/components/Toast";
 import { createClient } from "@/utils/supabase/client";
 import {
@@ -342,9 +344,10 @@ interface HomeClientProps {
   promoProducts: Product[];
   flashSaleEnd?: string | null;
   productStats?: Record<string, { average: number; count: number; sold: number }>;
+  banners: Banner[];
 }
 
-export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {} }: HomeClientProps) {
+export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {}, banners = [] }: HomeClientProps) {
   const { toast } = useToast();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [emailSubscribe, setEmailSubscribe] = useState("");
@@ -387,6 +390,9 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
       <Navbar />
 
       <HeroBanner />
+
+      {/* T-63: carousel banner promosi (tidak dirender bila tidak ada banner) */}
+      <PromoBannerCarousel banners={banners} />
 
       <TrustBar />
 

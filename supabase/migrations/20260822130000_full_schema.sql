@@ -1803,3 +1803,36 @@ create table if not exists public.shipping_cache (
 );
 
 alter table public.shipping_cache enable row level security;
+
+-- ============================================================
+-- [TAMBAHAN T-63] Banner promosi storefront
+-- Diterapkan via MCP sebagai migration `banners_table`.
+-- ============================================================
+
+create table if not exists public.banners (
+  id uuid primary key default uuid_generate_v4(),
+  title text not null,
+  subtitle text,
+  image_url text not null,
+  link_url text,
+  placement text not null default 'hero' check (placement in ('hero', 'strip')),
+  sort_order int not null default 0,
+  is_active boolean not null default true,
+  starts_at timestamptz,
+  ends_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_banners_active on public.banners(is_active, placement, sort_order);
+
+alter table public.banners enable row level security;
+
+create policy "Banners publicly viewable"
+  on public.banners for select to authenticated, anon
+  using (is_active = true);
+
+create policy "Admins can manage banners"
+  on public.banners for all to authenticated
+  using (public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text]))
+  with check (public.has_role(auth.uid(), array['super_admin'::text, 'admin'::text]));

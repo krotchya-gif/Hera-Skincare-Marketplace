@@ -21,19 +21,22 @@ import {
   Wallet,
   ShoppingBag,
   UserPlus,
+  Image as ImageIcon,
 } from "lucide-react";
 import type { Voucher, EventLog, UtmVisit } from "@/types/database";
 import { getEventLabel } from "@/lib/tracking";
 import { buildUtmLink } from "@/lib/utm";
+import BannerManager from "@/components/admin/BannerManager";
 
-// T-39: Halaman Marketing — 4 tab (Ringkasan / Analytics / Event Monitor / UTM)
-type TabKey = "ringkasan" | "analytics" | "events" | "utm";
+// T-39/T-63: Halaman Marketing — tab (Ringkasan / Analytics / Event Monitor / UTM / Banner; Push menyusul T-64)
+type TabKey = "ringkasan" | "analytics" | "events" | "utm" | "banner";
 
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "ringkasan", label: "Ringkasan", icon: <Gift className="w-3.5 h-3.5" /> },
   { key: "analytics", label: "Analytics", icon: <BarChart3 className="w-3.5 h-3.5" /> },
   { key: "events", label: "Event Monitor", icon: <Activity className="w-3.5 h-3.5" /> },
   { key: "utm", label: "UTM Campaign", icon: <Link2 className="w-3.5 h-3.5" /> },
+  { key: "banner", label: "Banner", icon: <ImageIcon className="w-3.5 h-3.5" /> },
 ];
 
 interface FinanceData {
@@ -683,6 +686,11 @@ export default function MarketingPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─── TAB: BANNER PROMOSI (T-63) ─────────────────────────── */}
+      {tab === "banner" && (
+        <BannerManager />
       )}
     </div>
   );
