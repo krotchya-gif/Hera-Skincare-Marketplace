@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import HomeClient from "@/components/HomeClient";
 import { getCategories, getFlashSaleProducts, getBestSellerProducts, getPromoProducts, getActiveFlashSaleEnd, getProductStatsMap, getProducts } from "@/lib/products";
 import { getActiveBanners } from "@/lib/banners";
+import { getHeroSettings } from "@/lib/hero";
 import { getSeoSettings } from "@/lib/seo";
 import { STORE_NAME } from "@/utils/storeConfig";
 
@@ -18,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, banners, allProducts] = await Promise.all([
+  const [categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, banners, allProducts, hero] = await Promise.all([
     getCategories(),
     getFlashSaleProducts(),
     getBestSellerProducts(8),
@@ -26,6 +27,7 @@ export default async function HomePage() {
     getActiveFlashSaleEnd(),
     getActiveBanners("hero"),
     getProducts({ page: 1, pageSize: 8, sort: "newest" }),
+    getHeroSettings(),
   ]);
 
   // Batch fetch rating & sold stats for all displayed products
@@ -46,6 +48,7 @@ export default async function HomePage() {
       productStats={productStats}
       banners={banners}
       allProducts={allProducts.data ?? []}
+      heroImageUrl={hero.image_url}
     />
   );
 }

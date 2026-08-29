@@ -68,9 +68,21 @@ function useCountdown(targetDate: string | null) {
 }
 
 // ─── Hero Banner ──────────────────────────────────────────────────
-function HeroBanner() {
+function HeroBanner({ heroImageUrl }: { heroImageUrl?: string | null }) {
   return (
     <section className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-700 relative overflow-hidden">
+      {/* T-71: gambar latar dari admin — overlay gelap menjaga keterbacaan teks */}
+      {heroImageUrl && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
+          <img
+            src={heroImageUrl}
+            alt="Latar hero beranda"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-emerald-950/60" />
+        </>
+      )}
       {/* Animated decorative circles */}
       <div className="absolute top-0 right-0 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-white/[0.04] rounded-full translate-x-1/3 -translate-y-1/3 animate-float-slow" />
       <div className="absolute bottom-0 left-1/4 w-24 sm:w-32 md:w-48 h-24 sm:h-32 md:h-48 bg-white/[0.04] rounded-full translate-y-1/2 animate-float-delayed" />
@@ -346,11 +358,12 @@ interface HomeClientProps {
   promoProducts: Product[];
   flashSaleEnd?: string | null;
   productStats?: Record<string, { average: number; count: number; sold: number }>;
+  heroImageUrl?: string | null;
   banners: Banner[];
   allProducts: Product[];
 }
 
-export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {}, banners = [], allProducts = [] }: HomeClientProps) {
+export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {}, banners = [], allProducts = [], heroImageUrl = null }: HomeClientProps) {
   const { toast } = useToast();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [emailSubscribe, setEmailSubscribe] = useState("");
@@ -416,7 +429,7 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
         </div>
       </nav>
 
-      <HeroBanner />
+      <HeroBanner heroImageUrl={heroImageUrl} />
 
       {/* T-63: carousel banner promosi (tidak dirender bila tidak ada banner) */}
       <PromoBannerCarousel banners={banners} />

@@ -65,6 +65,9 @@ export default function SettingsPage() {
   const [ttUrl, setTtUrl] = useState("");
   const [fbUrl, setFbUrl] = useState("");
   const [waNumber, setWaNumber] = useState("6281234567890");
+  // T-71: gambar latar hero beranda (settings key `hero`)
+  const [heroImageUrl, setHeroImageUrl] = useState("");
+  const [heroUploading, setHeroUploading] = useState(false);
 
   // --- States for Shipping ---
   const [courierToggles, setCourierToggles] = useState<Record<string, boolean>>(
@@ -166,8 +169,11 @@ export default function SettingsPage() {
           setTtUrl(settings.store_info.social_media.tiktok || "");
           setFbUrl(settings.store_info.social_media.facebook || "");
         }
-      if (settings.whatsapp_number) setWaNumber(settings.whatsapp_number as string);
       }
+      if (settings.hero) {
+        setHeroImageUrl(settings.hero.image_url || "");
+      }
+      if (settings.whatsapp_number) setWaNumber(settings.whatsapp_number as string);
 
       // Load shipping settings
       if (settings.shipping) {
@@ -262,6 +268,24 @@ export default function SettingsPage() {
     });
   }, []);
 
+  // T-71: upload gambar hero via jalur "temp" (pola T-70 — tanpa referensi produk)
+  const uploadHeroImage = async (file: File) => {
+    try {
+      setHeroUploading(true);
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("productId", "temp");
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Gagal mengupload gambar hero");
+      setHeroImageUrl(json.url);
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : String(err));
+    } finally {
+      setHeroUploading(false);
+    }
+  };
+
   const saveStoreInfo = async () => {
     try {
       setSaving(true);
@@ -299,6 +323,12 @@ export default function SettingsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: "whatsapp_number", value: waNumber })
+      });
+      // T-71: gambar hero beranda (key `hero`) — kosong = gradient bawaan
+      await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "hero", value: { image_url: heroImageUrl || null } })
       });
       toast("success", "Informasi toko berhasil disimpan!");
     } catch (err) {
@@ -748,6 +778,37 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
+            </div>
+            {/* T-71: Gambar Hero Beranda */}
+            <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-100">
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Gambar Hero Beranda</label>
+              <p className="text-[10px] text-gray-400 mb-2">Latar section hero di beranda. Ukuran disarankan ±1600×500 px (rasio 16:5), JPEG/PNG/WebP maks 2MB. Overlay gelap otomatis agar teks tetap terbaca. Kosong = warna gradient bawaan.</p>
+              {heroImageUrl && (
+                <div className="flex items-start gap-3 mb-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={heroImageUrl} alt="Preview hero" className="w-48 h-16 rounded-lg object-cover border border-gray-200" />
+                  <button
+                    onClick={() => setHeroImageUrl("")}
+                    className="text-xs text-red-600 hover:text-red-700 font-medium"
+                  >
+                    Hapus gambar
+                  </button>
+                </div>
+              )}
+              <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${heroUploading ? "bg-gray-100 text-gray-400 border-gray-200" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`}>
+                {heroUploading ? "Mengunggah..." : (heroImageUrl ? "Ganti gambar" : "Pilih gambar")}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  disabled={heroUploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) uploadHeroImage(f);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <label className="block text-xs font-medium text-gray-600 mb-1.5">No. WhatsApp (tombol mengambang)</label>
