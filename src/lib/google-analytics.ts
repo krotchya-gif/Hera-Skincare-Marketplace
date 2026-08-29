@@ -28,6 +28,9 @@ export interface AnalyticsStats {
     position: number | null;
   } | null;
   error?: string | null;
+  // T-65: error per-section agar kelihatan di UI (tidak ditelan "Tidak ada data")
+  ga4Error?: string | null;
+  gscError?: string | null;
 }
 
 // ─── JWT RS256 (manual, tanpa library) ────────────────────────────────────────
@@ -96,7 +99,7 @@ async function getAccessToken(serviceAccount: GaServiceAccount): Promise<string 
 async function fetchGa4Stats(
   accessToken: string,
   propertyId: string
-): Promise<{ users: number; sessions: number; views: number } | null> {
+): Promise<{ data: { users: number; sessions: number; views: number } | null; error: string | null }> {
   try {
     const res = await fetch(
       `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
@@ -117,22 +120,33 @@ async function fetchGa4Stats(
       }
     );
     if (!res.ok) {
-      console.error("[GA4 runReport]", res.status, await res.text());
-      return null;
+      // T-65: bawa pesan error Google ke UI (mis. 403 permission denied)
+      const txt = await res.text();
+      console.error("[GA4 runReport]", res.status, txt);
+      let msg = `GA4 API ${res.status}`;
+      try {
+        msg = JSON.parse(txt).error?.message ?? msg;
+      } catch {
+        /* biarkan default */
+      }
+      return { data: null, error: msg.slice(0, 160) };
     }
     const data = (await res.json()) as {
       rows?: { metricValues?: { value?: string }[] }[];
     };
     const row = data.rows?.[0]?.metricValues;
-    if (!row || row.length < 3) return null;
+    if (!row || row.length < 3) return { data: null, error: null };
     return {
-      users: Number(row[0].value ?? 0),
-      sessions: Number(row[1].value ?? 0),
-      views: Number(row[2].value ?? 0),
+      data: {
+        users: Number(row[0].value ?? 0),
+        sessions: Number(row[1].value ?? 0),
+        views: Number(row[2].value ?? 0),
+      },
+      error: null,
     };
   } catch (err) {
     console.error("[GA4 runReport network]", err);
-    return null;
+    return { data: null, error: "Gagal menghubungi GA4 API." };
   }
 }
 
@@ -141,7 +155,7 @@ async function fetchGa4Stats(
 async function fetchGscStats(
   accessToken: string,
   siteUrl: string
-): Promise<{ clicks: number; impressions: number; ctr: number; position: number } | null> {
+): Promise<{ data: { clicks: number; impressions: number; ctr: number; position: number } | null; error: string | null }> {
   try {
     const res = await fetch(
       `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
@@ -160,25 +174,37 @@ async function fetchGscStats(
       }
     );
     if (!res.ok) {
-      console.error("[GSC searchAnalytics]", res.status, await res.text());
-      return null;
+      // T-65: bawa pesan error Google ke UI (mis. 403 API belum di-enable /
+      // SA belum owner / URL property tidak persis cocok)
+      const txt = await res.text();
+      console.error("[GSC searchAnalytics]", res.status, txt);
+      let msg = `GSC API ${res.status}`;
+      try {
+        msg = JSON.parse(txt).error?.message ?? msg;
+      } catch {
+        /* biarkan default */
+      }
+      return { data: null, error: msg.slice(0, 160) };
     }
     const data = (await res.json()) as {
       rows?: { keys?: string[]; clicks?: number; impressions?: number; ctr?: number; position?: number }[];
     };
     const row = data.rows?.[0];
     if (!row) {
-      return { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+      return { data: { clicks: 0, impressions: 0, ctr: 0, position: 0 }, error: null };
     }
     return {
-      clicks: Number(row.clicks ?? 0),
-      impressions: Number(row.impressions ?? 0),
-      ctr: Number(row.ctr ?? 0),
-      position: Number(row.position ?? 0),
+      data: {
+        clicks: Number(row.clicks ?? 0),
+        impressions: Number(row.impressions ?? 0),
+        ctr: Number(row.ctr ?? 0),
+        position: Number(row.position ?? 0),
+      },
+      error: null,
     };
   } catch (err) {
     console.error("[GSC searchAnalytics network]", err);
-    return null;
+    return { data: null, error: "Gagal menghubungi GSC API." };
   }
 }
 
@@ -225,15 +251,17 @@ export async function getAnalyticsStats(
 
   const result: AnalyticsStats = {
     configured: true,
-    ga4: ga4
+    ga4: ga4.data
       ? {
-          users: ga4.users,
-          sessions: ga4.sessions,
-          views: ga4.views,
-          activeUsers7d: ga4.users,
+          users: ga4.data.users,
+          sessions: ga4.data.sessions,
+          views: ga4.data.views,
+          activeUsers7d: ga4.data.users,
         }
       : null,
-    gsc: gsc ?? null,
+    ga4Error: ga4.error,
+    gsc: gsc?.data ?? null,
+    gscError: gsc?.error ?? null,
   };
 
   cache.data = result;

@@ -64,6 +64,8 @@ interface AnalyticsStats {
   ga4?: { users: number | null; sessions: number | null; views: number | null } | null;
   gsc?: { clicks: number | null; impressions: number | null; ctr: number | null; position: number | null } | null;
   error?: string | null;
+  ga4Error?: string | null;
+  gscError?: string | null;
 }
 
 const formatRupiah = (v: number) => {
@@ -441,6 +443,8 @@ export default function MarketingPage() {
                 </p>
               ) : analytics.error ? (
                 <p className="text-xs text-red-500 py-6 text-center">{analytics.error}</p>
+              ) : analytics.ga4Error ? (
+                <p className="text-xs text-red-500 py-6 text-center break-words">{analytics.ga4Error}</p>
               ) : analytics.ga4 ? (
                 <div className="grid grid-cols-3 gap-3">
                   {[
@@ -470,6 +474,8 @@ export default function MarketingPage() {
                 </p>
               ) : analytics.error ? (
                 <p className="text-xs text-red-500 py-6 text-center">{analytics.error}</p>
+              ) : analytics.gscError ? (
+                <p className="text-xs text-red-500 py-6 text-center break-words">{analytics.gscError}</p>
               ) : analytics.gsc ? (
                 <div className="grid grid-cols-2 gap-3">
                   {[

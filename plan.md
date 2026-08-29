@@ -125,7 +125,7 @@ npm run build       # exit 0
 | T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | DONE |
 | T-63 | P1 | Fitur banner promosi: tabel banners + admin CRUD (tab Banner di marketing) + carousel storefront | DONE |
 | T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | DONE |
-| T-65 | P1 | CSP whitelist endpoint regional GA4 + tampilkan error API di tab Analytics | BACKLOG |
+| T-65 | P1 | CSP whitelist endpoint regional GA4 + tampilkan error API di tab Analytics | DONE |
 | T-66 | P1 | GA4/GTM script pindah ke `<head>` (kini di body → verifikasi GSC gagal) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
@@ -1804,6 +1804,21 @@ Catatan: 3 temuan lint baru saat pengerjaan (import Bell belum terpakai +
 1. Header CSP live memuat endpoint regional GA4; beacon tidak terblokir
 2. Error API terlihat di tab Analytics (memudahkan diagnosis owner)
 3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ next.config.ts — connect-src += *.google-analytics.com,
+  region1.google-analytics.com, *.analytics.google.com
+~ src/lib/google-analytics.ts — fetchGa4Stats/fetchGscStats kini
+  mengembalikan { data, error }; pesan error Google (mis. 403 permission/
+  API disabled) ditangkap & dipotong 160 char; AnalyticsStats +=
+  ga4Error/gscError
+~ tab Analytics — error per-section dirender merah (bukan "Tidak ada data"
+  generik); data kosong tanpa error tetap "Tidak ada data" (latensi normal)
+Catatan: interface AnalyticsStats lokal di halaman marketing ikut
+diperluas (halaman tidak memakai tipe dari lib).
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
 
 **Action item owner (di luar kode — hasil diagnosa 2026-08-30):**
 1. Enable Search Console API: console.developers.google.com/apis/api/searchconsole.googleapis.com/overview?project=606093113323
