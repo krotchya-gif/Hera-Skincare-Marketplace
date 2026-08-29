@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { STORE_NAME } from "@/utils/storeConfig";
 import { createClient } from "@/utils/supabase/client";
 import { CategoryIcon } from "@/components/CategoryIcon";
+import NotificationBell from "@/components/NotificationBell";
 import {
   Search,
   Heart,
@@ -16,7 +17,6 @@ import {
   X,
   ChevronDown,
   Package,
-  Bell,
   LogOut,
   ChevronRight,
   Home,
@@ -229,12 +229,10 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
                     </span>
                   )}
                 </Link>
-                <Link
-                  href="/profil"
-                  className="relative w-9.5 h-9.5 flex items-center justify-center text-gray-400 active:text-emerald-600 rounded-xl active:bg-emerald-50 transition-all duration-200"
-                >
-                  <Bell className="w-[19px] h-[19px]" />
-                </Link>
+                <NotificationBell
+                  iconClass="w-[19px] h-[19px]"
+                  buttonClass="relative w-9.5 h-9.5 flex items-center justify-center text-gray-400 active:text-emerald-600 rounded-xl active:bg-emerald-50 transition-all duration-200"
+                />
                 <Link
                   href="/keranjang"
                   className="relative w-9.5 h-9.5 flex items-center justify-center text-gray-400 active:text-emerald-600 rounded-xl active:bg-emerald-50 transition-all duration-200"
@@ -348,12 +346,10 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
                   </span>
                 )}
               </Link>
-              <Link
-                href="/profil"
-                className="relative w-10 h-10 flex items-center justify-center text-gray-400 hover:text-emerald-600 rounded-xl hover:bg-emerald-50 transition-all duration-200"
-              >
-                <Bell className="w-5 h-5" />
-              </Link>
+              <NotificationBell
+                iconClass="w-5 h-5"
+                buttonClass="relative w-10 h-10 flex items-center justify-center text-gray-400 hover:text-emerald-600 rounded-xl hover:bg-emerald-50 transition-all duration-200"
+              />
               <Link
                 href="/keranjang"
                 className="relative w-10 h-10 flex items-center justify-center text-gray-400 hover:text-emerald-600 rounded-xl hover:bg-emerald-50 transition-all duration-200"
