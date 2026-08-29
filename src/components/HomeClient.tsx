@@ -27,6 +27,7 @@ import {
   Sparkles,
   Flower2,
   Package,
+  Tag,
 } from "lucide-react";
 import type { Product, Category } from "@/types/database";
 import { CategoryIcon } from "@/components/CategoryIcon";
@@ -346,9 +347,10 @@ interface HomeClientProps {
   flashSaleEnd?: string | null;
   productStats?: Record<string, { average: number; count: number; sold: number }>;
   banners: Banner[];
+  allProducts: Product[];
 }
 
-export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {}, banners = [] }: HomeClientProps) {
+export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {}, banners = [], allProducts = [] }: HomeClientProps) {
   const { toast } = useToast();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [emailSubscribe, setEmailSubscribe] = useState("");
@@ -389,6 +391,30 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-slate-50 pb-20 md:pb-0">
       <Navbar />
+
+      {/* T-67 addendum: quick-nav section unggulan (Flash Sale / Promo Terbatas / Semua Produk) */}
+      <nav aria-label="Navigasi cepat" className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex gap-2 overflow-x-auto no-scrollbar">
+          <a
+            href="#flash-sale"
+            className="flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-100 text-xs font-semibold hover:bg-yellow-100 transition-colors"
+          >
+            <Zap className="w-3.5 h-3.5" /> Flash Sale
+          </a>
+          <a
+            href="#promo"
+            className="flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-red-50 text-red-600 border border-red-100 text-xs font-semibold hover:bg-red-100 transition-colors"
+          >
+            <Tag className="w-3.5 h-3.5" /> Promo Terbatas
+          </a>
+          <Link
+            href="/kategori/semua"
+            className="flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-green-50 text-green-700 border border-green-100 text-xs font-semibold hover:bg-green-100 transition-colors"
+          >
+            <Package className="w-3.5 h-3.5" /> Semua Produk
+          </Link>
+        </div>
+      </nav>
 
       <HeroBanner />
 
@@ -516,6 +542,24 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
             {bestSellerProducts.map((product) => (
               <ProductCard key={product.id} product={product} stats={productStats[product.id]} />
             ))}
+          </div>
+        </section>
+
+        {/* T-72: Semua Produk */}
+        <section id="semua-produk" className="scroll-mt-20 animate-fade-in-up delay-300">
+          <SectionHeader title="Semua Produk" subtitle="Katalog lengkap — terbaru lebih dulu" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4">
+            {allProducts.map((product) => (
+              <ProductCard key={product.id} product={product} stats={productStats[product.id]} />
+            ))}
+          </div>
+          <div className="text-center mt-6">
+            <Link
+              href="/kategori/semua"
+              className="inline-flex items-center gap-1.5 border-2 border-green-500 text-green-700 font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-green-50 transition-colors"
+            >
+              Lihat Semua →
+            </Link>
           </div>
         </section>
 

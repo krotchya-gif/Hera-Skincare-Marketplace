@@ -127,12 +127,12 @@ npm run build       # exit 0
 | T-64 | P1 | Fitur push notification (Web Push VAPID): sw.js + subscribe + tabel push_subscriptions + composer admin (tab Push di marketing) | DONE |
 | T-65 | P1 | CSP whitelist endpoint regional GA4 + tampilkan error API di tab Analytics | DONE |
 | T-66 | P1 | GA4/GTM script pindah ke `<head>` (kini di body → verifikasi GSC gagal) | DONE |
-| T-67 | P1 | Storefront: link "Semua Produk" (/kategori/semua) di navbar/footer + sitemap/llms | DONE |
+| T-67 | P1 | Storefront: quick-nav beranda (Flash Sale/Promo/Semua Produk) + footer + sitemap/llms — link hamburger dicabut per revisi owner | DONE |
 | T-68 | P1 | Manajemen gambar produk: hapus per thumbnail + sinkronisasi product_images saat edit | DONE |
 | T-69 | P2 | Kartu Banner/Push di Marketing jadi navigasi ke tab masing-masing | DONE |
 | T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | DONE |
 | T-71 | P2 | Hero beranda mendukung gambar latar dari admin (settings key hero) | BACKLOG |
-| T-72 | P1 | Homepage: section "Semua Produk" setelah Produk Terlaris (+ link /kategori/semua) | BACKLOG |
+| T-72 | P1 | Homepage: section "Semua Produk" setelah Produk Terlaris (+ link /kategori/semua) | DONE |
 | T-73 | P1 | Admin: panel "Promo Terbatas" di /admin/promo (kelola diskon produk) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
@@ -867,6 +867,8 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-68 | Selesai (DONE): syncProductImages di lib/admin (hapus/insert/urutan/is_primary) + PUT /api/admin/products/[id] menerima images[] + ProductFormModal hapus per thumbnail & badge Utama & EDIT kirim images — fix "slide 3" & placeholder tak tergantikan; E2E edit menyusul bila perlu | zcode |
 | 2026-08-30 | T-69 | Selesai (DONE): kartu Push Notification & Banner Iklan di tab Ringkasan jadi navigasi ke tab masing-masing (badge Aktif); Email Blast tetap Segera | zcode |
 | 2026-08-30 | T-70 | Selesai (DONE): upload banner pakai jalur "temp" (tanpa referensi product_images) — fix FK violation "Gagal menyimpan referensi gambar"; file yatim lama di Storage opsional dibersihkan via dashboard | zcode |
+| 2026-08-30 | T-67 | Addendum revisi owner: link hamburger dicabut → quick-nav strip beranda (Flash Sale/Promo Terbatas/Semua Produk); footer+sitemap+llms tetap | zcode |
+| 2026-08-30 | T-72 | Selesai (DONE): section "Semua Produk" di beranda setelah Terlaris — 8 produk terbaru (getProducts sort newest) + "Lihat Semua →" /kategori/semua; gerbang hijau; verifikasi live menyusul | zcode |
 | 2026-08-30 | T-65/T-66 | Selesai (DONE) & terverifikasi live: CSP connect-src += endpoint regional GA4; error API per-section di tab Analytics; GA4 config + GTM loader kini di <head> (gtag config @2.224, GTM @2.595 — sebelumnya di body @84rb) — syarat verifikasi GSC terpenuhi | zcode |
 | 2026-08-30 | T-64 | Selesai (DONE): fitur push notification Web Push VAPID — deps web-push, VAPID keys digenerate ke env, migration push_subscriptions_table live+mirror (2 policy), public/sw.js, /api/push/subscribe + /api/admin/push, PushOptIn homepage + PushComposer tab Push; 503 graceful tanpa env; gerbang hijau; E2E runtime menunggu VAPID di Vercel + redeploy | zcode |
 | 2026-08-30 | T-59 | Selesai (DONE): tab bar detail produk overflow-x-auto no-scrollbar (tombol nowrap shrink-0, px-4 mobile); gerbang hijau | zcode |
@@ -2067,7 +2069,8 @@ Entri plan.md + Changelog.
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Keluh owner 2026-08-30: homepage hanya Flash Sale / Promo Terbatas / Terlaris |
 
@@ -2080,6 +2083,26 @@ section ini pintu masuk; katalog penuh tetap di /kategori/semua.
 **Scope-IN:** page.tsx fetch + HomeClient section; Entri plan.md + Changelog.
 **Scope-OUT:** halaman /produk baru (parallel implementation), logika keranjang.
 **Kriteria:** section tampil 8 produk terbaru + link semua; 3 gerbang + bukti.
+
+**Bukti**
+```
+~ page.tsx       — Promise.all += getProducts({page:1,pageSize:8,sort:"newest"})
+~ HomeClient     — section id="semua-produk" setelah Terlaris (ProductCard
+  grid + "Lihat Semua →" ke /kategori/semua); prop allProducts
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Verifikasi live pasca-deploy menyusul di changelog.
+```
+
+**Addendum T-67 (revisi owner 2026-08-30):** link "Semua Produk" di drawer
+hamburger DICABUT (sudah terwakili: drawer memang memuat Flash Sale/Promo/
+Terlaris) dan diganti **quick-nav strip** di beranda tepat di bawah navbar:
+chips horizontal Flash Sale (#flash-sale) · Promo Terbatas (#promo) ·
+Semua Produk (/kategori/semua).
+```
+~ Navbar.tsx — link drawer dicabut
+~ HomeClient — nav aria-label="Navigasi cepat" strip di atas hero
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
 
 ---
 
