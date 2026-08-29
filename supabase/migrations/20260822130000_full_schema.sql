@@ -1538,10 +1538,32 @@ $$;
 revoke execute on function public.cancel_order_and_restore_stock(uuid) from anon, public;
 grant execute on function public.cancel_order_and_restore_stock(uuid) to authenticated;
 
--- T-33: Ringkasan penjualan per produk (tanpa order dibatalkan)
-create or replace view public.product_sales_summary as
-select oi.product_id, coalesce(sum(oi.qty), 0) as sold
-from public.order_items oi
-join public.orders o on o.id = oi.order_id
-where o.status <> 'dibatalkan'
-group by oi.product_id;
+-- ============================================================
+-- [TAMBAHAN T-34/T-35] RPC sold count & index FK (2026-08-29)
+-- Diterapkan via MCP sebagai migration `20260829160000_sold_count_rpc`.
+-- T-34: view product_sales_summary (T-33) DIHAPUS — security_definer_view
+-- ERROR di advisor. Diganti RPC SECURITY DEFINER (pola has_role, by-design
+-- WARN yang diterima) agar guest (anon) juga mendapat angka terjual.
+-- ============================================================
+
+-- T-34: RPC sold count — ekspos agregat (product_id, sold), tanpa data order
+create or replace function public.get_product_sales_summary()
+returns table (product_id uuid, sold bigint)
+language sql
+security definer
+set search_path = public
+as $$
+  select oi.product_id, coalesce(sum(oi.qty), 0) as sold
+  from public.order_items oi
+  join public.orders o on o.id = oi.order_id
+  where o.status <> 'dibatalkan'
+  group by oi.product_id;
+$$;
+
+revoke execute on function public.get_product_sales_summary() from public;
+grant execute on function public.get_product_sales_summary() to anon, authenticated;
+
+-- T-35: Index untuk FK tanpa covering index
+create index if not exists idx_categories_parent_id on public.categories(parent_id);
+create index if not exists idx_product_qna_user_id on public.product_qna(user_id);
+create index if not exists idx_reviews_order_id on public.reviews(order_id);

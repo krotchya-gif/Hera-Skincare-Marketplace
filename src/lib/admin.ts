@@ -391,7 +391,7 @@ export async function updateCategory(id: string, payload: Partial<Category>): Pr
   return true;
 }
 
-// ponytail: soft-delete (set is_active = false), not hard delete
+// Soft-delete (set is_active = false), bukan hard delete — riwayat pesanan tetap valid
 export async function softDeleteCategory(id: string): Promise<boolean> {
   const supabase = await createClient();
   const { error } = await supabase.from("categories").update({ is_active: false }).eq("id", id);

@@ -16,12 +16,9 @@ export async function getProductStatsMap(productIds: string[]): Promise<Record<s
     .in("product_id", productIds)
     .eq("is_visible", true);
 
-  // Get sold counts from order_items — T-28: hanya order yang TIDAK dibatalkan
-  const { data: soldData } = await supabase
-    .from("order_items")
-    .select("product_id, qty, orders!inner(status)")
-    .in("product_id", productIds)
-    .neq("orders.status", "dibatalkan");
+  // Get sold counts via RPC (T-34) — bypass RLS terkontrol sehingga
+  // guest (anon) juga mendapat angka terjual yang benar.
+  const soldMap = await getSoldCountMap();
 
   // Aggregate ratings
   const ratingSums: Record<string, { total: number; count: number }> = {};
@@ -31,22 +28,29 @@ export async function getProductStatsMap(productIds: string[]): Promise<Record<s
     ratingSums[r.product_id].count += 1;
   }
 
-  // Aggregate sold
-  const soldSums: Record<string, number> = {};
-  for (const s of soldData ?? []) {
-    if (s.product_id) soldSums[s.product_id] = (soldSums[s.product_id] ?? 0) + s.qty;
-  }
-
   for (const id of productIds) {
     const rs = ratingSums[id];
     map[id] = {
       average: rs ? Math.round((rs.total / rs.count) * 10) / 10 : 0,
       count: rs?.count ?? 0,
-      sold: soldSums[id] ?? 0,
+      sold: soldMap.get(id) ?? 0,
     };
   }
 
   return map;
+}
+
+// T-34: Satu-satunya sumber angka terjual (sold).
+// RPC SECURITY DEFINER — ekspos agregat (product_id, sold) tanpa data order.
+export async function getSoldCountMap(): Promise<Map<string, number>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_product_sales_summary");
+  if (error) {
+    console.error("[getSoldCountMap]", error);
+    return new Map();
+  }
+  const rows = (data ?? []) as { product_id: string; sold: number }[];
+  return new Map(rows.map((r) => [r.product_id, Number(r.sold)]));
 }
 
 // ─── Categories ───────────────────────────────────────────────────────────────
@@ -140,10 +144,65 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
     }
   }
 
+  // T-34: Sort "popular" — via RPC sold map (view lama dihapus; tanpa order dibatalkan)
+  if (sort === "popular") {
+    // Langkah 1: ambil semua id produk yang cocok filter (tanpa pagination)
+    let idQuery = supabase
+      .from("products")
+      .select("id")
+      .eq("is_active", true);
+
+    if (scopeCategoryId) idQuery = idQuery.eq("category_id", scopeCategoryId);
+    if (scopeIds && scopeIds.size > 0) idQuery = idQuery.in("id", [...scopeIds]);
+    if (search) idQuery = idQuery.ilike("name", `%${search}%`);
+    if (minPrice !== undefined) idQuery = idQuery.gte("price", minPrice);
+    if (maxPrice !== undefined) idQuery = idQuery.lte("price", maxPrice);
+
+    const { data: allIds, error: idError } = await idQuery;
+    if (idError) {
+      console.error("[getProducts popular ids]", idError);
+      return { data: [], count: 0, page, pageSize, totalPages: 0 };
+    }
+
+    // Langkah 2: urutkan di JS berdasarkan sold (desc), produk tanpa penjualan di akhir
+    const soldMap = await getSoldCountMap();
+    const sortedIds = (allIds ?? [])
+      .map((p) => p.id as string)
+      .sort((a, b) => (soldMap.get(b) ?? 0) - (soldMap.get(a) ?? 0));
+
+    const from = (page - 1) * pageSize;
+    const pageIds = sortedIds.slice(from, from + pageSize);
+
+    // Langkah 3: fetch detail produk untuk id halaman ini
+    const { data: pageProducts, error: pageError } = await supabase
+      .from("products")
+      .select(
+        `*, categories!products_category_id_fkey(id, name, slug, icon), product_images(id, url, is_primary, sort_order)`
+      )
+      .in("id", pageIds);
+
+    if (pageError) {
+      console.error("[getProducts popular detail]", pageError);
+      return { data: [], count: 0, page, pageSize, totalPages: 0 };
+    }
+
+    // Pertahankan urutan sortedIds
+    const byId = new Map((pageProducts ?? []).map((p) => [p.id, p]));
+    const ordered = pageIds.map((id) => byId.get(id)).filter((p): p is NonNullable<typeof p> => !!p);
+
+    return {
+      data: (ordered as unknown as Product[]) ?? [],
+      count: sortedIds.length,
+      page,
+      pageSize,
+      totalPages: Math.ceil(sortedIds.length / pageSize),
+    };
+  }
+
   let query = supabase
     .from("products")
     .select(
-      `*, categories!products_category_id_fkey(id, name, slug, icon), product_images(id, url, is_primary, sort_order), product_sales_summary(sold)`,
+      `*, categories!products_category_id_fkey(id, name, slug, icon), product_images(id, url, is_primary, sort_order)`,
       { count: "exact" }
     )
     .eq("is_active", true);
@@ -164,16 +223,13 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
   if (minPrice !== undefined) query = query.gte("price", minPrice);
   if (maxPrice !== undefined) query = query.lte("price", maxPrice);
 
-  // Sort — T-33: "popular" via view product_sales_summary (tanpa order dibatalkan)
+  // Sort
   switch (sort) {
     case "price_asc":
       query = query.order("price", { ascending: true });
       break;
     case "price_desc":
       query = query.order("price", { ascending: false });
-      break;
-    case "popular":
-      query = query.order("product_sales_summary.sold", { ascending: false, nullsFirst: false });
       break;
     case "newest":
     default:
@@ -388,15 +444,9 @@ export async function getProductRatingSummary(productId: string) {
 export async function getBestSellerProducts(limit = 8): Promise<Product[]> {
   const supabase = await createClient();
 
-  // T-28: join orders + filter TIDAK dibatalkan + batasi scan (bukan load semua)
-  const { data: orderData } = await supabase
-    .from("order_items")
-    .select("product_id, qty, orders!inner(status)")
-    .not("product_id", "is", null)
-    .neq("orders.status", "dibatalkan")
-    .limit(2000);
-
-  if (!orderData || orderData.length === 0) {
+  // T-34: Satu sumber sold via RPC (bypass RLS terkontrol — guest ikut terbaca)
+  const soldMap = await getSoldCountMap();
+  if (soldMap.size === 0) {
     // Fallback: just return newest active products
     const { data } = await supabase
       .from("products")
@@ -408,11 +458,7 @@ export async function getBestSellerProducts(limit = 8): Promise<Product[]> {
   }
 
   // Aggregate by product_id (count total qty per product)
-  const counts: Record<string, number> = {};
-  for (const row of orderData) {
-    if (row.product_id) counts[row.product_id] = (counts[row.product_id] ?? 0) + row.qty;
-  }
-  const topIds = Object.entries(counts)
+  const topIds = [...soldMap.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
     .map(([id]) => id);

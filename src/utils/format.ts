@@ -1,6 +1,6 @@
 // ─── Formatting Utilities ──────────────────────────────────────
 
-// ponytail: formatRp = full ("Rp 1.500.000"), formatRupiah = abbreviate ("Rp 1,5jt") untuk dashboard
+// formatRp = full ("Rp 1.500.000"), formatRupiah = abbreviate ("Rp 1,5jt") untuk dashboard
 export const formatRp = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
 
 export const formatRupiah = (value: number) => {

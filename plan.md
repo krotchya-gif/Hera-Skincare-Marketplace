@@ -96,6 +96,9 @@ npm run build       # exit 0
 | T-31 | P0 | Restore stok saat order dibatalkan (RPC atomic + idempotent) | DONE |
 | T-32 | P1 | Filter subCategory di /api/products + getProducts | DONE |
 | T-33 | P2 | Sort popular via view product_sales_summary | DONE |
+| T-34 | P0 | Ganti view paralel → RPC sold count + fix bug sold=0 guest | DONE |
+| T-35 | P2 | Index 3 FK tanpa covering index | DONE |
+| T-36 | P2 | Cleanup komentar ponytail + dokumentasi SKIP verdict advisor | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -803,6 +806,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-17 s/d T-25 | Dimulai & selesai (DONE): perbaikan keamanan & keandalan — T-17 checkout harga promo (getEffectivePrices: flash > discount > price) · T-18 policy profiles aman (user: safe fields; admin: penuh) + product_qna authenticated · T-19 confirm-payment via RPC request_payment_confirmation + verifikasi admin di modal · T-20 webhook cek paid_amount · T-21 voucher_usage + RPC redeem_voucher (per-user limit) · T-22 rollback variant phantom + qty integer · T-23 role whitelist + guard super_admin terakhir · T-24 magic bytes upload · T-25 full_schema = live (migration 20260829140000_security_fixes via MCP); gerbang typecheck 0 · build 0 · lint 13 (turun dari baseline 14) | ox-alpha |
 | 2026-08-29 | T-26 s/d T-29 | Dimulai & selesai (DONE): T-26 proxy cookie disalin ke response (refresh token tidak hilang) · T-27 escapeHtml di email notify.ts · T-28 sold/best-seller/top-products exclude status dibatalkan + limit scan · T-29 validasi POST/PUT products (stock/discount negatif, slug regex + cek duplikat friendly); gerbang typecheck 0 · build 0 · lint 13 | ox-alpha |
 | 2026-08-29 | T-31 s/d T-33 | Dimulai & selesai (DONE): T-31 kolom orders.stock_restored + RPC cancel_order_and_restore_stock (atomic, hanya admin, idempotent) dipakai updateOrderStatus saat dibatalkan · T-32 filter subCategory di /api/products & getProducts (CategoryClient kirim categorySlug induk + subCategory terpisah, TODO dihapus) · T-33 view product_sales_summary + sort popular di getProducts (tanpa order dibatalkan); full_schema = live (migration 20260829150000_stock_restore_and_sales_view); gerbang typecheck 0 · build 0 · lint 13 | ox-alpha |
+| 2026-08-29 | T-34 s/d T-36 | Dimulai & selesai (DONE): T-34 view product_sales_summary (T-33) DIHAPUS karena terdeteksi security_definer_view ERROR advisor — diganti RPC get_product_sales_summary() SECURITY DEFINER (pola has_role, by-design WARN); getProductStatsMap & getBestSellerProducts & sort popular kini pakai RPC (satu sumber sold, fix bug sold=0 untuk guest/anon) · T-35 index 3 FK (categories.parent_id, product_qna.user_id, reviews.order_id) · T-36 komentar ponytail dibersihkan + AGENTS.md §22 PERF-NOTE-1/2 & DB-NOTE-1 (SKIP verdict unused_index, multiple_permissive, auth_rls_initplan, rate limiter, RPC by-design); full_schema = live (migration 20260829160000_sold_count_rpc); advisor security 0 ERROR; gerbang typecheck 0 · build 0 · lint 13 | ox-alpha |
 
 ---
 

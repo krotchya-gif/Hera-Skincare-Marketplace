@@ -42,7 +42,7 @@ export default async function KategoriPage({ params, searchParams }: PageProps) 
   // Handle "semua" slug for search results (from navbar search)
   if (slug === "semua") {
     const searchTerm = search || "";
-    // ponytail: "all" bukan UUID — ini virtual category untuk search result, tidak disimpan di DB
+    // "all" bukan UUID — ini virtual category untuk search result, tidak disimpan di DB
     const virtualCategory = {
       id: "all",
       name: searchTerm ? `Hasil Pencarian: "${searchTerm}"` : "Semua Produk",
