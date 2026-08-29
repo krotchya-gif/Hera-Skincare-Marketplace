@@ -131,11 +131,12 @@ npm run build       # exit 0
 | T-68 | P1 | Manajemen gambar produk: hapus per thumbnail + sinkronisasi product_images saat edit | DONE |
 | T-69 | P2 | Kartu Banner/Push di Marketing jadi navigasi ke tab masing-masing | DONE |
 | T-70 | P1 | Upload gambar banner gagal ("Gagal menyimpan referensi gambar") — pakai jalur upload tanpa referensi produk | DONE |
-| T-71 | P2 | Hero beranda mendukung gambar latar dari admin (settings key hero) | BACKLOG |
+| T-71 | P2 | Hero beranda mendukung gambar latar dari admin (settings key hero) | DONE |
 | T-72 | P1 | Homepage: section "Semua Produk" setelah Produk Terlaris (+ link /kategori/semua) | DONE |
 | T-73 | P2 | Catatan "Promo Terbatas" pada kolom diskon produk (revisi owner — panel dibatalkan) | DONE |
 | T-74 | P1 | Lonceng notifikasi customer (dropdown panel, bukan link) | DONE |
 | T-75 | P1 | Banner: dua layout gambar (desktop & mobile) + catatan ukuran | DONE |
+| T-76 | P0 | REGRESI: admin/produk KOSONG + form edit tanpa foto aktif (select `product_images(order=sort_order)` ditolak PostgREST — addendum T-68) | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -880,6 +881,10 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-61 | Selesai (DONE): kartu item keranjang direstrukturisasi — hapus pindah ke kanan nama, nama full-width line-clamp-2, harga+stepper satu baris nowrap; gerbang hijau | zcode |
 | 2026-08-30 | T-59/T-61 | Verifikasi live post-deploy (browser 375×812): halaman detail docW 370 (sebelumnya 448) 0 overflow, tab bar scrollable; keranjang nama tampil penuh & harga 1 baris — kedua temuan keluhan owner tertutup. Roadmap T-01..T-64 semuanya DONE | zcode |
 | 2026-08-30 | T-02 | VERIFIKASI WEBHOOK: Xendit dashboard Test → 200 OK (512ms) — XENDIT_CALLBACK_TOKEN terpasang di Vercel, endpoint produksi terautentikasi; sisa runtime E2E (bayar simulasi → lunas otomatis) menunggu pesanan test owner. Seluruh dokumentasi disinkronkan (AGENTS.md tanggal + status Xendit) | zcode |
+| 2026-08-30 | T-76 | Dibuat & dimulai (IN_PROGRESS) — laporan owner: admin/produk KOSONG + form edit tanpa foto aktif. Repro live: select `product_images(order=sort_order)` (addendum T-68) ditolak PostgREST (parse error) dan error terserap → list kosong; fix = embed polos + order referencedTable | zcode |
+| 2026-08-30 | T-71 | Dimulai (IN_PROGRESS) atas instruksi owner — opsi A: hero beranda gambar latar dari admin (settings key hero + upload Pengaturan → Informasi Toko) | zcode |
+| 2026-08-30 | T-76 | Selesai (DONE): fix getAllProductsAdmin — embed `product_images(*)` + order referencedTable (query fix terbukti live: 16 rows, gambar terurut); gerbang hijau | zcode |
+| 2026-08-30 | T-71 | Selesai (DONE): hero beranda gambar latar dari admin — lib/hero.ts (getHeroSettings, SELECT publik diverifikasi MCP), page.tsx + HeroBanner overlay, Pengaturan→Informasi Toko blok upload (jalur temp, catatan ukuran 16:5); gerbang hijau | zcode |
 
 ---
 
@@ -2051,7 +2056,8 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P2 |
 | Sumber | Pertanyaan owner 2026-08-30: "hero section emang ga bisa diisi gambar ya? hanya warna hijau doang?" |
 
@@ -2274,4 +2280,69 @@ terautentikasi. Sisa UNVERIFIED (keputusan owner: push diaktifkan
 setelah produksi penuh): subscribe E2E di browser (menunggu env VAPID
 dipasang owner di Vercel + redeploy — key sudah ada di .env.local) +
 alur kirim broadcast (menunggu ≥1 perangkat subscribe).
+```
+
+---
+
+### T-76 — REGRESI: admin/produk kosong + form edit tanpa foto aktif
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
+| Prioritas | P0 |
+| Sumber | Laporan owner 2026-08-30: "halaman admin/produk tidak tampil produk sama sekali kosong" + "form edit/tambah tidak menampilkan foto produk yang aktif" |
+
+**Akar masalah (repro live via supabase-js 2.112.3 terhadap DB live):**
+addendum T-68 mengganti select menjadi
+`product_images(order=sort_order)` — BUKAN syntax valid PostgREST →
+error `failed to parse select parameter` → `getAllProductsAdmin`
+menyerap error (return `{data: [], count: 0}`) → seluruh list admin/produk
+kosong DAN form tidak pernah menerima `product_images` (dua keluhan owner
+satu akar masalah). Query `product_images(*)` + `.order("sort_order",
+{ referencedTable: "product_images" })` terbukti live: 16 rows, gambar terurut.
+
+**Scope-IN:** `src/lib/admin.ts` getAllProductsAdmin (select + order).
+**Scope-OUT:** API route (hanya konsumen), form, RLS, DB.
+**Kriteria:** list admin/produk menampilkan produk; form edit menampilkan
+foto aktif dengan tombol hapus per thumbnail; 3 gerbang hijau.
+
+**Bukti**
+```
+Repro live (supabase-js 2.112.3 → DB live): select lama → ERROR
+"failed to parse select parameter" (kolom 74); select fix → ok rows=16
+count=16, product_images terurut (sort 0 dulu).
+~ src/lib/admin.ts — select `product_images(*)` + .order("sort_order",
+  { referencedTable: "product_images" })
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Verifikasi visual admin/produk + form edit menyusul post-deploy
+(changelog).
+
+---
+
+### T-71 (pelaksanaan) — Hero beranda gambar latar dari admin (opsi A)
+
+**Desain terkonfirmasi owner 2026-08-30 (poin 1 daftar revisi):** opsi A —
+settings key `hero` (`{"image_url": "..."}`). Pengaturan → Informasi Toko
+dapat blok "Gambar Hero Beranda": upload via /api/admin/upload jalur
+"temp" (pola T-70, maks 2MB), preview + tombol hapus; simpan ikut tombol
+"Simpan Perubahan" (PUT key `hero`, pola whatsapp_number). Server:
+`getHeroSettings()` di src/lib/hero.ts (pola getShippingSettings —
+SELECT publik store_settings terverifikasi live via MCP). HeroBanner:
+image_url terisi → img cover + overlay gelap agar teks tetap terbaca;
+kosong → gradient emerald seperti sekarang.
+
+**Bukti pelaksanaan (2026-08-30)**
+```
++ src/lib/hero.ts                 — getHeroSettings() (cache, validasi
+  http(s); SELECT store_settings publik — terverifikasi live via MCP)
+~ page.tsx                        — Promise.all += getHeroSettings → prop
+  heroImageUrl ke HomeClient
+~ HomeClient/HeroBanner           — image_url terisi: <img> cover +
+  overlay emerald-950/60 (teks tetap terbaca); kosong: gradient bawaan
+~ admin Pengaturan → Informasi Toko — blok "Gambar Hero Beranda":
+  upload jalur "temp" (pola T-70, 2MB) + preview + Hapus gambar + catatan
+  ukuran ±1600×500 (16:5); simpan ikut "Simpan Perubahan" (PUT key hero)
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Verifikasi visual post-deploy menyusul (changelog).
 ```
