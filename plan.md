@@ -856,6 +856,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-60 | Prioritas diturunkan P0→P2 (keputusan owner: foto masih placeholder; galeri self-heal saat foto asli di-upload ke Supabase Storage) | zcode |
 | 2026-08-30 | T-62 | Selesai (DONE): audit admin 11 halaman (login super_admin) + checkout end-to-end customer (login user.md) di 375px — SEMUA 0 overflow, tidak ada perbaikan dibutuhkan; bonus verifikasi live: AreaPicker sugesti API asli ✓, gratis-ongkir 0-hit ✓, fallback flat ✓; action item operasional: owner isi origin_area_id + alamat lama pilih area | zcode |
 | 2026-08-30 | T-63 | Selesai (DONE): fitur banner promosi — migration banners_table live+mirror (2 policy), 3 API admin route, tab Banner di marketing (BannerManager + upload), carousel auto-rotate di homepage; gerbang hijau | zcode |
+| 2026-08-30 | T-65/T-66 | Selesai (DONE) & terverifikasi live: CSP connect-src += endpoint regional GA4; error API per-section di tab Analytics; GA4 config + GTM loader kini di <head> (gtag config @2.224, GTM @2.595 — sebelumnya di body @84rb) — syarat verifikasi GSC terpenuhi | zcode |
 | 2026-08-30 | T-64 | Selesai (DONE): fitur push notification Web Push VAPID — deps web-push, VAPID keys digenerate ke env, migration push_subscriptions_table live+mirror (2 policy), public/sw.js, /api/push/subscribe + /api/admin/push, PushOptIn homepage + PushComposer tab Push; 503 graceful tanpa env; gerbang hijau; E2E runtime menunggu VAPID di Vercel + redeploy | zcode |
 | 2026-08-30 | T-59 | Selesai (DONE): tab bar detail produk overflow-x-auto no-scrollbar (tombol nowrap shrink-0, px-4 mobile); gerbang hijau | zcode |
 | 2026-08-30 | T-61 | Selesai (DONE): kartu item keranjang direstrukturisasi — hapus pindah ke kanan nama, nama full-width line-clamp-2, harga+stepper satu baris nowrap; gerbang hijau | zcode |
@@ -1860,7 +1861,16 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
   Clarity/Ads/Pixel tetap afterInteractive (tidak dipersyaratkan GSC);
   eslint-disable next-script-for-ga dengan alasan (posisi head > komponen)
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
-Verifikasi live pasca-deploy menyusul di changelog.
+
+== Verifikasi live pasca-deploy (2026-08-30, curl homepage) ==
+gtag('config', 'G-3L5JSHXVFW') @ HEAD (pos. 2.224) ✓
+GTM-M66S6MCV loader @ HEAD (pos. 2.595) ✓
+gtag/js loader @ HEAD (pos. 1.021) ✓
+Catatan: kemunculan ID yang sama di body (pos. ~83rb) hanyalah string
+ter-escape di dalam payload RSC self.__next_f (bukan elemen DOM) —
+tidak memengaruhi verifikasi GSC.
+CSP live juga sudah memuat *.google-analytics.com,
+region1.google-analytics.com, *.analytics.google.com (T-65).
 ```
 
 **Alternatif tanpa kode (bila lebih disukai owner):** verifikasi GSC via DNS TXT untuk domain property `calysta.fun` — tidak tergantung posisi snippet.
