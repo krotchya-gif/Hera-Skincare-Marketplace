@@ -71,6 +71,26 @@ export async function POST(request: NextRequest) {
       dbProducts.map((p: any) => [p.id, p])
     );
 
+    // T-55.2: kuota flash sale aktif per produk (flash_stock) — dipakai
+    // membatasi qty; harga flash sendiri sudah divalidasi via getEffectivePrices
+    const nowIso = new Date().toISOString();
+    const { data: flashRows } = await supabase
+      .from("flash_sale_products")
+      .select("product_id, flash_price, flash_stock, flash_sales!inner(is_active, starts_at, ends_at)")
+      .in("product_id", productIds)
+      .eq("flash_sales.is_active", true)
+      .lte("flash_sales.starts_at", nowIso)
+      .gte("flash_sales.ends_at", nowIso);
+    const flashCap = new Map<string, { price: number; stock: number }>();
+    for (const row of (flashRows ?? []) as { product_id: string; flash_price: number; flash_stock: number }[]) {
+      // bila produk ada di beberapa flash sale aktif, pakai baris harga terendah
+      // (konsisten dengan pemilihan harga efektif di getEffectivePrices)
+      const current = flashCap.get(row.product_id);
+      if (!current || Number(row.flash_price) < current.price) {
+        flashCap.set(row.product_id, { price: Number(row.flash_price), stock: Number(row.flash_stock) });
+      }
+    }
+
     // Fetch variant data if any items have variant_id
     const variantIds = body.items.filter((i: any) => i.variant_id).map((i: any) => i.variant_id);
     let variantMap = new Map<string, { id: string; product_id: string; price: number; stock: number }>();
@@ -134,6 +154,14 @@ export async function POST(request: NextRequest) {
         if ((dbProduct.stock ?? 0) < item.qty) {
           return NextResponse.json({
             error: `Stok "${dbProduct.name}" tidak mencukupi. Tersedia: ${dbProduct.stock}, diminta: ${item.qty}.`,
+          }, { status: 400 });
+        }
+
+        // T-55.2: batasi qty per kuota flash sale aktif (flash_stock)
+        const flash = flashCap.get(item.product_id);
+        if (flash && item.qty > flash.stock) {
+          return NextResponse.json({
+            error: `Kuota flash sale "${dbProduct.name}" tidak mencukupi. Tersedia: ${flash.stock}, diminta: ${item.qty}.`,
           }, { status: 400 });
         }
 

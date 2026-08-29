@@ -1264,13 +1264,31 @@ build     : EXIT 0
 | Sub-ID | Bug (ringkas) | Status |
 |--------|---------------|--------|
 | T-55.1 | Rollback `createOrder` delete orders/order_items via client user — RLS-ditolak (tidak ada policy DELETE) → order yatim tertinggal; cleanup via service-role; sekalian: addresses PUT/DELETE cek baris terdampak (bukan success palsu) | DONE |
-| T-55.2 | `flash_stock` tidak divalidasi server di `/api/orders` (hanya `products.stock`) — kuota flash bisa ditembus | BACKLOG |
+| T-55.2 | `flash_stock` tidak divalidasi server di `/api/orders` (hanya `products.stock`) — kuota flash bisa ditembus | DONE |
 | T-55.3 | Whitelist status: admin orders PUT (transisi valid via `updateOrderStatus`) & customers PUT (`aktif\|nonaktif\|diblokir`) | BACKLOG |
 | T-55.4 | Notifikasi customer "Pembayaran Dilaporkan" dibuat di dalam RPC `request_payment_confirmation` (SECURITY DEFINER) — insert client pasti ditolak policy INSERT notifications admin-only | BACKLOG |
 
 **Kriteria Selesai (per sub)**
 1. Perilaku terverifikasi (uji manual / review SQL); tidak menambah parallel write path
 2. Ketiga gerbang DoD hijau + bukti tercatat; commit `<T-ID.sub>: ...`
+
+**Bukti T-55.1**
+```
+~ src/lib/orders.ts          — cleanup rollback (order yatim + order_items)
+  via createAdminClient (service-role); komentar root cause RLS
+~ api/addresses/[id]         — PUT & DELETE kini .select() + 404 bila 0 baris
+  terdampak (id milik orang lain/tidak ada bukan lagi success:true)
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+**Bukti T-55.2**
+```
+~ api/orders — fetch flash_sale_products join flash_sales aktif (window
+  starts_at/ends_at) utk productIds; bila produk ada di >1 sale, pakai baris
+  harga terendah (konsisten getEffectivePrices); qty > flash_stock → 400
+  "Kuota flash sale ... tidak mencukupi"
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
 
 ---
 
