@@ -221,40 +221,12 @@ export async function POST(request: NextRequest) {
         .eq("id", body.address_id)
         .eq("user_id", user.id)
         .maybeSingle();
-      const areaId = (dbAddress as { destination_area_id?: string } | null)?.destination_area_id;
-      if (!dbAddress || !areaId) {
+      if (!dbAddress) {
         return NextResponse.json(
-          { error: "Alamat belum memiliki area tujuan. Silakan perbarui alamat Anda." },
+          { error: "Alamat pengiriman tidak ditemukan." },
           { status: 400 }
         );
       }
-      const weight = await getWeightFromItems(
-        body.items.map((item) => ({ product_id: item.product_id, qty: item.qty }))
-      );
-      if (!weight) {
-        return NextResponse.json(
-          { error: "Gagal menghitung berat pengiriman. Silakan coba lagi." },
-          { status: 400 }
-        );
-      }
-      const options = await fetchRajaOngkirCosts(
-        shippingSettings.origin_area_id,
-        areaId,
-        weight,
-        shippingSettings.couriers
-      );
-      const courierCode = typeof body.courier_code === "string" ? body.courier_code : "";
-      const serviceCode = typeof body.service_code === "string" ? body.service_code : "";
-      const chosen = options
-        .flatMap((option) => option.services)
-        .find((s) => s.courier_code === courierCode && s.service_code === serviceCode);
-      if (!chosen) {
-        return NextResponse.json(
-          { error: "Layanan pengiriman tidak valid. Silakan pilih ulang kurir." },
-          { status: 400 }
-        );
-      }
-      serverShipping = freeQualifies ? 0 : chosen.price;
       const db = dbAddress as Record<string, string | null>;
       serverAddress = {
         name: db.name ?? "",
@@ -263,9 +235,50 @@ export async function POST(request: NextRequest) {
         city: db.city ?? "",
         province: db.province ?? "",
         postal_code: db.postal_code ?? "",
-        destination_area_id: areaId,
+        destination_area_id: db.destination_area_id ?? null,
         destination_area_label: db.destination_area_label ?? null,
       };
+
+      if (freeQualifies) {
+        // T-57: ongkir final = 0 — tanpa hit kuota RajaOngkir; kurir hanya
+        // informasi (tidak memengaruhi nilai transaksi)
+        serverShipping = 0;
+      } else {
+        const areaId = db.destination_area_id;
+        if (!areaId) {
+          return NextResponse.json(
+            { error: "Alamat belum memiliki area tujuan. Silakan perbarui alamat Anda." },
+            { status: 400 }
+          );
+        }
+        const weight = await getWeightFromItems(
+          body.items.map((item) => ({ product_id: item.product_id, qty: item.qty }))
+        );
+        if (!weight) {
+          return NextResponse.json(
+            { error: "Gagal menghitung berat pengiriman. Silakan coba lagi." },
+            { status: 400 }
+          );
+        }
+        const options = await fetchRajaOngkirCosts(
+          shippingSettings.origin_area_id,
+          areaId,
+          weight,
+          shippingSettings.couriers
+        );
+        const courierCode = typeof body.courier_code === "string" ? body.courier_code : "";
+        const serviceCode = typeof body.service_code === "string" ? body.service_code : "";
+        const chosen = options
+          .flatMap((option) => option.services)
+          .find((s) => s.courier_code === courierCode && s.service_code === serviceCode);
+        if (!chosen) {
+          return NextResponse.json(
+            { error: "Layanan pengiriman tidak valid. Silakan pilih ulang kurir." },
+            { status: 400 }
+          );
+        }
+        serverShipping = chosen.price;
+      }
     } else {
       // Mode flat: ongkir wajib sama dengan tarif flat settings (atau 0 bila
       // gratis ongkir memenuhi syarat) — client tidak bisa menentukan nilai lain.

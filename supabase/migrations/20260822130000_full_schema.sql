@@ -1787,3 +1787,19 @@ on conflict do nothing;
 update public.store_settings
 set value = jsonb_set(value, '{description}', '"Marketplace skincare & perawatan pribadi premium."')
 where key = 'store_info';
+
+-- ============================================================
+-- [TAMBAHAN T-57] Cache RajaOngkir (kuota 100 hit/hari)
+-- Diterapkan via MCP sebagai migration `shipping_cache_table`.
+-- SERVER-ONLY BY DESIGN: RLS on TANPA policy = deny anon/authenticated;
+-- hanya service-role (bypass RLS) yang baca/tulis — mencegah peracunan
+-- cache harga ongkir dari klien publik.
+-- ============================================================
+
+create table if not exists public.shipping_cache (
+  cache_key text primary key,
+  value jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.shipping_cache enable row level security;

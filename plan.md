@@ -117,6 +117,7 @@ npm run build       # exit 0
 | T-54 | P1 | Integrasi RajaOngkir V2 (Komerce) — cek ongkir real + satukan logika ongkir | DONE |
 | T-55 | P1 | Konsistensi order & stok (4 sub-bug hasil audit) | DONE |
 | T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | DONE |
+| T-57 | P0 | RajaOngkir kuota 100 hit/hari — cache persisten DB + short-circuit gratis ongkir | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -840,6 +841,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-55 | Selesai (DONE) 4 sub: .1 rollback createOrder via service-role + addresses 404 · .2 validasi flash_stock · .3 whitelist status orders/customers · .4 notifikasi customer pindah ke RPC request_payment_confirmation (migration payment_report_customer_notification live+mirror). Commit per sub | zcode |
 | 2026-08-29 | T-56 | Selesai (DONE) 3 sub: .1 mask ga_service_account GET + preserve PUT · .2 sitemap/llms.txt/judul skincare · .3 housekeeping supabase/.temp + .claude/worktrees. Commit per sub (56.3 = disk only) | zcode |
 | 2026-08-29 | T-54 | Addendum E2E upstream: key RajaOngkir owner diuji langsung — search & cost 200 OK, shape asli terkonfirmasi (label/*_name, {service,description,cost,etd}); gosend tidak didukung; normalisasi lib/shipping.ts disesuaikan + filter tier cargo band; gerbang hijau | zcode |
+| 2026-08-29 | T-57 | Selesai (DONE): kuota RajaOngkir 100 hit/hari — migration shipping_cache (server-only, RLS tanpa policy) live+mirror; cache persisten per kurier (TTL 24 jam) & pencarian area (TTL 7 hari); gratis-ongkir = 0 hit API di cost+order route; AGENTS.md Live Systems diperbarui; gerbang hijau | zcode |
 
 ---
 
@@ -1390,4 +1392,68 @@ Dihapus dari disk (gitignored, bukan bagian repo):
   verifikasi DB tetap 100% via MCP sesuai DB-SYNC-2)
 - .claude/worktrees/      — salinan project basi sisa sesi agent lama
 Live DB tidak disentuh; tidak ada file tracked yang berubah.
+```
+
+---
+
+### T-57 — RajaOngkir kuota 100 hit/hari: cache persisten + short-circuit
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
+| Prioritas | P0 |
+| Sumber | Info owner 2026-08-29: kuota API key RajaOngkir hanya 100 hit/hari. Tanpa cache, 1x cek ongkir = N hit (1 per kurir) + recompute order + ketikan picker → kuota habis |
+
+**Tujuan:** Menghemat kuota API tanpa mengubah perilaku harga: (1) cache persisten di DB (bertahan antar cold-start/instance — in-memory 5 menit tidak cukup), (2) per-kurier cache key agar hanya kurir yang miss yang dipanggil, (3) gratis-ongkir memenuhi syarat → 0 hit API, (4) pencarian area di-cache (data area ~statis).
+
+**Scope-IN**
+- Migration via MCP + mirror full_schema: tabel `shipping_cache` (cache_key PK, value jsonb, created_at) — RLS on TANPA policy (server-only by design, hanya service-role; mencegah peracunan harga dari klien)
+- `lib/shipping.ts` — helper cacheGet/cachePut (service-role, TTL: ongkir 24 jam, area 7 hari, prune 30 hari); fetchRajaOngkirCosts cache-first per kurier; searchDestinationAreas cache-first; hapus in-memory map
+- `/api/shipping/cost` — gratis-ongkir memenuhi syarat → flat options tanpa hit API
+- `/api/orders` — gratis-ongkir → skip panggil API + validasi layanan (harga = 0, kurir hanya informasi); alamat tetap dari DB
+- AGENTS.md Live Systems — catat kuota 100 hit/hari + mekanisme cache
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Logika harga/validasi yang sudah ada (T-50/T-54)
+- Kuota/plan RajaOngkir (keputusan owner)
+
+**Kriteria Selesai**
+1. Cek ongkir berulang utk kombinasi sama = 0 hit API (cache DB)
+2. Gratis-ongkir = 0 hit API di cost route & order route
+3. Cache hanya bisa ditulis service-role (tanpa kebocoran/peracunan dari klien)
+4. Tanpa SUPABASE_SERVICE_ROLE_KEY → cache nonaktif, alur tetap benar (fallback langsung API)
+5. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Migration live (via MCP) ==
+shipping_cache_table: tabel shipping_cache (cache_key PK, value jsonb,
+  created_at) — terverifikasi live: RLS on, 0 policy = server-only
+  (hanya service-role; klien publik tidak bisa baca/tulis → tidak bisa
+  memperacuni harga cache). Mirror full_schema (parse OK 266 statement).
+
+== Perubahan ==
+~ lib/shipping.ts — cacheGet/cachePut (service-role, best-effort: gagal =
+  lewatkan cache, alur tetap jalan); fetchRajaOngkirCosts cache-first PER
+  KURIER (key cost:{origin}:{dest}:{weight}:{courier}, TTL 24 jam) — hanya
+  kurir miss yang hit API; searchDestinationAreas cache-first
+  (key dest:{query}, TTL 7 hari — data area ~statis); prune entri >30 hari;
+  in-memory 5 menit DIHAPUS (digantikan cache DB yang bertahan antar
+  cold-start/instance)
+~ api/shipping/cost — gratis-ongkir terpenuhi → flat options TANPA hit API
+~ api/orders — gratis-ongkir → skip panggil API + validasi layanan
+  (serverShipping = 0; kurir hanya informasi); alamat tetap dari DB
+~ AGENTS.md Live Systems — kuota 100 hit/hari + mekanisme cache
+
+== Efek kuota (estimasi) ==
+Sebelum: buka checkout = 5 hit (5 kurir) + 1 hit recompute + ketikan picker.
+Sesudah: kombinasi (area, berat, kurir) hanya 1x hit per 24 jam; ulangan =
+0 hit; gratis-ongkir = 0 hit; pencarian area = 1x per query per 7 hari.
+Pol cache persisten juga bekerja antar cold-start/instance serverless
+(kelemahan cache in-memory di PERF-NOTE-2 tidak berlaku di sini).
+
+== Gerbang ==
+lint 13 (baseline) · typecheck 0 · build 0 · full_schema parse OK (266 stmt)
 ```

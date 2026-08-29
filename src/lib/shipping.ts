@@ -4,12 +4,59 @@
 // ongkir real per kurir (harga presisi subdistrict). Bila tidak → tarif flat
 // dari settings (graceful degradation, pola Xendit/notify).
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 const RAJAONGKIR_BASE =
   process.env.RAJAONGKIR_BASE_URL || "https://rajaongkir.komerce.id/api/v1";
 
 const DEFAULT_FLAT_RATE = 12000;
 const DEFAULT_FREE_SHIPPING_MIN = 100000;
+
+// ── Cache persisten (T-57) — kuota key RajaOngkir hanya 100 hit/hari ───────
+// Tabel shipping_cache = server-only (RLS on tanpa policy, hanya service-role).
+// Tanpa SUPABASE_SERVICE_ROLE_KEY cache nonaktif → langsung ke API (tetap
+// benar, hanya boros kuota).
+const COST_CACHE_TTL = 24 * 60 * 60 * 1000; // tarif stabil dalam sehari
+const DEST_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // daftar area ~statis
+const CACHE_PRUNE_AFTER = 30 * 24 * 60 * 60 * 1000;
+
+function cacheEnabled(): boolean {
+  return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
+async function cacheGet(key: string, ttlMs: number): Promise<unknown | null> {
+  if (!cacheEnabled()) return null;
+  try {
+    const admin = createAdminClient();
+    const cutoff = new Date(Date.now() - ttlMs).toISOString();
+    const { data } = await admin
+      .from("shipping_cache")
+      .select("value")
+      .eq("cache_key", key)
+      .gte("created_at", cutoff)
+      .maybeSingle();
+    return (data as { value: unknown } | null)?.value ?? null;
+  } catch (err) {
+    console.warn("[ShippingCache] get failed:", err);
+    return null;
+  }
+}
+
+async function cachePut(key: string, value: unknown): Promise<void> {
+  if (!cacheEnabled()) return;
+  try {
+    const admin = createAdminClient();
+    await admin.from("shipping_cache").upsert(
+      { cache_key: key, value, created_at: new Date().toISOString() },
+      { onConflict: "cache_key" }
+    );
+    // best-effort prune entri yang sangat lama
+    const cutoff = new Date(Date.now() - CACHE_PRUNE_AFTER).toISOString();
+    await admin.from("shipping_cache").delete().lt("created_at", cutoff);
+  } catch (err) {
+    console.warn("[ShippingCache] put failed:", err);
+  }
+}
 
 // Kode kurir RajaOngkir utk nama display di settings
 const COURIER_CODES: Record<string, string> = {
@@ -119,14 +166,19 @@ export async function searchDestinationAreas(
 ): Promise<AreaOption[]> {
   const q = query.trim();
   if (q.length < 3) return [];
+  // T-57: hasil pencarian di-cache (data area ~statis) — hemat kuota harian
+  const cacheKey = `dest:${q.toLowerCase()}`;
+  const cached = await cacheGet(cacheKey, DEST_CACHE_TTL);
+  if (Array.isArray(cached) && cached.length > 0) return cached as AreaOption[];
+
   const json = (await rajaOngkirFetch(
     `/destination/domestic-destination?search=${encodeURIComponent(q)}&limit=${limit}&offset=0`
   )) as { data?: unknown } | null;
   const data = json?.data;
   if (!Array.isArray(data)) return [];
-  // Respons V2 bisa berupa array objek atau array of arrays — normalisasi
-  // defensif; bentuk eksak akan dikonfirmasi saat E2E dengan key owner.
-  return data
+  // Shape asli V2 (E2E 2026-08-29): data[] = {id, label, province_name,
+  // city_name, district_name, subdistrict_name, zip_code}
+  const areas = data
     .slice(0, limit)
     .map((row: unknown): AreaOption | null => {
       if (Array.isArray(row)) {
@@ -142,8 +194,6 @@ export async function searchDestinationAreas(
       const r = row as Record<string, unknown>;
       const id = r.id ?? r.subdistrict_id ?? r.area_id;
       if (!id) return null;
-      // Shape asli V2 (E2E 2026-08-29): {id, label, province_name, city_name,
-      // district_name, subdistrict_name, zip_code} — label sudah siap pakai
       const label =
         (typeof r.label === "string" && r.label.trim()) ||
         [r.subdistrict_name, r.district_name, r.city_name, r.province_name]
@@ -153,11 +203,18 @@ export async function searchDestinationAreas(
       return { id: String(id), label };
     })
     .filter((a): a is AreaOption => a !== null);
+  if (areas.length > 0) await cachePut(cacheKey, areas);
+  return areas;
 }
 
-// Cache ongkir 5 menit (pola google-analytics.ts) — hemat kuota per tier
-const costCache = new Map<string, { at: number; options: ShippingOption[] }>();
-const COST_CACHE_TTL = 5 * 60 * 1000;
+// T-57: cache persisten per (origin, dest, weight, courier) — hanya kurir
+// yang cache-nya miss yang memanggil API (kuota 100 hit/hari).
+interface RajaOngkirCostRow {
+  service?: string;
+  description?: string;
+  cost?: number;
+  etd?: string;
+}
 
 export async function fetchRajaOngkirCosts(
   originAreaId: string,
@@ -165,44 +222,38 @@ export async function fetchRajaOngkirCosts(
   weightGram: number,
   couriers: { name: string; code: string }[]
 ): Promise<ShippingOption[]> {
-  const cacheKey = `${originAreaId}|${destAreaId}|${weightGram}|${couriers
-    .map((c) => c.code)
-    .join(",")}`;
-  const cached = costCache.get(cacheKey);
-  if (cached && Date.now() - cached.at < COST_CACHE_TTL) return cached.options;
-
   const weight = Math.max(1000, Math.round(weightGram)); // minimum chargeable 1 kg
   const options: ShippingOption[] = [];
   for (const courier of couriers) {
     if (!courier.code) continue;
-    const json = (await rajaOngkirFetch("/calculate/domestic-cost", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        origin: originAreaId,
-        destination: destAreaId,
-        weight: String(weight),
-        courier: courier.code,
-      }).toString(),
-    })) as { data?: unknown } | null;
-    const data = json?.data;
-    const rows: unknown[] = Array.isArray(data)
-      ? data
-      : data && typeof data === "object"
-        ? (Object.values(data as Record<string, unknown>).flat() as unknown[])
-        : [];
+    const cacheKey = `cost:${originAreaId}:${destAreaId}:${weight}:${courier.code}`;
+    let rows = (await cacheGet(cacheKey, COST_CACHE_TTL)) as RajaOngkirCostRow[] | null;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      const json = (await rajaOngkirFetch("/calculate/domestic-cost", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          origin: originAreaId,
+          destination: destAreaId,
+          weight: String(weight),
+          courier: courier.code,
+        }).toString(),
+      })) as { data?: unknown } | null;
+      // Shape asli (E2E 2026-08-29): data[] = {name, code, service,
+      // description, cost, etd}
+      rows = Array.isArray(json?.data) ? (json!.data as RajaOngkirCostRow[]) : [];
+      if (rows.length > 0) await cachePut(cacheKey, rows);
+    }
     const services: ShippingService[] = [];
-    for (const row of rows) {
-      const r = (typeof row === "object" && row !== null ? row : {}) as Record<string, unknown>;
-      const serviceCode = String(r.service ?? r.service_code ?? r.code ?? "").trim();
-      const price = Number(r.cost ?? r.price ?? r.shipping_cost ?? 0);
+    for (const r of rows) {
+      const serviceCode = String(r.service ?? "").trim();
+      const price = Number(r.cost ?? 0);
       if (!serviceCode || !Number.isFinite(price) || price <= 0) continue;
-      // Shape asli (E2E 2026-08-29): {name, code, service, description, cost, etd}.
       // Tier cargo berbasis band berat (mis. "JTR<130", "JTR>200") tidak
       // relevan utk berat yang dihitung — sembunyikan dari opsi checkout.
       if (serviceCode.includes("<") || serviceCode.includes(">")) continue;
       services.push({
-        name: String(r.description ?? r.service_name ?? serviceCode),
+        name: String(r.description ?? serviceCode),
         code: `${courier.code}:${serviceCode}`,
         etd: String(r.etd ?? "").trim() || "-",
         price,
@@ -214,7 +265,6 @@ export async function fetchRajaOngkirCosts(
       options.push({ courier: courier.name, logo: courier.name.charAt(0), services });
     }
   }
-  costCache.set(cacheKey, { at: Date.now(), options });
   return options;
 }
 

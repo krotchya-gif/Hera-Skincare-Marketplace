@@ -47,6 +47,17 @@ export async function POST(request: NextRequest) {
       qualifies: isFreeShipping(settings, subtotal),
     };
 
+    // T-57: gratis-ongkir terpenuhi → ongkir final = 0 (order route juga
+    // skip API) — tidak perlu membakar kuota RajaOngkir hanya untuk
+    // menampilkan daftar kurir
+    if (free.qualifies) {
+      return NextResponse.json({
+        mode: "flat",
+        options: buildFlatOptions(settings),
+        free_shipping: free,
+      });
+    }
+
     let destinationAreaId: string | null = null;
     if (addressId) {
       const { data: addr } = await supabase
