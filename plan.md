@@ -109,6 +109,14 @@ npm run build       # exit 0
 | T-46 | P1 | Hapus Edge Runtime deprecated → nodejs (4 file ikon + README) | DONE |
 | T-47 | P1 | Rebrand catalog → skincare (kategori lucide, produk skincare, gambar, emoji → icon) | DONE |
 | T-48 | P1 | Sinkronisasi dokumentasi pasca T-47 (README 36 route, AGENTS.md) | DONE |
+| T-49 | P0 | Fix checkout voucher (voucher_code tidak terkirim ke /api/orders) | BACKLOG |
+| T-50 | P0 | Validasi shipping_cost & total di /api/orders (tolak negatif) | BACKLOG |
+| T-51 | P0 | Xendit create: simpan referensi invoice via service-role | BACKLOG |
+| T-52 | P0 | Perbaiki syntax error full_schema.sql (store_settings terpotong) | BACKLOG |
+| T-53 | P1 | Newsletter via API route (RLS-safe, tanpa success palsu) | BACKLOG |
+| T-54 | P1 | Integrasi RajaOngkir V2 (Komerce) — cek ongkir real + satukan logika ongkir | BACKLOG |
+| T-55 | P1 | Konsistensi order & stok (4 sub-bug hasil audit) | BACKLOG |
+| T-56 | P2 | Hardening & housekeeping kecil (3 sub-entri) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -822,6 +830,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-46 | Dimulai & selesai (DONE): hapus `export const runtime = "edge"` di 4 file ikon (icon.tsx, apple-icon.tsx, icon-192/512.png route) — Edge Runtime deprecated di Next 16, ImageResponse mendukung nodejs runtime; README disinkronkan; gerbang typecheck 0 · build 0 (ikon tetap render) · lint 13 | ox-alpha |
 | 2026-08-29 | T-47 | Dimulai & selesai (DONE): rebrand catalog ke skincare — DB (migration 20260829190000_rebrand_skincare_catalog + full_schema sync): hapus 13 produk rumah tangga + test, 30 kategori baru (6 induk + 24 sub) murni kecantikan dengan icon NAMA LUCIDE (droplets/palette/bath/dll), 16 produk skincare (cleanser, toner, serum, moisturizer, sunscreen, mask, makeup, rambut, parfum, tubuh), 7 varian, 2 gambar per produk (picsum seeded), flash sale baru, store_info description skincare · kode: komponen CategoryIcon (map nama→lucide, 60+ icon), getProductImage helper, cart item image (ganti emoji), emoji diganti lucide di Home/Category/Detail/Navbar/Footer/keranjang/checkout/blog/cara-belanja/hubungi-kami/voucher/karir/not-found + seluruh admin (dashboard/keuangan/pesanan/pelanggan/promo/ulasan/produk/pengaturan/marketing/blog) + admin kategori form jadi grid pemilih lucide; gerbang typecheck 0 · build 0 · lint 13 | ox-alpha |
 | 2026-08-29 | T-48 | Dimulai & selesai (DONE): sinkronisasi dokumentasi pasca T-47 — README (36 API routes + 3 baru events/utm/analytics, struktur tree, fitur customer 18 halaman, admin marketing 4 tab + SEO tabs, migration seed skincare, baseline lint 13) + AGENTS.md §20 (36 routes, catalog T-47) + §22 tanggal sinkron; gerbang typecheck 0 · lint 13 | ox-alpha |
+| 2026-08-29 | — | Audit menyeluruh (kode + live DB via MCP) → 5 temuan HIGH + MEDIUM/LOW didaftarkan T-49..T-56 (BACKLOG); keputusan owner: cek ongkir real via RajaOngkir API V2 (Komerce, key tersedia), presisi subdistrict dengan picker alamat + kolom destination_area_id | zcode |
 
 ---
 
@@ -900,3 +909,212 @@ Profiles  : 1 super_admin (infocyber001@gmail.com), 2 customer — role admin su
 Git remote: origin https://github.com/krotchya-gif/Hera-Skincare-Marketplace.git (sudah ada)
 Gerbang   : tidak ada perubahan src → lint/typecheck/build tidak dijalankan ulang
 ```
+
+---
+
+### T-49 — Fix checkout voucher (voucher_code tidak terkirim)
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P0 |
+| Sumber | Audit menyeluruh 2026-08-29 — temuan HIGH-1 (terverifikasi kode) |
+
+**Tujuan:** Checkout dengan voucher selalu gagal. `src/app/checkout/page.tsx` (payload `handleCreateOrder`) mengirim `discount` tanpa `voucher_code`, sedangkan `src/app/api/orders/route.ts` menolak 400 "Kode voucher diperlukan" bila `discount > 0`. State `voucherCode` di checkout berupa dead code.
+
+**Scope-IN**
+- `src/app/checkout/page.tsx` — kirim `voucher_code` dari localStorage `hera_applied_voucher` ke payload `/api/orders`; bersihkan dead state `voucherCode`
+- `src/app/keranjang/page.tsx` — bila perlu, samakan bentuk data `hera_applied_voucher`
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Validasi voucher server (`api/orders/route.ts`, `lib/vouchers.ts`) — TIDAK boleh dilemahkan
+- Fitur voucher lain, halaman admin promo
+
+**Kriteria Selesai**
+1. Order dengan voucher aktif sukses dibuat (uji manual: keranjang → pakai voucher → checkout selesai)
+2. Order tanpa voucher tetap berjalan normal
+3. Revalidasi server tetap menolak discount tanpa kode / nilai diskon tak cocok
+4. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-50 — Validasi shipping_cost & total di /api/orders
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P0 |
+| Sumber | Audit menyeluruh 2026-08-29 — temuan HIGH-2 (terverifikasi kode) |
+
+**Tujuan:** `src/app/api/orders/route.ts` menerima `shipping_cost` dari client tanpa validasi (`Number(body.shipping_cost) || 0`) — nilai negatif lolos dan menekan `total` meski harga item sudah divalidasi ketat. Integritas nilai transaksi wajib dijaga server-side.
+
+**Scope-IN**
+- `src/app/api/orders/route.ts` — wajibkan `shipping_cost >= 0`, `total > 0`, `discount <= subtotal` (tolak 400)
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Sumber ongkir dari settings / keranjang / checkout (milik T-54)
+- Validasi harga item & voucher yang sudah ada
+
+**Kriteria Selesai**
+1. Payload `shipping_cost` negatif / `total <= 0` / `discount > subtotal` ditolak 400
+2. Alur checkout normal tidak berubah
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-51 — Xendit create: simpan referensi invoice via service-role
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P0 |
+| Sumber | Audit 2026-08-29 — temuan HIGH-4; TERKONFIRMASI live DB via MCP (policy UPDATE orders = admin-only, tidak ada policy user) |
+
+**Tujuan:** `src/app/api/payments/xendit/create/route.ts` meng-update `orders.xendit_invoice_id/url` memakai client session customer — pasti ditolak RLS (policy UPDATE orders hanya untuk admin). Akibatnya invoice dibuat di Xendit lalu di-expire dan user menerima 500: pembayaran online tidak berfungsi.
+
+**Scope-IN**
+- `src/app/api/payments/xendit/create/route.ts` — update referensi invoice memakai `createAdminClient()` (service-role); kepemilikan order TETAP diverifikasi via session client sebelum call
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Webhook Xendit, alur transfer manual (`confirm-payment`), policy RLS orders
+- `src/utils/supabase/admin.ts`
+
+**Kriteria Selesai**
+1. Kode: referensi invoice tersimpan ke orders tanpa bergantung policy user
+2. Runtime E2E ditandai UNVERIFIED sampai owner mengisi env Xendit (pola T-02) — transfer manual tetap utuh
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-52 — Perbaiki syntax error full_schema.sql
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P0 |
+| Sumber | Audit 2026-08-29 — temuan HIGH-5; policy & kolom terverifikasi 100% sinkron live via MCP (52 public + 3 storage), kerusakan murni sintaks file |
+
+**Tujuan:** `supabase/migrations/20260822130000_full_schema.sql` (SATU-SATUNYA pedoman skema, DB-SYNC-1) tidak bisa dieksekusi: statement `create table if not exists public.store_settings (` terpotong di baris ±599 karena blok `-- PRODUCT Q&A (T-06.1)` tersisip di tengah statement; definisi lengkap store_settings baru muncul di baris ±636.
+
+**Scope-IN**
+- `supabase/migrations/20260822130000_full_schema.sql` — hapus fragmen statement terpotong, pertahankan definisi lengkap; review cepat bagian lain agar file utuh sebagai init + seed
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Live DB — DILARANG mengeksekusi file ini ke live (mengandung DELETE seed T-47)
+- Struktur/policy/fungsi apa pun (sudah sinkron live)
+
+**Kriteria Selesai**
+1. File terbukti parse-able & bisa dieksekusi penuh untuk init project baru (uji di Postgres disposable lokal / scratch project — bukan live)
+2. Tidak ada perubahan makna skema vs live DB (DB-SYNC-1 kembali utuh)
+3. Bukti uji parse tercatat di Bukti
+
+---
+
+### T-53 — Newsletter via API route (RLS-safe)
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Audit 2026-08-29 — temuan HIGH-3; TERKONFIRMASI live via MCP (write store_settings admin-only; key `subscribed_emails` tidak ada = belum pernah tersimpan) |
+
+**Tujuan:** Newsletter di homepage di-upsert langsung dari browser (anon) ke `store_settings` — pasti ditolak RLS — lalu UI tetap menampilkan sukses. Data subscriber hilang diam-diam.
+
+**Scope-IN**
+- API route baru `src/app/api/newsletter/route.ts` (POST) — rate-limit, validasi email, dedupe, tulis via `createAdminClient()` ke key `subscribed_emails` (server-side only)
+- `src/components/HomeClient.tsx` — panggil route baru; hapus fallback "tetap anggap berhasil"
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Policy RLS store_settings (tetap ketat admin-only)
+- Provider email marketing eksternal
+
+**Kriteria Selesai**
+1. Subscribe tersimpan di live DB (verifikasi via MCP: key `subscribed_emails` berisi daftar email)
+2. Email duplikat tidak tersimpan dobel; guest & login sama-sama jalan
+3. Gagal simpan = toast error (bukan success palsu)
+4. Ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-54 — Integrasi RajaOngkir V2 (Komerce): cek ongkir real + satukan logika ongkir
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Referensi | https://rajaongkir.com/docs/shipping-cost/getting_started/about — API V2 (Komerce): base `https://rajaongkir.komerce.id/api/v1/`, auth header `key`; `POST /calculate/domestic-cost` (origin, destination = area ID subdistrict, weight gram, courier kode mis. `jne`); `GET /destination/domestic-destination?search=` (pencarian area) |
+| Keputusan owner | 2026-08-29: key Komerce/V2 sudah tersedia (E2E bisa diverifikasi saat implementasi); presisi subdistrict dengan picker alamat + kolom baru |
+
+**Tujuan:** Ongkir saat ini flat hardcoded 12000 per kurir di checkout, gratis-ongkir hanya diterapkan di keranjang (inkonsisten), dan ongkir dipercaya dari client (diperkuat T-50). Integrasi ongkir real RajaOngkir V2 + satu sumber logika ongkir + recompute server saat order.
+
+**Scope-IN**
+- Migration via MCP + mirror full_schema + `src/types/database.ts`: kolom `shipping_addresses.destination_area_id text` + `destination_area_label text` (DB-SYNC-1/2/3)
+- `store_settings.shipping` += `origin_area_id` + field di admin Pengaturan → tab Pengiriman
+- Route baru `src/app/api/shipping/destination/route.ts` — proxy pencarian area (rate-limit, auth)
+- Route baru `src/app/api/shipping/cost/route.ts` — POST address_id + items → weight dihitung server dari DB (`products.weight_gram` × qty), origin dari settings → daftar kurir/service/etd/cost
+- `src/lib/shipping.ts` — sumber tunggal ongkir (flat fallback + gratis-ongkir threshold), dipakai keranjang & checkout
+- Form alamat (checkout + profil) — search picker area, simpan via `/api/addresses` (whitelist field baru)
+- `src/app/api/orders/route.ts` — bila RajaOngkir aktif: ongkir FINAL direcompute server dari `destination_area_id` di DB + weight DB + courier code payload; nilai client diabaikan (penguat T-50)
+- `.env.example` — `RAJAONGKIR_API_KEY`; README (fitur + env); AGENTS.md §20 Live Systems RajaOngkir
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Waybill/tracking API, kurir instan (GoSend/Grab) sampai kebutuhan nyata
+- Schema lain di luar kolom baru di atas
+
+**Kriteria Selesai**
+1. Dengan key: ongkir nyata tampil per kurir/service di checkout; order terbuat dengan ongkir hasil recompute server
+2. Tanpa key: fallback flat rate + gratis-ongkir tetap berfungsi penuh (pola graceful Xendit/notify)
+3. Keranjang & checkout menampilkan sumber ongkir yang sama (tidak ada lagi 12000 hardcoded / "Gratis!" lalu ditagih)
+4. Migration live terverifikasi via MCP (kolom ada, advisor tidak bertambah) + full_schema tersinkron
+5. E2E dengan key Komerce owner + ketiga gerbang DoD hijau + bukti tercatat
+
+---
+
+### T-55 — Konsistensi order & stok (4 sub-bug)
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P1 |
+| Sumber | Audit 2026-08-29 — temuan MEDIUM terverifikasi kode + live DB |
+
+**Aturan khusus (pola T-04):** satu sub-bug = satu commit; task induk DONE jika semua sub DONE atau di-skip dengan alasan eksplisit pemilik project.
+
+| Sub-ID | Bug (ringkas) | Status |
+|--------|---------------|--------|
+| T-55.1 | Rollback `createOrder` delete orders/order_items via client user — RLS-ditolak (tidak ada policy DELETE) → order yatim tertinggal; cleanup via service-role; sekalian: addresses PUT/DELETE cek baris terdampak (bukan success palsu) | BACKLOG |
+| T-55.2 | `flash_stock` tidak divalidasi server di `/api/orders` (hanya `products.stock`) — kuota flash bisa ditembus | BACKLOG |
+| T-55.3 | Whitelist status: admin orders PUT (transisi valid via `updateOrderStatus`) & customers PUT (`aktif\|nonaktif\|diblokir`) | BACKLOG |
+| T-55.4 | Notifikasi customer "Pembayaran Dilaporkan" dibuat di dalam RPC `request_payment_confirmation` (SECURITY DEFINER) — insert client pasti ditolak policy INSERT notifications admin-only | BACKLOG |
+
+**Kriteria Selesai (per sub)**
+1. Perilaku terverifikasi (uji manual / review SQL); tidak menambah parallel write path
+2. Ketiga gerbang DoD hijau + bukti tercatat; commit `<T-ID.sub>: ...`
+
+---
+
+### T-56 — Hardening & housekeeping kecil
+
+| Field | Isi |
+|---|---|
+| Status | `BACKLOG` |
+| Prioritas | P2 |
+| Sumber | Audit 2026-08-29 — temuan LOW + housekeeping |
+
+**Aturan khusus (pola T-04):** satu sub = satu commit.
+
+| Sub-ID | Item (ringkas) | Status |
+|--------|----------------|--------|
+| T-56.1 | `GET /api/admin/settings` tidak lagi mengembalikan isi penuh `seo.ga_service_account` (private key tak transit browser; nilai penuh hanya lewat PUT) | BACKLOG |
+| T-56.2 | SEO/content: sitemap exclude `/keranjang` `/checkout` `/profil`; llms.txt perbaiki link `/kategori` (404); default title layout & homepage → skincare (copy drift pasca T-47) | BACKLOG |
+| T-56.3 | Housekeeping workspace: bersihkan `supabase/.temp` (ter-link project lama `pvvjfnabrywvnoolipji`) + `.claude/worktrees` basi — keduanya gitignored; live DB tidak disentuh | BACKLOG |
+
+**Kriteria Selesai (per sub)**
+1. Perilaku terverifikasi; tidak ada regresi fitur
+2. Ketiga gerbang DoD hijau + bukti tercatat; commit `<T-ID.sub>: ...`
