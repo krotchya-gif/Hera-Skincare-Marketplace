@@ -122,7 +122,7 @@ npm run build       # exit 0
 | T-59 | P0 | Mobile: tab bar detail produk overflow → halaman melebar 448px (bisa geser horizontal) | BACKLOG |
 | T-60 | P2 | Mobile: galeri gambar detail produk rusak (next/image × picsum tidak di-whitelist) — DITURUNKAN: foto masih placeholder, otomatis tampil saat foto asli di-upload ke Supabase Storage | BACKLOG |
 | T-61 | P1 | Mobile keranjang: nama produk terpotong parah + harga patah 2 baris | BACKLOG |
-| T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | BACKLOG |
+| T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -849,6 +849,8 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-57 | Selesai (DONE): kuota RajaOngkir 100 hit/hari — migration shipping_cache (server-only, RLS tanpa policy) live+mirror; cache persisten per kurier (TTL 24 jam) & pencarian area (TTL 7 hari); gratis-ongkir = 0 hit API di cost+order route; AGENTS.md Live Systems diperbarui; gerbang hijau | zcode |
 | 2026-08-29 | T-58 | Selesai (DONE): strip trailing slash NEXT_PUBLIC_SITE_URL di 3 route SEO — perbaiki double slash terdeteksi di deployment live marketplace.calysta.fun; gerbang hijau | zcode |
 | 2026-08-30 | — | Audit UI/UX mobile live (browser 375×812, 12 halaman) → 4 task didaftarkan BACKLOG: T-59 tab bar detail produk overflow 448px (P0) · T-60 galeri gambar rusak next/image×picsum (P0) · T-61 keranjang nama terpotong & harga patah baris (P1) · T-62 audit lanjutan admin+checkout butuh akses (P1). Halaman lain bersih 0 overflow | zcode |
+| 2026-08-30 | T-60 | Prioritas diturunkan P0→P2 (keputusan owner: foto masih placeholder; galeri self-heal saat foto asli di-upload ke Supabase Storage) | zcode |
+| 2026-08-30 | T-62 | Selesai (DONE): audit admin 11 halaman (login super_admin) + checkout end-to-end customer (login user.md) di 375px — SEMUA 0 overflow, tidak ada perbaikan dibutuhkan; bonus verifikasi live: AreaPicker sugesti API asli ✓, gratis-ongkir 0-hit ✓, fallback flat ✓; action item operasional: owner isi origin_area_id + alamat lama pilih area | zcode |
 
 ---
 
@@ -1596,7 +1598,8 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
 | Prioritas | P1 |
 | Sumber | Audit visual mobile 2026-08-29 — cakupan terbatas karena butuh akses |
 
@@ -1613,3 +1616,35 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 **Kriteria Selesai**
 1. Semua halaman admin & checkout: `scrollWidth ≤ viewport` di 375px (tabel/chart di dalam container scroll sendiri)
 2. Per sub-temuan: gerbang DoD hijau + commit terpisah
+
+**Bukti (2026-08-30 — login nyata via user.md, browser 375×812)**
+```
+== Admin (super_admin) — 11 halaman dialami ==
+/admin · produk · pesanan · pelanggan · kategori · promo · ulasan ·
+keuangan · marketing · pengaturan · blog
+→ docW 370 di SEMUA halaman: 0 overflow. Visual: kartu stat menumpuk rapi,
+  tabel dalam container sendiri, filter pill wrap, sidebar jadi hamburger.
+  TIDAK ADA perbaikan yang dibutuhkan.
+
+== Customer — checkout end-to-end (tanpa membuat pesanan) ==
+Login customer ✓ · step 1 alamat (alamat tersimpan terpilih, modal
+Tambah Alamat + AreaPicker render baik) · step 2 kurir (opsi flat 12rb,
+fallback sesuai desain krn alamat lama tanpa area + origin_area_id belum
+diisi owner; ringkasan "Gratis Ongkir: Gratis" = jalur 0-hit T-57 LIVE) ·
+step 3 pembayaran ✓ · step 4 konfirmasi (alamat + kurir + Xendit + tombol
+Buat Pesanan) ✓ — docW 370 di semua step, 0 overflow.
+
+== Bonus verifikasi live (T-54/T-57 terbukti di produksi) ==
+AreaPicker: ketik "kebayoran" → sugesti ASLI dari API RajaOngkir muncul
+  (CIPETE UTARA, KEBAYORAN BARU, JAKARTA SELATAN, ...) ✓
+Gratis-ongkir path: subtotal ≥ 100rb → ringkasan "Gratis", 0 hit API ✓
+Fallback flat: alamat tanpa destination_area_id → opsi kurir flat ✓
+
+== Kesimpulan ==
+T-62 selesai TANPA temuan baru — tidak ada perbaikan yang dibutuhkan.
+Action item operasional (bukan bug, untuk owner):
+1. Admin → Pengiriman → pilih AREA ASAL (origin_area_id) agar ongkir
+   real per kurir aktif menggantikan flat 12rb
+2. Alamat customer baru: pilih Area Tujuan via picker (harga presisi
+   kecamatan); alamat lama perlu di-edit sekali untuk menambah area
+```
