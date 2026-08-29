@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge";
+// T-46: runtime default nodejs (edge deprecated di Next 16)
 
 export async function GET() {
   return new ImageResponse(

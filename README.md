@@ -83,7 +83,7 @@ marketplace/
 ### Infrastructure
 - **Next.js 16 Proxy** — `src/proxy.ts` (JANGAN buat `middleware.ts`)
 - **Dynamic SEO** — sitemap.xml, robots.txt, meta tags per-page, Meta Pixel & GA4
-- **Web App PWA** — Registrasi manifest PWA dinamis, dynamic favicon generator, dynamic apple touch icon, serta dynamic routes 192px/512px menggunakan Next.js `ImageResponse` (edge runtime).
+- **Web App PWA** — Registrasi manifest PWA dinamis, dynamic favicon generator, dynamic apple touch icon, serta dynamic routes 192px/512px menggunakan Next.js `ImageResponse` (nodejs runtime).
 - **Security** — CSP + headers di `next.config.ts`, rate limiting, atomic stock, input validation. Fungsi RPC `SECURITY DEFINER` sudah di-hardening: `EXECUTE` dicabut dari `anon`/`PUBLIC` (lihat bagian Hardening di `supabase/migrations/20260822130000_full_schema.sql`).
 - **Auth** — proxy guard admin routes + `verifyAdminRole()` per-handler
 - **Toast Notifications** — Integrasi custom toast menggantikan semua dialog `alert()` bawaan browser.

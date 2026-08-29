@@ -106,6 +106,7 @@ npm run build       # exit 0
 | T-42 | P1 | Tab SEO extend (GTM/Clarity/Ads/TikTok, AI crawler block, GEO/JSON-LD) | DONE |
 | T-43 | P1 | Analytics eksternal GA4 + GSC (angka real via Google API) | DONE |
 | T-44 | P2 | Route llms.txt (GEO / AI crawler) | DONE |
+| T-46 | P1 | Hapus Edge Runtime deprecated → nodejs (4 file ikon + README) | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -816,6 +817,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-29 | T-34 s/d T-36 | Dimulai & selesai (DONE): T-34 view product_sales_summary (T-33) DIHAPUS karena terdeteksi security_definer_view ERROR advisor — diganti RPC get_product_sales_summary() SECURITY DEFINER (pola has_role, by-design WARN); getProductStatsMap & getBestSellerProducts & sort popular kini pakai RPC (satu sumber sold, fix bug sold=0 untuk guest/anon) · T-35 index 3 FK (categories.parent_id, product_qna.user_id, reviews.order_id) · T-36 komentar ponytail dibersihkan + AGENTS.md §22 PERF-NOTE-1/2 & DB-NOTE-1 (SKIP verdict unused_index, multiple_permissive, auth_rls_initplan, rate limiter, RPC by-design); full_schema = live (migration 20260829160000_sold_count_rpc); advisor security 0 ERROR; gerbang typecheck 0 · build 0 · lint 13 | ox-alpha |
 | 2026-08-29 | T-38 | Dimulai & selesai (DONE): hapus fungsi mati increment_voucher_usage dari live (migration 20260829170000_drop_dead_voucher_function) + 3 lokasi di full_schema (2 definisi + 1 revoke) — digantikan RPC redeem_voucher (T-21); verifikasi: fungsi 0 tersisa, advisor bersih, typecheck 0 · build 0 | ox-alpha |
 | 2026-08-29 | T-39 s/d T-44 | Dimulai & selesai (DONE): fitur Marketing & SEO mengacu docs seo.md — T-40 event_logs (RLS anon insert/admin manage) + lib/tracking.ts (5 pemicu: view/add_to_cart/checkout_start/order_created/payment_success) + API GET/PATCH admin/events + UI retry · T-41 utm_visits + orders.utm_source (capture URL→localStorage→checkout) + builder UTM + laporan source (kunjungan/order/revenue) via API admin/utm · T-42 tab SEO extend (GTM/Clarity/Ads/TikTok inject layout, AI crawler block 14 bot di robots.txt, geo JSON-LD LocalBusiness) · T-43 lib/google-analytics.ts (JWT RS256 manual node:crypto, GA4 runReport + GSC searchAnalytics, cached) + API admin/analytics + UI angka real · T-44 route llms.txt · T-39 marketing jadi 4 tab (Ringkasan/Analytics/Event/UTM), SMS Broadcast dihapus; DB via MCP (20260829180000_marketing_features) + full_schema sync; gerbang typecheck 0 · build 0 · lint 13 · advisor 0 ERROR | ox-alpha |
+| 2026-08-29 | T-46 | Dimulai & selesai (DONE): hapus `export const runtime = "edge"` di 4 file ikon (icon.tsx, apple-icon.tsx, icon-192/512.png route) — Edge Runtime deprecated di Next 16, ImageResponse mendukung nodejs runtime; README disinkronkan; gerbang typecheck 0 · build 0 (ikon tetap render) · lint 13 | ox-alpha |
 
 ---
 
