@@ -136,7 +136,6 @@ npm run build       # exit 0
 | T-73 | P2 | Catatan "Promo Terbatas" pada kolom diskon produk (revisi owner — panel dibatalkan) | DONE |
 | T-74 | P1 | Lonceng notifikasi customer (dropdown panel, bukan link) | DONE |
 | T-75 | P1 | Banner: dua layout gambar (desktop & mobile) + catatan ukuran | DONE |
-| T-73 | P1 | Admin: panel "Promo Terbatas" di /admin/promo (kelola diskon produk) | BACKLOG |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
