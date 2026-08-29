@@ -111,7 +111,7 @@ npm run build       # exit 0
 | T-48 | P1 | Sinkronisasi dokumentasi pasca T-47 (README 36 route, AGENTS.md) | DONE |
 | T-49 | P0 | Fix checkout voucher (voucher_code tidak terkirim ke /api/orders) | DONE |
 | T-50 | P0 | Validasi shipping_cost & total di /api/orders (tolak negatif) | DONE |
-| T-51 | P0 | Xendit create: simpan referensi invoice via service-role | BACKLOG |
+| T-51 | P0 | Xendit create: simpan referensi invoice via service-role | DONE |
 | T-52 | P0 | Perbaiki syntax error full_schema.sql (store_settings terpotong) | BACKLOG |
 | T-53 | P1 | Newsletter via API route (RLS-safe, tanpa success palsu) | BACKLOG |
 | T-54 | P1 | Integrasi RajaOngkir V2 (Komerce) — cek ongkir real + satukan logika ongkir | BACKLOG |
@@ -1011,7 +1011,8 @@ build     : EXIT 0
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-29 / 2026-08-29 |
 | Prioritas | P0 |
 | Sumber | Audit 2026-08-29 — temuan HIGH-4; TERKONFIRMASI live DB via MCP (policy UPDATE orders = admin-only, tidak ada policy user) |
 
@@ -1029,6 +1030,28 @@ build     : EXIT 0
 1. Kode: referensi invoice tersimpan ke orders tanpa bergantung policy user
 2. Runtime E2E ditandai UNVERIFIED sampai owner mengisi env Xendit (pola T-02) — transfer manual tetap utuh
 3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Perubahan ==
+~ src/app/api/payments/xendit/create/route.ts
+  - import createAdminClient
+  - guard env: XENDIT_SECRET_KEY ATAU SUPABASE_SERVICE_ROLE_KEY kosong → 503
+    (transfer manual tetap jalan)
+  - langkah 7: update orders.xendit_invoice_id/url via createAdminClient()
+    (kepemilikan order tetap diverifikasi via session client di langkah 4;
+    service-role hanya menulis referensi invoice setelah verifikasi)
+
+== Gerbang ==
+lint      : 13 problems (baseline sama, 0 warning)
+typecheck : tsc --noEmit → EXIT 0
+build     : EXIT 0
+
+== UNVERIFIED (pola T-02) ==
+E2E runtime (create invoice → tersimpan → bayar → webhook) menunggu owner
+mengisi XENDIT_SECRET_KEY + XENDIT_CALLBACK_TOKEN + SUPABASE_SERVICE_ROLE_KEY
+dan mendaftarkan callback URL di dashboard Xendit.
+```
 
 ---
 

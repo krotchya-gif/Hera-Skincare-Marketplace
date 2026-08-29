@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 // T-02: Buat / pakai-ulang Xendit Invoice untuk satu order milik user yang login.
@@ -16,8 +17,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Guard konfigurasi — transfer manual tetap jalan bila env kosong
+    // T-51: service-role key juga wajib (langkah 7 menulis via admin client)
     const secret = process.env.XENDIT_SECRET_KEY;
-    if (!secret) {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!secret || !serviceKey) {
       return NextResponse.json(
         { error: "Pembayaran online belum tersedia. Silakan gunakan transfer manual." },
         { status: 503 }
@@ -114,7 +117,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 7. Simpan referensi invoice ke order
-    const { error: updateError } = await supabase
+    // T-51: policy UPDATE orders = admin-only (by design) — tulis referensi
+    // invoice via service-role; kepemilikan order sudah diverifikasi langkah 4.
+    const adminClient = createAdminClient();
+    const { error: updateError } = await adminClient
       .from("orders")
       .update({
         xendit_invoice_id: invoice.id,
