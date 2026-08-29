@@ -111,6 +111,7 @@ export default function SettingsPage() {
   const [seoGeoLat, setSeoGeoLat] = useState("");
   const [seoGeoLng, setSeoGeoLng] = useState("");
   const [seoGaServiceAccount, setSeoGaServiceAccount] = useState("");
+  const [seoGaConfigured, setSeoGaConfigured] = useState(false); // T-56.1
   const [seoGa4PropertyId, setSeoGa4PropertyId] = useState("");
   const [seoGscSiteUrl, setSeoGscSiteUrl] = useState("");
   const [seoDefaultTitle, setSeoDefaultTitle] = useState("");
@@ -215,11 +216,11 @@ export default function SettingsPage() {
         setSeoAiBlocked(Array.isArray(settings.seo.ai_crawlers_block) ? settings.seo.ai_crawlers_block : []);
         setSeoGeoLat(settings.seo.geo_lat || "");
         setSeoGeoLng(settings.seo.geo_lng || "");
-        setSeoGaServiceAccount(
-          settings.seo.ga_service_account && typeof settings.seo.ga_service_account === "object"
-            ? JSON.stringify(settings.seo.ga_service_account, null, 2)
-            : ""
-        );
+        const sa = settings.seo.ga_service_account as Record<string, unknown> | undefined;
+        // T-56.1: GET hanya mengirim penanda __configured — private key tidak
+        // pernah transit browser; textarea kosong = pertahankan nilai lama
+        setSeoGaConfigured(Boolean(sa && typeof sa === "object" && sa.__configured));
+        setSeoGaServiceAccount("");
         setSeoGa4PropertyId(settings.seo.tracking_ga4_property_id || "");
         setSeoGscSiteUrl(settings.seo.tracking_gsc_site_url || "");
         setSeoDefaultTitle(settings.seo.default_title || "");
@@ -461,6 +462,9 @@ export default function SettingsPage() {
           toast("error", "Service account harus berupa JSON yang valid.");
           return;
         }
+      } else if (seoGaConfigured) {
+        // T-56.1: kosong + sudah terkonfigurasi = pertahankan nilai lama di DB
+        gaServiceAccount = { __configured: true };
       }
 
       const res = await fetch("/api/admin/settings", {
@@ -1177,14 +1181,17 @@ export default function SettingsPage() {
             <p className="text-[10px] text-gray-400 mb-3">Isi service account (JSON) untuk menampilkan angka analytics real di halaman Marketing. Kredensial tetap di server.</p>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Service Account JSON</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                  Service Account JSON {seoGaConfigured && <span className="text-green-600 font-semibold">✓ terkonfigurasi (nilai disembunyikan)</span>}
+                </label>
                 <textarea
                   value={seoGaServiceAccount}
                   onChange={(e) => setSeoGaServiceAccount(e.target.value)}
                   rows={5}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 resize-none font-mono"
-                  placeholder='{"type":"service_account","client_email":"...","private_key":"...","token_uri":"https://oauth2.googleapis.com/token"}'
+                  placeholder={seoGaConfigured ? "Kosongkan untuk mempertahankan yang terpasang — isi ulang JSON untuk mengganti" : '{"type":"service_account","client_email":"...","private_key":"...","token_uri":"https://oauth2.googleapis.com/token"}'}
                 />
+                <p className="text-[10px] text-gray-400 mt-1">T-56.1: private key tidak pernah dikirim balik ke browser setelah disimpan.</p>
               </div>
               <div className="grid grid-cols-2 gap-5">
                 <div>

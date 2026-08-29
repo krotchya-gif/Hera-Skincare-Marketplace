@@ -40,6 +40,14 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {});
 
+    // T-56.1: private key service-account TIDAK dikirim ke browser —
+    // kirim penanda __configured saja; nilai penuh tetap di DB (PUT
+    // mem-preserve bila payload tidak membawa objek baru).
+    const seoRaw = settingsMap["seo"] as Record<string, unknown> | undefined;
+    if (seoRaw && seoRaw.ga_service_account && typeof seoRaw.ga_service_account === "object") {
+      settingsMap["seo"] = { ...seoRaw, ga_service_account: { __configured: true } };
+    }
+
     // Ensure default settings are returned if not set in DB
     const finalSettings: Record<string, unknown> = {
       ...settingsMap, // include all stored keys (pages, etc.)
@@ -217,11 +225,32 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Key and Value are required" }, { status: 400 });
     }
 
+    // T-56.1: bila payload seo tidak membawa objek ga_service_account yang
+    // valid (mis. hanya penanda __configured dari GET), pertahankan nilai
+    // lama di DB — private key tidak boleh ter-timpa mask/kosong.
+    let finalValue = value;
+    if (key === "seo") {
+      const incoming = (value ?? {}) as Record<string, unknown>;
+      const sa = incoming.ga_service_account as Record<string, unknown> | null | undefined;
+      const hasNewSa =
+        !!sa && typeof sa === "object" && !Array.isArray(sa) &&
+        Object.keys(sa).length > 0 && !sa.__configured;
+      if (!hasNewSa) {
+        const { data: current } = await supabase
+          .from("store_settings")
+          .select("value")
+          .eq("key", "seo")
+          .maybeSingle();
+        const existingSa = (current?.value as Record<string, unknown> | null)?.ga_service_account ?? null;
+        finalValue = { ...incoming, ga_service_account: existingSa };
+      }
+    }
+
     const { error } = await supabase
       .from("store_settings")
       .upsert({
         key,
-        value,
+        value: finalValue,
         updated_at: new Date().toISOString()
       });
 

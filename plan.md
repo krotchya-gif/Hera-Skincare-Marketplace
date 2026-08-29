@@ -1317,7 +1317,8 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `IN_PROGRESS` |
+| Mulai / Selesai | 2026-08-29 / - |
 | Prioritas | P2 |
 | Sumber | Audit 2026-08-29 — temuan LOW + housekeeping |
 
@@ -1325,10 +1326,30 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 
 | Sub-ID | Item (ringkas) | Status |
 |--------|----------------|--------|
-| T-56.1 | `GET /api/admin/settings` tidak lagi mengembalikan isi penuh `seo.ga_service_account` (private key tak transit browser; nilai penuh hanya lewat PUT) | BACKLOG |
-| T-56.2 | SEO/content: sitemap exclude `/keranjang` `/checkout` `/profil`; llms.txt perbaiki link `/kategori` (404); default title layout & homepage → skincare (copy drift pasca T-47) | BACKLOG |
+| T-56.1 | `GET /api/admin/settings` tidak lagi mengembalikan isi penuh `seo.ga_service_account` (private key tak transit browser; nilai penuh hanya lewat PUT) | DONE |
+| T-56.2 | SEO/content: sitemap exclude `/keranjang` `/checkout` `/profil`; llms.txt perbaiki link `/kategori` (404); default title layout & homepage → skincare (copy drift pasca T-47) | DONE |
 | T-56.3 | Housekeeping workspace: bersihkan `supabase/.temp` (ter-link project lama `pvvjfnabrywvnoolipji`) + `.claude/worktrees` basi — keduanya gitignored; live DB tidak disentuh | BACKLOG |
 
 **Kriteria Selesai (per sub)**
 1. Perilaku terverifikasi; tidak ada regresi fitur
 2. Ketiga gerbang DoD hijau + bukti tercatat; commit `<T-ID.sub>: ...`
+
+**Bukti T-56.1**
+```
+~ api/admin/settings GET  — seo.ga_service_account diganti penanda
+  {__configured:true} sebelum dikirim ke browser
+~ api/admin/settings PUT  — bila payload seo tidak membawa objek baru,
+  nilai lama di DB dipertahankan (mask/kosong tidak menimpa private key)
+~ admin/pengaturan        — textarea tak lagi menampilkan nilai (badge
+  "terkonfigurasi"), kosong + terkonfigurasi = pertahankan (marker dikirim)
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+**Bukti T-56.2**
+```
+~ sitemap.xml/route.ts — /keranjang /checkout /profil dihapus dari sitemap
+~ llms.txt/route.ts    — link /kategori (404) dihapus dari daftar halaman
+~ layout.tsx + page.tsx — default title "Marketplace Produk Rumah Tangga"
+  → "Marketplace Skincare & Perawatan Pribadi" (copy drift T-47)
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
