@@ -61,10 +61,10 @@ marketplace/
 - **Perbandingan** — Bandingkan hingga 4 produk side-by-side (`/perbandingan`)
 - **Keranjang** — Checkbox, qty, voucher, ringkasan
 - **Checkout** — 5-step: Alamat → Pengiriman → Pembayaran → Konfirmasi → Selesai; UTM campaign tersimpan ke order; ongkir real via RajaOngkir V2 (Komerce) + gratis ongkir konsisten, fallback tarif flat
-- **Profil** — Tab pesanan, wishlist, alamat, edit profil, aksi per-status
+- **Profil** — Tab pesanan, **wishlist (fungsional — localStorage + daftar produk)**, alamat, edit profil, aksi per-status
 - **Pembayaran** — Info rekening dari DB, lapor bayar (verifikasi admin), **bayar online via Xendit** (QRIS/e-wallet/VA) + salin/kirim link invoice via WhatsApp
-- **Voucher** — Daftar voucher + copy code
-- **7 halaman statis** — Tentang Kami, Karir, Blog, Hubungi Kami (WhatsApp + Maps), FAQ, Cara Belanja, Pengembalian Barang
+- **Voucher** — Daftar voucher aktif (kadaluarsa otomatis tersembunyi) + copy code
+- **7 halaman statis** — Tentang Kami, Karir, **Blog (artikel + gambar cover + tag/keyword)**, Hubungi Kami (WhatsApp + Maps), FAQ, Cara Belanja, Pengembalian Barang
 - **`llms.txt`** — file teks untuk AI crawler (GEO)
 
 ### Mobile
@@ -97,7 +97,7 @@ marketplace/
 - **Pembayaran Online** — Xendit Invoice API v2 (QRIS/e-wallet/VA/kartu/retail) via route server-side; webhook `x-callback-token` verified + idempotent + cek `paid_amount`; alur transfer manual tetap utuh (customer lapor → admin verifikasi).
 - **Notifikasi Otomatis** — Email (Resend) & WhatsApp (Fonnte) ke customer saat status pesanan berubah; fire-and-forget, nonaktif bila env kosong.
 - **Push Notification (T-64)** — Web Push VAPID: opt-in di homepage (user login), service worker `public/sw.js`, broadcast dari tab Marketing → Push; prune langganan mati otomatis; nonaktif bila env kosong.
-- **Banner Promosi (T-63)** — CRUD banner di tab Marketing → Banner, tampil sebagai carousel auto-rotate di homepage.
+- **Banner Promosi (T-63/78/79)** — CRUD banner di tab Marketing → Banner; 2 posisi: **Hero (atas, 16:5/4:3)** & **Promo (bawah, 11:2/2:1)**; dua layout gambar (desktop & mobile, ukuran dicantumkan di form sebagai patokan); carousel auto-rotate di homepage.
 - **Event Tracking & UTM** — event_logs (5 pemicu) + utm_visits + orders.utm_source untuk atribusi kampanye.
 - **Ikon** — Semua UI memakai icon Lucide (termasuk kategori — nama icon disimpan di DB, dirender via `CategoryIcon`).
 
