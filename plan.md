@@ -120,7 +120,7 @@ npm run build       # exit 0
 | T-57 | P0 | RajaOngkir kuota 100 hit/hari — cache persisten DB + short-circuit gratis ongkir | DONE |
 | T-58 | P1 | Normalisasi NEXT_PUBLIC_SITE_URL (double slash di sitemap/robots/llms.txt) | DONE |
 | T-59 | P0 | Mobile: tab bar detail produk overflow → halaman melebar 448px (bisa geser horizontal) | DONE |
-| T-60 | P2 | Mobile: galeri gambar detail produk rusak (next/image × picsum tidak di-whitelist) — DITURUNKAN: foto masih placeholder, otomatis tampil saat foto asli di-upload ke Supabase Storage | BACKLOG |
+| T-60 | P2 | Mobile: galeri gambar detail produk rusak (next/image × picsum tidak di-whitelist) — DITURUNKAN: foto masih placeholder, otomatis tampil saat foto asli di-upload ke Supabase Storage — SELESAI: foto asli 16/16 produk ter-upload (2026-08-31) | DONE |
 | T-61 | P1 | Mobile keranjang: nama produk terpotong parah + harga patah 2 baris | DONE |
 | T-62 | P1 | Mobile audit lanjutan: admin dashboard & checkout terisi (butuh akses akun) | DONE |
 | T-63 | P1 | Fitur banner promosi: tabel banners + admin CRUD (tab Banner di marketing) + carousel storefront | DONE |
@@ -146,6 +146,8 @@ npm run build       # exit 0
 | T-83 | P2 | Blog: gambar cover (upload temp, 16:9) + tag/keyword chips di form admin & kartu storefront | DONE |
 | T-84 | P0 | Fix blog crash: artikel lama tanpa tags/image_url (normalisasi fetch admin + guard Array.isArray storefront) | DONE |
 | T-85 | P0 | Fix dashboard pesanan kosong: embed profiles(...) invalid (PGRST200) di 6 query → attachProfiles() bulk + search nama via user_id.in; sync live DB prefix order number HS | DONE |
+| T-86 | P2 | Hapus dekorasi hero homepage: 3 kartu ikon (droplets/sparkles/flower2) + progress bar — revisi owner | DONE |
+| T-87 | P2 | Sidebar admin: link "Lihat Website" (buka tab baru) di atas profil admin — revisi owner | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -903,6 +905,9 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-83 | Dimulai & selesai (DONE): blog gambar cover + tag — BlogArticle += image_url (upload temp, note 16:9 800×450) + tags (TagInput chips); form admin + kartu storefront render gambar (fallback icon) & chip #tag; tersimpan di page_blog jsonb tanpa migration. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-30 | T-84 | Dimulai & selesai (DONE): REGRESI T-83 — blog "Terjadi Kesalahan" (error boundary). Akar masalah: artikel lama (tanpa key tags/image_url, terverifikasi live) diteruskan ke TagInput → tags.map() TypeError. Fix: normalisasi saat fetch admin (tags → [], image_url → "") + guard Array.isArray di storefront. Gerbang lint 13 · typecheck 0 · build 0 · push | zcode |
 | 2026-08-30 | T-85 | Dimulai & selesai (DONE): dashboard pesanan admin kosong meski stats 2 Menunggu — akar masalah: getAllOrders dkk meng-embed profiles(...) dari tabel yang FK-nya ke auth.users (tanpa relasi FK langsung) → PostgREST PGRST200 → query gagal diam-diam (baru terlihat karena orders baru berisi data). Fix: helper src/lib/profiles.ts attachProfiles() (bulk fetch + tempel key profiles) dipakai 6 lokasi (getAllOrders + search nama via user_id.in, getOrderById, recent orders dashboard, getAllReviews, getReviewsByProduct, Q&A admin); export CSV ikut tertolong. Bonus DB sync: generate_order_number live masih 'TJ' padahal full_schema sudah 'HS' → apply_migration prefix HS (order lama TJ dibiarkan — terikat invoice Xendit, webhook lookup external_id = order_number). Gerbang lint 13 · typecheck 0 · build 0 · REST live 200 · push | zcode |
+| 2026-08-31 | T-60 | Selesai (DONE): galeri detail produk self-heal tanpa kode — owner meng-upload foto asli untuk 16/16 produk (yang terakhir Aloe Vera Gel Moisturizer masih picsum). Verifikasi live via MCP: semua product_images.is_primary menunjuk Supabase Storage product-images, 0 picsum tersisa; whitelist **.supabase.co sudah mencakup, whitelist picsum + set sizes TIDAK dieksekusi (tidak diperlukan). Gerbang lint 13 · typecheck 0 · build 0 | zcode |
+| 2026-08-31 | T-86 | Dimulai & selesai (DONE): revisi owner — dekorasi hero homepage (3 kartu ikon Droplets/Sparkles/Flower2 + progress bar 70/55/40%) dihapus dari HomeClient.tsx beserta import lucide yang tidak terpakai; hero kini kolom teks + CTA full-width. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
+| 2026-08-31 | T-87 | Dimulai & selesai (DONE): revisi owner — link "Lihat Website" di sidebar admin (atas kartu profil, buka tab baru target=_blank): storeConfig.ts + export STORE_URL (NEXT_PUBLIC_SITE_URL strip slash + fallback localhost), AdminSidebar.tsx + ExternalLink; urutan Lihat Website → Profil → Keluar; tampil juga di drawer mobile. Gerbang lint 13 · typecheck 0 · build 0 · push | zcode |
 
 ---
 
@@ -1611,7 +1616,8 @@ browser menyusul commit)
 
 | Field | Isi |
 |---|---|
-| Status | `BACKLOG` |
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-31 / 2026-08-31 |
 | Prioritas | P2 (diturunkan dari P0 — keputusan owner 2026-08-30) |
 | Sumber | Audit visual mobile 2026-08-29 — gambar utama + 2 thumbnail broken di SEMUA halaman detail |
 
@@ -1631,6 +1637,19 @@ browser menyusul commit)
 1. Halaman detail: main image + semua thumbnail tampil (img.naturalWidth > 0)
 2. URL optimizer memakai width wajar (tidak ada w=3840)
 3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Hasil akhir (2026-08-31):** owner meng-upload foto asli untuk **16/16 produk** (termasuk Aloe Vera Gel Moisturizer — yang terakhir masih picsum). Verifikasi live via MCP: semua `product_images.is_primary` menunjuk Supabase Storage bucket `product-images` (domain `**.supabase.co` sudah di-whitelist di `next.config.ts`). Galeri detail tampil normal **tanpa perubahan kode** — scope-in (whitelist picsum + set `sizes`) tidak dieksekusi karena tidak diperlukan lagi.
+
+**Bukti**
+```
+== Verifikasi DB live (Supabase MCP, 2026-08-31) ==
+16/16 produk: product_images.is_primary = https://leocryckwezmxusrorhm.supabase.co/storage/v1/object/public/product-images/...
+0 produk tersisa picsum.photos
+
+== npm run lint ==     13 problems (13 errors, 0 warnings) — baseline pre-existing
+== npm run typecheck == exit 0
+== npm run build ==    exit 0
+```
 
 ---
 
@@ -2810,5 +2829,73 @@ Commit 1602222
   select generate_order_number() → HS260829161, HS260869368
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 Commit 2cf152f
+```
+
+---
+
+### T-86 — Hapus dekorasi hero homepage (3 kartu ikon + progress bar)
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-31 / 2026-08-31 |
+| Prioritas | P2 |
+| Sumber | Revisi owner 2026-08-31 — dekorasi sisi kanan hero (Droplets/Sparkles/Flower2 dengan bar progres 70%/55%/40%) dihapus |
+
+**Tujuan:** Hero homepage hanya berisi teks branding + CTA (kolom `flex-1` full-width). Dekorasi kartu ikon dekoratif tanpa data nyata dihilangkan.
+
+**Scope-IN**
+- `src/components/HomeClient.tsx` — hapus blok dekorasi (`<div className="flex gap-3 md:gap-4 shrink-0 animate-fade-in-up delay-200">` + `.map()` 3 kartu) + hapus import `Droplets`, `Sparkles`, `Flower2` dari lucide-react (tidak terpakai lagi)
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- `CategoryIcon.tsx` (icon sama dipakai untuk kategori — tidak terpengaruh)
+- Teks hero, CTA, struktur section lain
+
+**Kriteria Selesai**
+1. Hero: tidak ada kartu ikon dekoratif; teks + CTA tetap tampil
+2. Tidak ada import lucide unused tersisa
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ src/components/HomeClient.tsx: blok dekorasi (3 kartu + progress bar) dihapus;
+  import Droplets/Sparkles/Flower2 dihapus dari lucide-react
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Commit menyusul (instruksi owner: jangan commit dulu)
+```
+
+---
+
+### T-87 — Sidebar admin: link "Lihat Website" (buka tab baru)
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-31 / 2026-08-31 |
+| Prioritas | P2 |
+| Sumber | Revisi owner 2026-08-31 — admin repot membuka beranda (harus ketik URL manual) |
+
+**Tujuan:** Tambah link "Lihat Website" di sidebar admin, di atas kartu profil admin, membuka beranda website di tab baru sekali klik.
+
+**Scope-IN**
+- `src/utils/storeConfig.ts` — export baru `STORE_URL` (`NEXT_PUBLIC_SITE_URL`, strip trailing slash, fallback `http://localhost:3000`; pola sama dengan sitemap/robots/llms)
+- `src/components/admin/AdminSidebar.tsx` — import `ExternalLink` + `STORE_URL`; sisipkan `<a href={STORE_URL} target="_blank" rel="noopener noreferrer">` di blok Bottom (urutan: Lihat Website → Profil Admin → Keluar); tampil juga di drawer mobile
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- AdminTopbar, nav menu, logika auth
+
+**Kriteria Selesai**
+1. Klik "Lihat Website" membuka beranda di tab baru
+2. Urutan di sidebar: Lihat Website → Profil Admin → Keluar
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ src/utils/storeConfig.ts: STORE_URL ditambahkan
+~ src/components/admin/AdminSidebar.tsx: link Lihat Website (btn-view-website)
+  target=_blank rel=noopener noreferrer di atas kartu profil
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```
 
