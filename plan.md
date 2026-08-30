@@ -5,7 +5,7 @@
 > (Catatan 2026-08-29: `Todo.md`, `doc.md`, `AGENT.md`, `CLAUDE.md` sudah DIHAPUS dari repo — lihat T-15.)
 > Setiap agent/kontributor **WAJIB** membaca bagian [Protokol](#-protokol-source-of-truth) sebelum menyentuh kode.
 >
-> Terakhir diperbarui: 2026-08-29
+> Terakhir diperbarui: 2026-08-30
 
 ---
 
@@ -144,6 +144,8 @@ npm run build       # exit 0
 | T-81 | P1 | Wishlist fungsional: tab wishlist di profil (baca localStorage → fetch produk → render + hapus + live sync) + baca query ?tab= | DONE |
 | T-82 | P1 | Voucher kadaluarsa: badge admin cek waktu (Kadaluarsa ≠ Aktif) + filter halaman customer + bersihkan 4 voucher expired (is_active=false) + flash sale badge | DONE |
 | T-83 | P2 | Blog: gambar cover (upload temp, 16:9) + tag/keyword chips di form admin & kartu storefront | DONE |
+| T-84 | P0 | Fix blog crash: artikel lama tanpa tags/image_url (normalisasi fetch admin + guard Array.isArray storefront) | DONE |
+| T-85 | P0 | Fix dashboard pesanan kosong: embed profiles(...) invalid (PGRST200) di 6 query → attachProfiles() bulk + search nama via user_id.in; sync live DB prefix order number HS | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -899,6 +901,8 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-81 | Dimulai & selesai (DONE): wishlist fungsional — akar masalah: tab wishlist placeholder statis + ?tab= tidak dibaca. Fix: baca ?tab= saat mount (timer callback, lolos lint); tab wishlist baca hera_wishlist → fetch produk (products + product_images RLS publik) → kartu + hapus + live sync (wishlist-updated/storage) + loading/empty. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-30 | T-82 | Dimulai & selesai (DONE): voucher kadaluarsa — konfirmasi 4/5 voucher live expired tapi is_active=true. Fix: badge admin voucher & flash sale cek waktu ("Kadaluarsa" merah, bukan "Aktif"); halaman customer filter ends_at; DB via MCP 4 voucher → is_active=false (NEWUSER20 tetap). Validasi server sudah aman sebelumnya. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-30 | T-83 | Dimulai & selesai (DONE): blog gambar cover + tag — BlogArticle += image_url (upload temp, note 16:9 800×450) + tags (TagInput chips); form admin + kartu storefront render gambar (fallback icon) & chip #tag; tersimpan di page_blog jsonb tanpa migration. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
+| 2026-08-30 | T-84 | Dimulai & selesai (DONE): REGRESI T-83 — blog "Terjadi Kesalahan" (error boundary). Akar masalah: artikel lama (tanpa key tags/image_url, terverifikasi live) diteruskan ke TagInput → tags.map() TypeError. Fix: normalisasi saat fetch admin (tags → [], image_url → "") + guard Array.isArray di storefront. Gerbang lint 13 · typecheck 0 · build 0 · push | zcode |
+| 2026-08-30 | T-85 | Dimulai & selesai (DONE): dashboard pesanan admin kosong meski stats 2 Menunggu — akar masalah: getAllOrders dkk meng-embed profiles(...) dari tabel yang FK-nya ke auth.users (tanpa relasi FK langsung) → PostgREST PGRST200 → query gagal diam-diam (baru terlihat karena orders baru berisi data). Fix: helper src/lib/profiles.ts attachProfiles() (bulk fetch + tempel key profiles) dipakai 6 lokasi (getAllOrders + search nama via user_id.in, getOrderById, recent orders dashboard, getAllReviews, getReviewsByProduct, Q&A admin); export CSV ikut tertolong. Bonus DB sync: generate_order_number live masih 'TJ' padahal full_schema sudah 'HS' → apply_migration prefix HS (order lama TJ dibiarkan — terikat invoice Xendit, webhook lookup external_id = order_number). Gerbang lint 13 · typecheck 0 · build 0 · REST live 200 · push | zcode |
 
 ---
 
@@ -2727,5 +2731,84 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
   lama tetap tampil normal
 Data tersimpan di store_settings.page_blog (jsonb — tanpa migration).
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+---
+
+### T-84 — Fix blog crash: artikel lama tanpa tags/image_url
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
+| Prioritas | P0 |
+| Sumber | Owner 2026-08-30: halaman blog menampilkan "Terjadi Kesalahan" setelah fitur T-83 |
+
+**Akar masalah:** Artikel yang tersimpan sebelum T-83 tidak punya key `tags`/`image_url` (terverifikasi live DB: `page_blog.articles[0]` tanpa kedua key). Form admin meneruskan `article.tags` (undefined) ke `TagInput` → `tags.map()` → `TypeError` → error boundary.
+
+**Scope-IN**
+- `src/app/admin/(dashboard)/blog/page.tsx` — normalisasi saat fetch: `tags: Array.isArray(a.tags) ? a.tags : []`, `image_url` fallback `""`
+- `src/app/blog/page.tsx` — guard `Array.isArray(article.tags)` sebelum render chip
+
+**Scope-OUT (dilarang disentuh)**
+- Data `store_settings.page_blog` (tidak diubah — normalisasi di layer render), fitur lain
+
+**Kriteria Selesai**
+1. `/admin/blog` tidak crash dengan artikel lama (tags undefined)
+2. Storefront aman terhadap tags non-array
+3. Gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ admin blog: setArticles((blogData?.articles || []).map(a => ({
+    ...a, image_url: a.image_url || "",
+    tags: Array.isArray(a.tags) ? a.tags : [] })))
+~ blog storefront: {Array.isArray(article.tags) && article.tags.length > 0 && (...)}
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Commit 1602222
+```
+
+---
+
+### T-85 — Fix dashboard pesanan kosong (PGRST200 embed profiles) + prefix order HS
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
+| Prioritas | P0 |
+| Sumber | Owner 2026-08-30: 2 order tampil di profil customer (TJ260843710, TJ260670806) tapi tabel dashboard pesanan admin kosong; nomor pesanan masih prefix TJ (harusnya HS = Hera Skincare) |
+
+**Akar masalah:** `getAllOrders` & 5 query lain meng-embed `profiles(...)` dari tabel yang FK-nya menunjuk ke `auth.users` (`orders`/`reviews`/`product_qna`.user_id → auth.users; `profiles`.id → auth.users — TANPA FK langsung) → PostgREST menolak `PGRST200: Could not find a relationship between 'orders' and 'profiles'` → query error diam-diam (return `{data: [], count: 0}`) → tabel kosong, sedangkan `getOrderStats` (tanpa embed) tetap jalan → stats tampil. Tidak terlihat selama ini karena tabel orders/reviews/qna masih kosong. Terverifikasi via REST live (400 PGRST200 → setelah fix 200 `[]`).
+
+**Scope-IN**
+- `src/lib/profiles.ts` (BARU) — helper `attachProfiles()`: kumpulkan `user_id` unik → fetch profiles bulk → tempel key `profiles` per baris (satu metode otoritatif, dipakai semua pemakai)
+- `src/lib/orders.ts` — `getAllOrders`: hapus embed profiles, pertahankan `order_items` (FK valid); search nama via profiles → `user_id.in.()` OR `order_number.ilike`; attachProfiles. `getOrderById` sama (modal detail)
+- `src/lib/admin.ts` — recent orders `getDashboardStats` + `getAllReviews`
+- `src/lib/products.ts` — `getReviewsByProduct` (nama pembeli review storefront)
+- `src/app/api/admin/qna/route.ts` — list Q&A admin
+- DB live via MCP — `apply_migration order_number_prefix_hs`: `generate_order_number()` prefix 'TJ' → 'HS' (live drift; `full_schema.sql` sudah 'HS' sejak T-47)
+- Entri plan.md + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Order lama prefix TJ (dibiarkan — sudah terbit invoice Xendit; webhook lookup `external_id` = `order_number`, rename akan memutus pencocokan pembayaran)
+- Skema DB lain, UI (shape `order.profiles` dipertahankan → halaman/modal/export tanpa perubahan)
+
+**Kriteria Selesai**
+1. `/api/admin/orders` mengembalikan 2 order + stats (search nama berfungsi)
+2. Order baru berformat `#HS...` (generator live = full_schema)
+3. Gerbang DoD hijau + verifikasi REST live tercatat
+
+**Bukti**
+```
+~ attachProfiles: 1 query profiles bulk + Map attach; dipakai 6 lokasi
+~ REST live: orders?select=*,order_items(...) → 200 [] (sebelum: 400
+  PGRST200); or(order_number.ilike.*TJ*,user_id.in.(...)) → 200
+~ RLS user-level (set_config request.jwt.claims + set role authenticated
+  sbg super_admin): 2 order + profiles + order_items terlihat
+~ apply_migration order_number_prefix_hs; tes langsung:
+  select generate_order_number() → HS260829161, HS260869368
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Commit 2cf152f
 ```
 
