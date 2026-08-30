@@ -1062,33 +1062,40 @@ create table if not exists public.notifications (
   created_at timestamptz not null default now()
 );
 
-create index idx_notifications_user_id on public.notifications(user_id);
-create index idx_notifications_unread on public.notifications(is_read) where is_read = false;
+create index if not exists idx_notifications_user_id on public.notifications(user_id);
+create index if not exists idx_notifications_unread on public.notifications(is_read) where is_read = false;
 
 alter table public.notifications enable row level security;
 
--- Admins can view all notifications
+-- T-77: drop before re-create — duplikat section kronologis (0001 sudah
+-- membuat policy ini di baris 517-534); tanpa drop, init project baru gagal
+-- (ERROR: policy already exists). Versi final = create terakhir = live DB.
+drop policy if exists "Admins can view all notifications" on public.notifications;
 create policy "Admins can view all notifications"
   on public.notifications for select to authenticated
   using (public.has_role(auth.uid(), array['super_admin', 'admin', 'operator', 'finance']));
 
 -- Admins can update notifications (mark read)
+drop policy if exists "Admins can update notifications" on public.notifications;
 create policy "Admins can update notifications"
   on public.notifications for update to authenticated
   using (public.has_role(auth.uid(), array['super_admin', 'admin', 'operator', 'finance']))
   with check (public.has_role(auth.uid(), array['super_admin', 'admin', 'operator', 'finance']));
 
 -- Admins can insert notifications
+drop policy if exists "Admins can insert notifications" on public.notifications;
 create policy "Admins can insert notifications"
   on public.notifications for insert to authenticated
   with check (true);
 
 -- Users can view own notifications
+drop policy if exists "Users can view own notifications" on public.notifications;
 create policy "Users can view own notifications"
   on public.notifications for select to authenticated
   using (user_id = auth.uid());
 
 -- Users can update own notifications
+drop policy if exists "Users can update own notifications" on public.notifications;
 create policy "Users can update own notifications"
   on public.notifications for update to authenticated
   using (user_id = auth.uid())
@@ -1158,6 +1165,9 @@ create trigger on_order_status_change
 
 -- C6: Fix order_items insert policy — only allow order owner or admin
 drop policy if exists "Auth users can insert order items" on public.order_items;
+-- T-77: drop before re-create — policy ini sudah dibuat di baris 348
+-- (duplikat section kronologis); versi final = create di sini = live DB.
+drop policy if exists "Users can insert own order items" on public.order_items;
 
 create policy "Users can insert own order items"
   on public.order_items for insert to authenticated

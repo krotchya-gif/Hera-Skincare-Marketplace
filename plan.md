@@ -137,6 +137,8 @@ npm run build       # exit 0
 | T-74 | P1 | Lonceng notifikasi customer (dropdown panel, bukan link) | DONE |
 | T-75 | P1 | Banner: dua layout gambar (desktop & mobile) + catatan ukuran | DONE |
 | T-76 | P0 | REGRESI: admin/produk KOSONG + form edit tanpa foto aktif (select `product_images(order=sort_order)` ditolak PostgREST — addendum T-68) | DONE |
+| T-77 | P0 | Fix eksekusi full_schema.sql: duplikat create policy/index tanpa drop → init project baru gagal | DONE |
+| T-78 | P1 | Banner: hero jadi carousel (placement hero=atas, strip=bawah) + rasio frame dikunci (Hero 21:9/4:3, Promo 16:5/2:1) + note ukuran akurat per posisi + hero non-full-bleed | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -885,6 +887,8 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-71 | Dimulai (IN_PROGRESS) atas instruksi owner — opsi A: hero beranda gambar latar dari admin (settings key hero + upload Pengaturan → Informasi Toko) | zcode |
 | 2026-08-30 | T-76 | Selesai (DONE): fix getAllProductsAdmin — embed `product_images(*)` + order referencedTable (query fix terbukti live: 16 rows, gambar terurut); gerbang hijau | zcode |
 | 2026-08-30 | T-71 | Selesai (DONE): hero beranda gambar latar dari admin — lib/hero.ts (getHeroSettings, SELECT publik diverifikasi MCP), page.tsx + HeroBanner overlay, Pengaturan→Informasi Toko blok upload (jalur temp, catatan ukuran 16:5); gerbang hijau | zcode |
+| 2026-08-30 | T-77 | Dimulai & selesai (DONE): audit menemukan full_schema.sql tidak bisa eksekusi di project baru (duplikat create policy/index tanpa drop — uji T-52 hanya parse sintaks). Fix: 6 drop policy if exists sebelum create duplikat (5 notifications + order_items insert) + create index if not exists (2); state final tidak berubah (68 create / 10 drop / 0 index tanpa if-not-exists; set 59 unik = live). False positive "seed duplikat" = insert dalam body fungsi (tidak diubah). Gerbang lint 13 · typecheck 0 · build 0 | zcode |
+| 2026-08-30 | T-78 | Dimulai & selesai (DONE): banner dual-carousel — BannerCarousel generik (rasio DIKUNCI aspect-ratio: hero 21:9/4:3, strip 16:5/2:1; ganti PromoBannerCarousel yang dihapus), page.tsx fetch 2 placement, HeroBanner → fallback non-full-bleed (max-w-7xl), BannerManager label "Hero (atas)"/"Promo (bawah)" + note ukuran dinamis (Hero 1600×685/800×600; Promo 1600×500/800×400) = patokan presisi; 2 banner live otomatis naik ke carousel atas. Bonus housekeeping: .env.local duplikat blok VAPID kosong-first (dotenv first-wins → kunci asli terabaikan, push mati diam-diam) dibersihkan; 6 branch worktree basi dihapus + worktree prune. Gerbang lint 13 · typecheck 0 · build 0; verifikasi visual post-deploy menyusul | zcode |
 
 ---
 
@@ -2345,4 +2349,141 @@ kosong → gradient emerald seperti sekarang.
   ukuran ±1600×500 (16:5); simpan ikut "Simpan Perubahan" (PUT key hero)
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 Verifikasi visual post-deploy menyusul (changelog).
+```
+
+---
+
+### T-77 — Fix eksekusi full_schema.sql (duplikat create policy/index tanpa drop)
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
+| Prioritas | P0 |
+| Sumber | Audit menyeluruh 2026-08-30 (kode + live DB via MCP): state final full_schema = live DB 1:1 (21 tabel, 14 fungsi, 56 public + 3 storage policy, trigger, bucket, seed T-47 — semua terverifikasi), TAPI file tidak bisa mengeksekusi di project baru: duplikat `create policy`/`create index` tanpa drop → error `already exists` di init. Uji T-52 hanya parse sintaks (pglast), bukan eksekusi |
+
+**Akar masalah:** file = konsolidasi kronologis 7 migration lama tanpa dedupe — section 0001 (baris 517-545) membuat 7 policy notifications, section 0003 (baris 1071-1095) membuat 5 di antaranya LAGI tanpa drop; index idx_notifications_* dibuat 2× (512-513 dengan `if not exists`, 1065-1066 tanpa); `Users can insert own order items` dibuat 2× (348 & 1162). Live DB aman karena disinkronkan via migration MCP terpisah — tidak pernah dieksekusi dari file ini.
+
+**Scope-IN**
+- `supabase/migrations/20260822130000_full_schema.sql`:
+  1. `drop policy if exists` sebelum 6 create policy duplikat (1071, 1076, 1082, 1087, 1092 — 5 policy notifications; 1162 — order_items insert) — urutan kronologis & versi final (last-create wins) dipertahankan
+  2. `create index if not exists` di baris 1065-1066 (idx_notifications_user_id, idx_notifications_unread)
+  3. Seed notifications duplikat 3× (576/581, 1126/1131, 1350/1357) → sisakan 1 pasang (kosmetik, tanpa unique key)
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Live DB (file mengandung DELETE seed T-47 — DILARANG dieksekusi ke live)
+- Struktur/policy/fungsi lain (state final TIDAK boleh berubah — DB-SYNC-1)
+
+**Kriteria Selesai**
+1. Parse-able (pglast, pola T-52) dengan jumlah statement CreatePolicyStmt = jumlah policy final (tanpa duplikat create)
+2. Semua duplikat create policy/index berpasangan drop/if-not-exists → urutan eksekusi tidak pernah error
+3. State final file = live DB (set policy/kolom/fungsi tidak berubah — verifikasi diff)
+4. Gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Perubahan (full_schema.sql) ==
+1. 6 drop policy if exists sebelum create duplikat:
+   - 5 policy notifications (baris ~1071-1095): "Admins can view all",
+     "Admins can update", "Admins can insert", "Users can view own",
+     "Users can update own" — duplikat dari section 0001 (517-534)
+   - "Users can insert own order items" (baris ~1162) — duplikat dari 348
+   Versi final = create terakhir (last-create wins) = definisi live DB
+   (termasuk "Admins can insert notifications" with check has_role di 1176)
+2. create index idx_notifications_user_id/unread → if not exists (1065-1066)
+   (duplikat 512-513 yang sudah if not exists)
+3. VERIFIKASI TAMBAHAN: "seed notifications duplikat" yang ditemukan saat
+   audit ternyata BUKAN seed — itu insert di dalam body fungsi
+   (handle_order_status_change ×2 via create or replace + request_payment_
+   confirmation) — TIDAK diubah (false positive, terdokumentasikan)
+
+== Verifikasi struktur ==
+- create policy: 68 (final set 59 unik = 56 public + 3 storage, tidak
+  berubah) · drop policy: 4 → 10 (semua duplikat create kini berpasangan)
+- create index tanpa if not exists: 0 tersisa
+- State final (tabel/fungsi/ACL/policy set): TIDAK berubah — DB-SYNC-1 utuh
+
+== Gerbang ==
+lint 13 (baseline) · typecheck 0 · build 0
+
+== UNVERIFIED ==
+Eksekusi penuh di project Supabase baru (Docker/scratch tidak tersedia —
+pola T-52; live DB DILARANG karena file memuat DELETE seed T-47). Bukti
+terkuat tersedia: struktur berpasangan + pglast parse T-52 + set final
+terverifikasi identik live.
+```
+
+---
+
+### T-78 — Banner: hero jadi carousel + rasio frame dikunci + patokan ukuran akurat
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
+| Prioritas | P1 |
+| Sumber | Revisi owner 2026-08-30: (1) hero banner cuma 1 input sedangkan banner promosi 2 input; (2) note ukuran harus presisi agar user punya patokan (tidak kepotong/peyang) — note lama (±1600×500/16:5) tidak sesuai frame aktual (tinggi tetap + lebar dinamis; hero mobile ~1:1 → crop 69%); (3) hero "terlalu lebar" (full-bleed); (4) hero mau dibuat carousel, ukuran HARUS beda dengan carousel promosi agar tidak tampak 2 banner kembar |
+
+**Keputusan owner (terkonfirmasi):**
+- Skema ukuran: **Hero** Desktop 21:9 (±1600×685) / Mobile 4:3 (±800×600); **Promo** Desktop 16:5 (±1600×500) / Mobile 2:1 (±800×400)
+- Frame dikunci `aspect-ratio` → note = patokan 100% presisi (tanpa migration DB — reuse `banners.placement`: `hero` = atas, `strip` = bawah)
+
+**Scope-IN**
+- `src/components/PromoBannerCarousel.tsx` → refactor `BannerCarousel` generik (prop placement; hero: `aspect-[4/3]` mobile + `sm:aspect-[21/9]` desktop; strip: `aspect-[2/1]` mobile + `sm:aspect-[16/5]` desktop; fitur existing: auto-rotate 5s, panah, dots, overlay, link)
+- `src/app/page.tsx` — render 2 carousel: `getActiveBanners("hero")` (atas, menggantikan HeroBanner lama) + `getActiveBanners("strip")` (bawah, posisi PromoBannerCarousel sekarang)
+- `src/components/HomeClient.tsx` — HeroBanner lama → fallback: hanya tampil bila TIDAK ada banner hero; gambar settings `hero` (T-71) dibatasi `max-w-7xl` (tidak full-bleed)
+- `src/components/admin/BannerManager.tsx` — label placement "Hero (atas)" / "Promo (bawah)"; note ukuran dinamis per posisi (Hero: 1600×685/21:9 & 800×600/4:3; Promo: 1600×500/16:5 & 800×400/2:1)
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- DB/migration (tidak ada perubahan — placement existing), T-71 settings hero (dipakai fallback), fitur lain
+
+**Kriteria Selesai**
+1. 2 banner live (placement "hero") tampil di carousel atas; carousel bawah kosong → tersembunyi
+2. Frame terkunci: browser 375px = 4:3 (hero) & 2:1 (promo); 1280px = 21:9 (hero) & 16:5 (promo); 0 overflow
+3. Note di admin = rasio frame aktual (patokan presisi)
+4. Hero fallback (tanpa banner) non-full-bleed
+5. Gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Perubahan ==
++ src/components/BannerCarousel.tsx     — refactor PromoBannerCarousel
+  (T-63) jadi generik: prop placement; RATIOS terkunci aspect-ratio
+  (hero: aspect-[4/3] mobile + sm:aspect-[21/9] desktop; strip:
+  aspect-[2/1] mobile + sm:aspect-[16/5] desktop); fitur existing utuh
+  (auto-rotate 5s, panah, dots, overlay gradient, link internal/eksternal,
+  dual gambar T-75 mobile/desktop)
+- src/components/PromoBannerCarousel.tsx — DIHAPUS (digantikan, tanpa
+  parallel implementation)
+~ src/app/page.tsx                      — Promise.all +=
+  getActiveBanners("strip"); props heroBanners (hero) + banners (strip)
+~ src/components/HomeClient.tsx         — hero = <BannerCarousel
+  placement="hero"> bila ada banner hero, else <HeroBanner> fallback;
+  promo = <BannerCarousel placement="strip">; HeroBanner dibatasi
+  max-w-7xl + rounded-2xl (T-78: TIDAK full-bleed lagi — fix keluhan
+  "terlalu lebar"); gambar settings hero (T-71) tetap dipakai fallback
+~ src/components/admin/BannerManager.tsx — PLACEMENT_NOTES per posisi:
+  Hero (atas) = Desktop ±1600×685 (21:9) / Mobile ±800×600 (4:3);
+  Promo (bawah) = Desktop ±1600×500 (16:5) / Mobile ±800×400 (2:1);
+  label select + deskripsi diperbarui; note input dinamis mengikuti
+  placement terpilih
+
+== Patokan final (frame DIKUNCI → 100% presisi) ==
+Hero  : Desktop 21:9 (±1600×685) · Mobile 4:3 (±800×600)
+Promo  : Desktop 16:5 (±1600×500) · Mobile 2:1 (±800×400)
+
+== Efek data live ==
+2 banner placement "hero" (Saatnya Kulitmu Lebih Bersinar, Produk
+Favorit...) otomatis tampil di carousel ATAS; carousel bawah (strip)
+kosong → tidak dirender.
+
+== Gerbang ==
+lint 13 (baseline) · typecheck 0 · build 0
+
+== UNVERIFIED (visual, butuh deploy) ==
+Ukur frame di browser post-deploy (pola T-59/T-62): 375px → hero 4:3 &
+promo 2:1; 1280px → hero 21:9 & promo 16:5; 0 overflow. Dijamin oleh
+CSS aspect-ratio (bukan estimasi), verifikasi tetap disarankan.
 ```
