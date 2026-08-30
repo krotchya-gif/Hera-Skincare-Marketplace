@@ -88,7 +88,8 @@ marketplace/
 ### Infrastructure
 - **Next.js 16 Proxy** — `src/proxy.ts` (JANGAN buat `middleware.ts`); cookie refresh disalin ke response
 - **Dynamic SEO** — sitemap.xml, robots.txt (+ AI crawler block), llms.txt, meta tags per-page, Meta Pixel & GA4 & GTM & Clarity & Google Ads & TikTok, JSON-LD LocalBusiness
-- **Web App PWA** — Registrasi manifest PWA dinamis, dynamic favicon generator, dynamic apple touch icon, serta dynamic routes 192px/512px menggunakan Next.js `ImageResponse` (nodejs runtime).
+- **Web App PWA (T-89)** — Manifest dinamis (`/manifest.webmanifest`), icon statis `public/icons/` dari `heralogo.png` (192/512/apple/favicon, background gradient), service worker di-auto-register untuk semua pengunjung dengan pre-cache app shell + offline fallback (navigasi network-first → cache `/`, aset `/_next/static` cache-first), Web Push tetap jalan. **Install prompt (T-90)**: banner custom via `beforeinstallprompt` (Chrome/Android) + panduan Add to Home Screen (iOS), dismiss terkunci 24 jam via localStorage, hilang permanen saat ter-install.
+- **Social Share (T-91)** — Open Graph + Twitter Card (`summary_large_image`) global dengan gambar `og.png` 1200×630 (gradient brand + logo) via metadata layout; favicon & apple-touch-icon statis dari logo toko.
 - **Image Optimization (T-88)** — Gambar storefront (banner, hero, blog cover) dirender via Supabase Image Transformation (`render/image`: resize + WebP q80, cache CDN) lewat helper `src/lib/image.ts optimizeImageUrl()` — PNG 1.7MB → 32KB WebP; hero memakai `fetchPriority="high"`; seluruh `<img>` `decoding="async"`.
 - **Security** — CSP + headers di `next.config.ts`, rate limiting, atomic stock, input validation, upload magic-bytes. Fungsi RPC `SECURITY DEFINER` sudah di-hardening: `EXECUTE` dicabut dari `anon`/`PUBLIC` (lihat bagian Hardening di `supabase/migrations/20260822130000_full_schema.sql`).
 - **Auth** — proxy guard admin routes + `verifyAdminRole()` per-handler

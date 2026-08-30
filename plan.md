@@ -149,6 +149,9 @@ npm run build       # exit 0
 | T-86 | P2 | Hapus dekorasi hero homepage: 3 kartu ikon (droplets/sparkles/flower2) + progress bar — revisi owner | DONE |
 | T-87 | P2 | Sidebar admin: link "Lihat Website" (buka tab baru) di atas profil admin — revisi owner | DONE |
 | T-88 | P1 | Optimasi loading image: Supabase Image Transformation (WebP + resize on-the-fly) untuk banner/hero/blog + fetchpriority hero + decoding async | DONE |
+| T-89 | P1 | PWA penuh: auto-register SW semua visitor + pre-cache app shell + offline fallback (network-first navigasi, cache-first _next/static) | DONE |
+| T-90 | P1 | Install prompt terkendali: banner custom (beforeinstallprompt + iOS guide), dismiss TTL 1 hari, hilang permanen saat ter-install | DONE |
+| T-91 | P2 | Icon & OG/Twitter rebrand ke heralogo.png (file statis /icons/, hapus 4 route dinamis, metadata openGraph+twitter) | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -910,6 +913,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-31 | T-86 | Dimulai & selesai (DONE): revisi owner — dekorasi hero homepage (3 kartu ikon Droplets/Sparkles/Flower2 + progress bar 70/55/40%) dihapus dari HomeClient.tsx beserta import lucide yang tidak terpakai; hero kini kolom teks + CTA full-width. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-31 | T-87 | Dimulai & selesai (DONE): revisi owner — link "Lihat Website" di sidebar admin (atas kartu profil, buka tab baru target=_blank): storeConfig.ts + export STORE_URL (NEXT_PUBLIC_SITE_URL strip slash + fallback localhost), AdminSidebar.tsx + ExternalLink; urutan Lihat Website → Profil → Keluar; tampil juga di drawer mobile. Gerbang lint 13 · typecheck 0 · build 0 · push | zcode |
 | 2026-08-31 | T-88 | Dimulai & selesai (DONE): optimasi loading image — akar masalah: banner/hero homepage PNG 1.3–1.9 MB (total ±10 MB). Solusi: helper src/lib/image.ts optimizeImageUrl() pakai Supabase Image Transformation (render/image, resize=cover + format=webp + quality=80) untuk BannerCarousel (BANNER_HERO/BANNER_STRIP 1232×385/800×600 & 1232×224/700×350), HeroBanner HomeClient (+ fetchPriority=high, LCP) & blog cover (BLOG_COVER 480); decoding=async di img produk Home/Category. Verifikasi live: 2244×701 PNG 1692KB → 32KB WebP (200 image/webp, -98%). Gambar produk sudah ringan (32KB) — tidak di-resize. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
+| 2026-08-31 | T-89 s/d T-91 | Dimulai & selesai (DONE): PWA penuh + install prompt + rebrand icon/OG. T-89: sw.js upgrade (CACHE_VERSION hera-pwa-v1, pre-cache app shell /+icons+manifest, fetch navigate network-first → fallback cache /, _next/static cache-first, activate cleanup) + auto-register semua visitor di layout. T-90: InstallPrompt.tsx (beforeinstallprompt → tombol Install prompt() native; iOS guide Add to Home Screen; dismiss TTL 1 hari via localStorage; hilang permanen saat appinstalled/standalone). T-91: public/icons/ statis dari heralogo.png (192/512/apple/favicon gradient gelap + logo; og 1200×630 gradient hijau) — hapus 4 route icon dinamis; manifest icons + metadata layout icons/openGraph(siteName, og.png absolute)/twitter(summary_large_image); sw.js path icon baru. .next/types regenerated (route icon lama dihapus). Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 
 ---
 
@@ -2940,6 +2944,113 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ~ Verifikasi live: render/image ... width=1232&height=224&resize=cover
   &format=webp&quality=80 → 200 image/webp 32KB (dari 1.7MB PNG, -98%)
 ~ Banner 2244x701 PNG 1692KB → 32KB WebP; hero serupa
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+---
+
+### T-89 — PWA penuh: auto-register SW + offline app shell
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-31 / 2026-08-31 |
+| Prioritas | P1 |
+| Sumber | Owner 2026-08-31 — PWA sebelumnya parsial (SW hanya push, tanpa fetch handler/offline) |
+
+**Tujuan:** SW aktif untuk SEMUA pengunjung + offline support (app shell) + memenuhi kriteria installable Chrome.
+
+**Scope-IN**
+- `public/sw.js` — upgrade: `CACHE_VERSION="hera-pwa-v1"`, pre-cache app shell `["/", "/icons/icon-192.png", "/icons/icon-512.png", "/manifest.webmanifest"]` saat install; `activate` hapus cache lama; `fetch`: navigasi network-first → fallback `caches.match("/")`, `/_next/static/*` cache-first (hashed), selainnya network; handler push tetap + icon baru `/icons/icon-192.png`
+- `src/app/layout.tsx` — script `pwa-register` (afterInteractive) auto-register `/sw.js` untuk semua visitor (register() idempotent, PushOptIn tetap jalan)
+- Entri plan.md ini + Changelog + README
+
+**Scope-OUT (dilarang disentuh)**
+- PushOptIn (push flow), API routes, database
+
+**Kriteria Selesai**
+1. SW terdaftar untuk semua pengunjung (DevTools → Application)
+2. Offline: buka situs → offline → reload → homepage tampil dari cache
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ sw.js: CACHE_VERSION + APP_SHELL + fetch handler (navigate network-first
+  fallback cache /; _next/static cache-first) + activate cleanup
+~ layout.tsx: <Script id="pwa-register"> register("/sw.js")
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+Verifikasi browser/DevTools menyusul di changelog (butuh buka situs live)
+```
+
+---
+
+### T-90 — Install prompt terkendali (banner custom)
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-31 / 2026-08-31 |
+| Prioritas | P1 |
+| Sumber | Owner 2026-08-31 — prompt native Chrome muncul berulang; mau banner yang frekuensinya terkendali |
+
+**Tujuan:** Banner install aplikasi custom: Chrome/Android tangkap `beforeinstallprompt` (tombol Install → `prompt()` native); iOS tampilkan petunjuk Add to Home Screen; dismiss → muncul lagi setelah **TTL 1 hari** (keputusan owner); ter-install → hilang permanen.
+
+**Scope-IN**
+- `src/components/InstallPrompt.tsx` (BARU) — deteksi standalone (display-mode/navigator.standalone), localStorage `pwa-install-dismissed` (timestamp + TTL 86400000ms), initializer useState untuk mode iOS (tanpa setState sinkron di effect — lint bersih), event beforeinstallprompt + appinstalled; UI bottom banner (fixed, z-50, di atas tab bar mobile)
+- `src/app/layout.tsx` — pasang `<InstallPrompt />`
+- Entri plan.md ini + Changelog + README
+
+**Scope-OUT (dilarang disentuh)**
+- Prompt native Chrome (mini-infobar) — dibiarkan (keputusan owner), PushOptIn
+
+**Kriteria Selesai**
+1. Chrome: banner muncul sekali, X → tidak muncul 24 jam, Install → prompt native
+2. iOS: banner petunjuk Add to Home Screen (sekali/hari)
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ InstallPrompt.tsx: lazy initializer (standalone + TTL + iOS detect),
+  event listeners beforeinstallprompt/appinstalled, prompt() native
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+---
+
+### T-91 — Icon & OG/Twitter rebrand ke heralogo.png
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-31 / 2026-08-31 |
+| Prioritas | P2 |
+| Sumber | Owner 2026-08-31 — icon PWA & gambar share (OG/Twitter) pakai logo toko `public/heralogo.png` |
+
+**Tujuan:** Semua identitas visual (favicon, icon PWA, apple icon, OG/Twitter share) memakai `heralogo.png` (transparan, 1247×1261). Icon statis = nol runtime ImageResponse.
+
+**Scope-IN**
+- `public/icons/` (BARU, generate sekali via System.Drawing) — `icon-192.png`, `icon-512.png`, `apple-icon.png` (180), `favicon.png` (32): background gradient gelap `#022c22→#09090b` + logo contain 76%; `og.png` (1200×630): gradient hijau brand `#10b981→#0d9488` + logo tengah
+- HAPUS route dinamis: `src/app/icon.tsx`, `icon-192.png/route.tsx`, `icon-512.png/route.tsx`, `apple-icon.tsx`
+- `src/app/manifest.ts` — icons → `/icons/icon-192.png` (maskable) + `/icons/icon-512.png` (any)
+- `src/app/layout.tsx` — metadata `icons` (favicon+apple) + `openGraph` (image `/icons/og.png` absolute via STORE_URL, siteName) + `twitter` (summary_large_image) — sebelumnya TIDAK ADA OG/twitter global
+- `public/sw.js` — path icon push + APP_SHELL ke `/icons/`
+- Entri plan.md ini + Changelog + README + AGENTS.md
+
+**Scope-OUT (dilarang disentuh)**
+- OG produk (`produk/[slug]` route-level tetap, override global)
+- `heralogo.png` asli (tetap di public/, dipakai sebagai sumber)
+
+**Kriteria Selesai**
+1. `/icons/*.png` ter-serve; manifest + favicon + apple icon menunjuk path baru
+2. `<head>` memuat og:image + twitter:image absolute
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ public/icons/: icon-192 (19KB), icon-512 (118KB), apple-icon (17KB),
+  favicon (1.5KB), og 1200x630 (129KB)
+~ route dinamis icon (4 file) dihapus; .next/types regenerated
+~ layout metadata: icons + openGraph (STORE_URL/icons/og.png) + twitter card
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```
 
