@@ -642,9 +642,14 @@ export default function PromotionsPage() {
                         {v.ends_at ? new Date(v.ends_at).toLocaleDateString("id-ID") : "Selamanya"}
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium inline-block ${v.is_active ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                          {v.is_active ? "Aktif" : "Nonaktif"}
-                        </span>
+                        {(() => {
+                          // T-82: status tampilan cek waktu — voucher lewat
+                          // ends_at tidak lagi ditampilkan sebagai "Aktif"
+                          const expired = !!v.ends_at && new Date(v.ends_at).getTime() < Date.now();
+                          const label = !v.is_active ? "Nonaktif" : expired ? "Kadaluarsa" : "Aktif";
+                          const cls = !v.is_active ? "bg-gray-100 text-gray-500" : expired ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700";
+                          return <span className={`text-xs px-2.5 py-1 rounded-full font-medium inline-block ${cls}`}>{label}</span>;
+                        })()}
                       </td>
                       <td className="px-4 py-3.5">
                         <button
@@ -712,12 +717,20 @@ export default function PromotionsPage() {
                     <td className="px-4 py-3.5"><span className="text-xs text-gray-600">{new Date(fs.ends_at).toLocaleDateString("id-ID")}</span></td>
                     <td className="px-4 py-3.5"><span className="text-xs text-gray-600">{fs.flash_sale_products?.length ?? 0} produk</span></td>
                     <td className="px-4 py-3.5">
-                      <button
-                        onClick={() => handleToggleFlashStatus(fs.id, fs.is_active)}
-                        className={`text-xs font-semibold px-2 py-0.5 rounded-full cursor-pointer ${fs.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}
-                      >
-                        {fs.is_active ? "Aktif" : "Nonaktif"}
-                      </button>
+                      {(() => {
+                        // T-82: status tampilan cek waktu (pola badge voucher)
+                        const expired = new Date(fs.ends_at).getTime() < Date.now();
+                        const label = !fs.is_active ? "Nonaktif" : expired ? "Kadaluarsa" : "Aktif";
+                        const cls = !fs.is_active ? "bg-gray-100 text-gray-500" : expired ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700";
+                        return (
+                          <button
+                            onClick={() => handleToggleFlashStatus(fs.id, fs.is_active)}
+                            className={`text-xs font-semibold px-2 py-0.5 rounded-full cursor-pointer ${cls}`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-1">

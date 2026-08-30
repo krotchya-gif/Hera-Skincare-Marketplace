@@ -8,10 +8,14 @@ export default async function VoucherPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  const now = new Date().toISOString();
+
   const { data: vouchers } = user ? await supabase
     .from("vouchers")
     .select("*")
     .eq("is_active", true)
+    // T-82: sembunyikan voucher yang sudah kadaluarsa (ends_at lewat)
+    .or(`ends_at.is.null,ends_at.gte.${now}`)
     .order("created_at", { ascending: false }) : { data: null };
 
   return (
