@@ -89,6 +89,7 @@ marketplace/
 - **Next.js 16 Proxy** — `src/proxy.ts` (JANGAN buat `middleware.ts`); cookie refresh disalin ke response
 - **Dynamic SEO** — sitemap.xml, robots.txt (+ AI crawler block), llms.txt, meta tags per-page, Meta Pixel & GA4 & GTM & Clarity & Google Ads & TikTok, JSON-LD LocalBusiness
 - **Web App PWA** — Registrasi manifest PWA dinamis, dynamic favicon generator, dynamic apple touch icon, serta dynamic routes 192px/512px menggunakan Next.js `ImageResponse` (nodejs runtime).
+- **Image Optimization (T-88)** — Gambar storefront (banner, hero, blog cover) dirender via Supabase Image Transformation (`render/image`: resize + WebP q80, cache CDN) lewat helper `src/lib/image.ts optimizeImageUrl()` — PNG 1.7MB → 32KB WebP; hero memakai `fetchPriority="high"`; seluruh `<img>` `decoding="async"`.
 - **Security** — CSP + headers di `next.config.ts`, rate limiting, atomic stock, input validation, upload magic-bytes. Fungsi RPC `SECURITY DEFINER` sudah di-hardening: `EXECUTE` dicabut dari `anon`/`PUBLIC` (lihat bagian Hardening di `supabase/migrations/20260822130000_full_schema.sql`).
 - **Auth** — proxy guard admin routes + `verifyAdminRole()` per-handler
 - **Toast Notifications** — Integrasi custom toast menggantikan semua dialog `alert()` bawaan browser.
@@ -97,7 +98,7 @@ marketplace/
 - **Pembayaran Online** — Xendit Invoice API v2 (QRIS/e-wallet/VA/kartu/retail) via route server-side; webhook `x-callback-token` verified + idempotent + cek `paid_amount`; alur transfer manual tetap utuh (customer lapor → admin verifikasi).
 - **Notifikasi Otomatis** — Email (Resend) & WhatsApp (Fonnte) ke customer saat status pesanan berubah; fire-and-forget, nonaktif bila env kosong.
 - **Push Notification (T-64)** — Web Push VAPID: opt-in di homepage (user login), service worker `public/sw.js`, broadcast dari tab Marketing → Push; prune langganan mati otomatis; nonaktif bila env kosong.
-- **Banner Promosi (T-63/78/79)** — CRUD banner di tab Marketing → Banner; 2 posisi: **Hero (atas, 16:5/4:3)** & **Promo (bawah, 11:2/2:1)**; dua layout gambar (desktop & mobile, ukuran dicantumkan di form sebagai patokan); carousel auto-rotate di homepage.
+- **Banner Promosi (T-63/78/79)** — CRUD banner di tab Marketing → Banner; 2 posisi: **Hero (atas, 16:5/4:3)** & **Promo (bawah, 11:2/2:1)**; dua layout gambar (desktop & mobile, ukuran dicantumkan di form sebagai patokan); carousel auto-rotate di homepage. Frame efektif di layar: hero 1232×385/800×600, promo 1232×224/700×350 — gambar WAJIB mengikuti rasio frame agar tidak terpotong (object-cover).
 - **Event Tracking & UTM** — event_logs (5 pemicu) + utm_visits + orders.utm_source untuk atribusi kampanye.
 - **Ikon** — Semua UI memakai icon Lucide (termasuk kategori — nama icon disimpan di DB, dirender via `CategoryIcon`).
 

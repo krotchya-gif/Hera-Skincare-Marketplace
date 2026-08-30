@@ -148,6 +148,7 @@ npm run build       # exit 0
 | T-85 | P0 | Fix dashboard pesanan kosong: embed profiles(...) invalid (PGRST200) di 6 query → attachProfiles() bulk + search nama via user_id.in; sync live DB prefix order number HS | DONE |
 | T-86 | P2 | Hapus dekorasi hero homepage: 3 kartu ikon (droplets/sparkles/flower2) + progress bar — revisi owner | DONE |
 | T-87 | P2 | Sidebar admin: link "Lihat Website" (buka tab baru) di atas profil admin — revisi owner | DONE |
+| T-88 | P1 | Optimasi loading image: Supabase Image Transformation (WebP + resize on-the-fly) untuk banner/hero/blog + fetchpriority hero + decoding async | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -908,6 +909,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-31 | T-60 | Selesai (DONE): galeri detail produk self-heal tanpa kode — owner meng-upload foto asli untuk 16/16 produk (yang terakhir Aloe Vera Gel Moisturizer masih picsum). Verifikasi live via MCP: semua product_images.is_primary menunjuk Supabase Storage product-images, 0 picsum tersisa; whitelist **.supabase.co sudah mencakup, whitelist picsum + set sizes TIDAK dieksekusi (tidak diperlukan). Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-31 | T-86 | Dimulai & selesai (DONE): revisi owner — dekorasi hero homepage (3 kartu ikon Droplets/Sparkles/Flower2 + progress bar 70/55/40%) dihapus dari HomeClient.tsx beserta import lucide yang tidak terpakai; hero kini kolom teks + CTA full-width. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-31 | T-87 | Dimulai & selesai (DONE): revisi owner — link "Lihat Website" di sidebar admin (atas kartu profil, buka tab baru target=_blank): storeConfig.ts + export STORE_URL (NEXT_PUBLIC_SITE_URL strip slash + fallback localhost), AdminSidebar.tsx + ExternalLink; urutan Lihat Website → Profil → Keluar; tampil juga di drawer mobile. Gerbang lint 13 · typecheck 0 · build 0 · push | zcode |
+| 2026-08-31 | T-88 | Dimulai & selesai (DONE): optimasi loading image — akar masalah: banner/hero homepage PNG 1.3–1.9 MB (total ±10 MB). Solusi: helper src/lib/image.ts optimizeImageUrl() pakai Supabase Image Transformation (render/image, resize=cover + format=webp + quality=80) untuk BannerCarousel (BANNER_HERO/BANNER_STRIP 1232×385/800×600 & 1232×224/700×350), HeroBanner HomeClient (+ fetchPriority=high, LCP) & blog cover (BLOG_COVER 480); decoding=async di img produk Home/Category. Verifikasi live: 2244×701 PNG 1692KB → 32KB WebP (200 image/webp, -98%). Gambar produk sudah ringan (32KB) — tidak di-resize. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 
 ---
 
@@ -2896,6 +2898,48 @@ Commit menyusul (instruksi owner: jangan commit dulu)
 ~ src/utils/storeConfig.ts: STORE_URL ditambahkan
 ~ src/components/admin/AdminSidebar.tsx: link Lihat Website (btn-view-website)
   target=_blank rel=noopener noreferrer di atas kartu profil
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+---
+
+### T-88 — Optimasi loading image (Supabase Image Transformation)
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-31 / 2026-08-31 |
+| Prioritas | P1 |
+| Sumber | Owner 2026-08-31 — banner/hero homepage load lambat (gambar PNG besar) |
+
+**Tujuan:** Turunkan beban gambar homepage dari ±10 MB → <0.5 MB memakai Supabase Image Transformation (`render/image` — resize + WebP on-the-fly, cache CDN; fitur sudah ENABLED di project).
+
+**Temuan (verifikasi dimensi+ukuran file live via HTTP):**
+- Banner strip 2× (desktop+mobile): PNG 2244×701 & 1182×1330 = **1.7–1.9 MB/file**
+- Hero beranda (desktop+mobile): PNG 2244×701 & 896×1200 = **1.6 & 1.3 MB**
+- Gambar produk: JPG 1024×1024 ±32 KB (sudah ringan — hanya ditambah decoding)
+
+**Scope-IN**
+- `src/lib/image.ts` (BARU) — helper `optimizeImageUrl(url, opts)`: konversi `object/public` → `render/image/public` + `width/height/resize=cover&format=webp&quality=80`; URL non-storage dibiarkan apa adanya; konstanta `BANNER_HERO` (1232×385 & 800×600), `BANNER_STRIP` (1232×224 & 700×350), `BLOG_COVER` (480)
+- `src/components/BannerCarousel.tsx` — src mobile/desktop lewat helper
+- `src/components/HomeClient.tsx` — HeroBanner lewat helper + `fetchPriority="high"` + `decoding="async"`; img produk + `decoding="async"`
+- `src/components/CategoryClient.tsx` — img produk + `decoding="async"`
+- `src/app/blog/page.tsx` — cover artikel lewat helper + `decoding="async"`
+- Entri plan.md ini + Changelog + AGENTS.md + README
+
+**Scope-OUT (dilarang disentuh)**
+- File asli di Storage (tetap PNG besar — transform di sisi render), upload flow, `next.config.ts`
+
+**Kriteria Selesai**
+1. URL transform live: HTTP 200 + `content-type: image/webp`
+2. Banner/hero turun menjadi ±30–150 KB per file
+3. Ketiga gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ Verifikasi live: render/image ... width=1232&height=224&resize=cover
+  &format=webp&quality=80 → 200 image/webp 32KB (dari 1.7MB PNG, -98%)
+~ Banner 2244x701 PNG 1692KB → 32KB WebP; hero serupa
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```
 
