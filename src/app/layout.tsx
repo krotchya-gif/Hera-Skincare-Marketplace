@@ -1,19 +1,39 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
-import { STORE_NAME, STORE_DESCRIPTION } from "@/utils/storeConfig";
+import { STORE_NAME, STORE_DESCRIPTION, STORE_URL } from "@/utils/storeConfig";
 import { getSeoSettings } from "@/lib/seo";
 import { ToastProvider } from "@/components/Toast";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import UtmCapture from "@/components/UtmCapture";
+import InstallPrompt from "@/components/InstallPrompt";
 
 export async function generateMetadata(): Promise<Metadata> {
   const seo = await getSeoSettings();
+  const title = seo.default_title || `${STORE_NAME} — Marketplace Skincare & Perawatan Pribadi`;
+  const description = seo.default_description || STORE_DESCRIPTION;
 
   return {
-    title: seo.default_title || `${STORE_NAME} — Marketplace Skincare & Perawatan Pribadi`,
-    description: seo.default_description || STORE_DESCRIPTION,
+    title,
+    description,
     keywords: seo.default_keywords || undefined,
+    icons: {
+      icon: [{ url: "/icons/favicon.png", sizes: "32x32", type: "image/png" }],
+      apple: [{ url: "/icons/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      siteName: STORE_NAME,
+      images: [{ url: `${STORE_URL}/icons/og.png`, width: 1200, height: 630, alt: STORE_NAME }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`${STORE_URL}/icons/og.png`],
+    },
   };
 }
 
@@ -57,6 +77,15 @@ export default async function RootLayout({
         </ToastProvider>
         {/* T-41: Capture UTM dari URL (campaign tracking) */}
         <UtmCapture />
+
+        {/* T-89: PWA — auto-register service worker untuk semua pengunjung
+            (register() idempotent; PushOptIn tetap memakai registration sama) */}
+        <Script id="pwa-register" strategy="afterInteractive">
+          {`if ("serviceWorker" in navigator) { window.addEventListener("load", () => { navigator.serviceWorker.register("/sw.js").catch(() => {}); }); }`}
+        </Script>
+
+        {/* T-90: Banner install aplikasi (custom, frekuensi terkendali localStorage) */}
+        <InstallPrompt />
 
         {/* Meta Pixel */}
         {seo.meta_pixel_id && (
