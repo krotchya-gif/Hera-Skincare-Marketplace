@@ -20,8 +20,9 @@ import {
   ChevronRight,
   X,
   FileText,
+  ExternalLink,
 } from "lucide-react";
-import { STORE_NAME } from "@/utils/storeConfig";
+import { STORE_NAME, STORE_URL } from "@/utils/storeConfig";
 
 const navItems = [
   {
@@ -193,6 +194,16 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
 
       {/* Bottom — Admin Profile */}
       <div className="p-3 border-t border-gray-800">
+        <a
+          id="btn-view-website"
+          href={STORE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-colors mb-2"
+        >
+          <ExternalLink size={16} />
+          <span>Lihat Website</span>
+        </a>
         <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-gray-800 mb-2">
           <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center shrink-0">
             <span className="text-white text-xs font-bold">A</span>

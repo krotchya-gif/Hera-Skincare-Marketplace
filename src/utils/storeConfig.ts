@@ -10,6 +10,8 @@ export const STORE_DESCRIPTION =
 export const STORE_ADDRESS = 
   process.env.NEXT_PUBLIC_STORE_ADDRESS || 
   "Jl. Industri No. 45, Jakarta Selatan, DKI Jakarta 12345";
+// URL situs (tanpa trailing slash) untuk link eksternal, mis. "Lihat Website" di admin
+export const STORE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
 // Untuk domain email dinamis yang menyesuaikan dengan email toko
 export const getStoreDomain = () => {
   return STORE_EMAIL.split("@")[1] || "heraskincare.com";
