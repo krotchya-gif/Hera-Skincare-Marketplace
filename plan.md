@@ -139,6 +139,7 @@ npm run build       # exit 0
 | T-76 | P0 | REGRESI: admin/produk KOSONG + form edit tanpa foto aktif (select `product_images(order=sort_order)` ditolak PostgREST — addendum T-68) | DONE |
 | T-77 | P0 | Fix eksekusi full_schema.sql: duplikat create policy/index tanpa drop → init project baru gagal | DONE |
 | T-78 | P1 | Banner: hero jadi carousel (placement hero=atas, strip=bawah) + rasio frame dikunci (Hero 21:9/4:3, Promo 16:5/2:1) + note ukuran akurat per posisi + hero non-full-bleed | DONE |
+| T-79 | P1 | Redesign ukuran banner stack: Hero 16:5/4:3, Promo 11:2/2:1 + BrandStrip (headline di atas carousel) + pindah 2 banner existing ke strip | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -889,6 +890,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-71 | Selesai (DONE): hero beranda gambar latar dari admin — lib/hero.ts (getHeroSettings, SELECT publik diverifikasi MCP), page.tsx + HeroBanner overlay, Pengaturan→Informasi Toko blok upload (jalur temp, catatan ukuran 16:5); gerbang hijau | zcode |
 | 2026-08-30 | T-77 | Dimulai & selesai (DONE): audit menemukan full_schema.sql tidak bisa eksekusi di project baru (duplikat create policy/index tanpa drop — uji T-52 hanya parse sintaks). Fix: 6 drop policy if exists sebelum create duplikat (5 notifications + order_items insert) + create index if not exists (2); state final tidak berubah (68 create / 10 drop / 0 index tanpa if-not-exists; set 59 unik = live). False positive "seed duplikat" = insert dalam body fungsi (tidak diubah). Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-30 | T-78 | Dimulai & selesai (DONE): banner dual-carousel — BannerCarousel generik (rasio DIKUNCI aspect-ratio: hero 21:9/4:3, strip 16:5/2:1; ganti PromoBannerCarousel yang dihapus), page.tsx fetch 2 placement, HeroBanner → fallback non-full-bleed (max-w-7xl), BannerManager label "Hero (atas)"/"Promo (bawah)" + note ukuran dinamis (Hero 1600×685/800×600; Promo 1600×500/800×400) = patokan presisi; 2 banner live otomatis naik ke carousel atas. Bonus housekeeping: .env.local duplikat blok VAPID kosong-first (dotenv first-wins → kunci asli terabaikan, push mati diam-diam) dibersihkan; 6 branch worktree basi dihapus + worktree prune. Gerbang lint 13 · typecheck 0 · build 0; verifikasi visual post-deploy menyusul | zcode |
+| 2026-08-30 | T-79 | Dimulai & selesai (DONE): revisi owner "ketumpuk & hanya banner promo tampil" — redesign ukuran: Hero 16:5/4:3 (±1600×500/±800×600), Promo 11:2/2:1 (±1600×290/±800×400) ramping seperti iklan; + BrandStrip (headline "Solusi Produk Berkualitas" + CTA) di atas carousel hero (hanya saat ada banner hero; kosong → fallback headline lama); 2 banner existing dipindah ke placement strip via MCP (data saja, tanpa migration). Gerbang lint 13 · typecheck 0 · build 0 · push langsung atas instruksi owner | zcode |
 
 ---
 
@@ -2486,4 +2488,68 @@ lint 13 (baseline) · typecheck 0 · build 0
 Ukur frame di browser post-deploy (pola T-59/T-62): 375px → hero 4:3 &
 promo 2:1; 1280px → hero 21:9 & promo 16:5; 0 overflow. Dijamin oleh
 CSS aspect-ratio (bukan estimasi), verifikasi tetap disarankan.
+```
+
+---
+
+### T-79 - Redesign ukuran banner stack + BrandStrip + pindah data banner
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
+| Prioritas | P1 |
+| Sumber | Revisi owner 2026-08-30: setelah T-78, halaman terlihat `ketumpuk` - hanya carousel berisi banner promo yang tampil (2 banner existing ber-placement hero naik ke carousel atas yang besar), hero branding hilang. Desain yang diinginkan: hero = carousel besar multi-gambar + promo = carousel KECIL tinggi ramping untuk iklan (produk baru dll). Ukuran perlu `design ulang ukuran pas` |
+
+**Keputusan owner (terkonfirmasi):** skema Hero 16:5/4:3 & Promo 11:2/2:1; 2 banner existing dipindah ke placement `strip`.
+
+**Scope-IN**
+- DB (via MCP, data saja - bukan skema): 2 banner existing -`placement = strip` (banners tidak ada di seed - tanpa perubahan full_schema)
+- `src/components/BannerCarousel.tsx` - rasio dikunci: hero = `aspect-[4/3]` mobile + `sm:aspect-[16/5]` desktop; strip = `aspect-[2/1]` mobile + `sm:aspect-[11/2]` desktop
+- `src/components/HomeClient.tsx` - komponen `BrandStrip` (badge Hera + headline `Solusi Produk Berkualitas` + tagline + CTA Belanja Sekarang/Lihat Promo); render HANYA saat ada banner hero (bila kosong - HeroBanner fallback utuh, tanpa duplikat teks)
+- `src/components/admin/BannerManager.tsx` - note & label: Hero = 1600x500 (16:5) / 800x600 (4:3); Promo = 1600x290 (11:2) / 800x400 (2:1)
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- HeroBanner fallback (utuh), skema DB (tidak ada migration), fitur lain
+
+**Kriteria Selesai**
+1. 2 banner existing tampil di carousel promo bawah (kecil); hero atas kosong - headline lama tampil
+2. Frame: 1280px hero 16:5 (385px) & promo 11:2 (224px); 375px hero 4:3 (257px) & promo 2:1 (171px); 0 overflow
+3. Note admin = rasio frame aktual
+4. BrandStrip hanya saat ada banner hero (tanpa duplikat headline)
+5. Gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== DB (via MCP — data saja, tanpa skema/migration) ==
+update banners set placement='strip' where placement='hero' → 2 rows
+Verifikasi live: kedua banner (Saatnya Kulitmu Lebih Bersinar, Produk
+Favorit...) kini placement "strip", is_active true ✓
+(banners tidak ada di seed → full_schema TIDAK berubah)
+
+== Kode ==
+~ src/components/BannerCarousel.tsx  — RATIOS: hero = aspect-[4/3] mobile +
+  sm:aspect-[16/5] desktop; strip = aspect-[2/1] mobile + sm:aspect-[11/2]
+  desktop (promo diturunkan 16:5 → 11:2 agar ramping seperti iklan)
+~ src/components/HomeClient.tsx      — + BrandStrip (badge Leaf + STORE_NAME
+  + "Solusi Produk Berkualitas" + CTA Belanja Sekarang/Lihat Promo);
+  render: heroBanners ada → BrandStrip + carousel hero; kosong →
+  HeroBanner fallback utuh (tanpa duplikat headline)
+~ src/components/admin/BannerManager.tsx — PLACEMENT_NOTES & label:
+  Hero ±1600×500 (16:5) / ±800×600 (4:3); Promo ±1600×290 (11:2) /
+  ±800×400 (2:1)
+
+== Hasil akhir beranda ==
+Ada banner hero : quick-nav → BrandStrip → carousel hero 16:5/4:3 →
+                  carousel promo 11:2/2:1
+Tanpa banner hero: quick-nav → HeroBanner fallback (headline lama) →
+                  carousel promo (2 banner strip)
+
+== Gerbang ==
+lint 13 (baseline) · typecheck 0 · build 0
+
+== UNVERIFIED (visual, butuh deploy) ==
+Ukur frame post-deploy: 1280px hero 16:5 & promo 11:2; 375px hero 4:3 &
+promo 2:1; 0 overflow. Dijamin CSS aspect-ratio (pola T-78).
 ```

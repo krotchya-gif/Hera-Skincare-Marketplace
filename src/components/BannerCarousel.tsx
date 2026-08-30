@@ -1,8 +1,8 @@
 "use client";
 
 // T-78: carousel banner generik (refactor PromoBannerCarousel T-63).
-// Dipakai 2× di homepage: placement "hero" (atas, 21:9/4:3) &
-// "strip" (bawah, 16:5/2:1). Rasio frame DIKUNCI aspect-ratio agar
+// Dipakai 2× di homepage: placement "hero" (atas, 16:5/4:3) &
+// "strip" (bawah, 11:2/2:1). Rasio frame DIKUNCI aspect-ratio agar
 // catatan ukuran di admin = patokan presisi (tidak kepotong/peyang).
 // Tanpa banner → tidak dirender (zero impact). Auto-rotate tiap 5 detik.
 import { useEffect, useState } from "react";
@@ -13,11 +13,12 @@ import type { Banner } from "@/types/database";
 export type BannerPlacement = "hero" | "strip";
 
 // Rasio frame per posisi — WAJIB sinkron dengan catatan ukuran di
-// BannerManager.tsx (Hero: 1600×685/21:9 & 800×600/4:3; Promo:
-// 1600×500/16:5 & 800×400/2:1).
+// BannerManager.tsx (Hero: 1600×500/16:5 & 800×600/4:3; Promo:
+// 1600×290/11:2 & 800×400/2:1). T-79: promo diturunkan dari 16:5 → 11:2
+// agar ramping seperti iklan (produk baru dll) & tidak "ketumpuk" dgn hero.
 const RATIOS: Record<BannerPlacement, { mobile: string; desktop: string }> = {
-  hero: { mobile: "aspect-[4/3]", desktop: "sm:aspect-[21/9]" },
-  strip: { mobile: "aspect-[2/1]", desktop: "sm:aspect-[16/5]" },
+  hero: { mobile: "aspect-[4/3]", desktop: "sm:aspect-[16/5]" },
+  strip: { mobile: "aspect-[2/1]", desktop: "sm:aspect-[11/2]" },
 };
 
 export default function BannerCarousel({

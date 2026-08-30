@@ -46,8 +46,8 @@ const EMPTY_FORM: BannerForm = {
 // URL gambar tersimpan di banners.image_url, bukan di tabel produk.
 const UPLOAD_NO_REF = "temp";
 
-// T-78: catatan ukuran per posisi — WAJIB sinkron dengan rasio frame di
-// BannerCarousel.tsx (hero: 21:9/4:3; strip: 16:5/2:1). Frame DIKUNCI
+// T-78/T-79: catatan ukuran per posisi — WAJIB sinkron dengan rasio frame di
+// BannerCarousel.tsx (hero: 16:5/4:3; strip: 11:2/2:1). Frame DIKUNCI
 // aspect-ratio sehingga catatan ini = patokan presisi (tidak kepotong/peyang).
 const PLACEMENT_NOTES: Record<
   "hero" | "strip",
@@ -55,12 +55,12 @@ const PLACEMENT_NOTES: Record<
 > = {
   hero: {
     label: "Hero (atas)",
-    desktop: "±1600×685 px (rasio 21:9)",
+    desktop: "±1600×500 px (rasio 16:5)",
     mobile: "±800×600 px (rasio 4:3)",
   },
   strip: {
     label: "Promo (bawah)",
-    desktop: "±1600×500 px (rasio 16:5)",
+    desktop: "±1600×290 px (rasio 11:2)",
     mobile: "±800×400 px (rasio 2:1)",
   },
 };
@@ -183,8 +183,8 @@ export default function BannerManager() {
         <div>
           <h3 className="font-semibold text-gray-800 text-sm">Banner Promosi</h3>
           <p className="text-xs text-gray-400">
-            Carousel beranda: <span className="font-medium text-gray-500">Hero (atas)</span> ukuran besar 21:9/4:3 ·
-            <span className="font-medium text-gray-500"> Promo (bawah)</span> ramping 16:5/2:1. Kosong = section tidak dirender.
+            Carousel beranda: <span className="font-medium text-gray-500">Hero (atas)</span> ukuran besar 16:5/4:3 ·
+            <span className="font-medium text-gray-500"> Promo (bawah)</span> ramping 11:2/2:1 (iklan produk baru dll). Kosong = section tidak dirender.
           </p>
         </div>
         <button
@@ -335,8 +335,8 @@ export default function BannerManager() {
                     value={form.placement}
                     onChange={(e) => setForm({ ...form, placement: e.target.value as BannerForm["placement"] })}
                   >
-                    <option value="hero">Hero (atas) — 21:9 / 4:3</option>
-                    <option value="strip">Promo (bawah) — 16:5 / 2:1</option>
+                    <option value="hero">Hero (atas) — 16:5 / 4:3</option>
+                    <option value="strip">Promo (bawah) — 11:2 / 2:1</option>
                   </select>
                 </div>
                 <div>

@@ -151,6 +151,43 @@ function HeroBanner({ heroImageUrl }: { heroImageUrl?: string | null }) {
   );
 }
 
+// ─── Brand Strip (T-79) ───────────────────────────────────────────
+// Headline branding yang tampil DI ATAS carousel hero (hanya saat ada
+// banner hero — bila kosong, HeroBanner fallback sudah memuat headline).
+function BrandStrip() {
+  return (
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-1" aria-label="Brand hero">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-600/10 rounded-xl flex items-center justify-center shrink-0">
+            <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-emerald-600/80">{STORE_NAME}</p>
+            <h1 className="text-lg sm:text-2xl font-extrabold text-gray-900 leading-tight tracking-tight">
+              Solusi Produk <span className="text-gradient-premium">Berkualitas</span>
+            </h1>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+          <Link
+            href="/kategori/semua"
+            className="inline-flex items-center justify-center gap-1.5 bg-emerald-600 text-white text-xs sm:text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl shadow-sm hover:bg-emerald-700 hover:-translate-y-0.5 transition-all duration-300"
+          >
+            Belanja Sekarang <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </Link>
+          <Link
+            href="#promo"
+            className="inline-flex items-center justify-center border border-emerald-200 text-emerald-700 text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-xl hover:bg-emerald-50 transition-colors duration-300"
+          >
+            Lihat Promo →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Trust Bar ────────────────────────────────────────────────────
 function TrustBar() {
   const items = [
@@ -434,16 +471,20 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
         </div>
       </nav>
 
-      {/* T-78: hero = carousel banner (placement "hero", 21:9/4:3);
-          fallback HeroBanner hanya bila belum ada banner hero */}
+      {/* T-78/T-79: hero = carousel banner (placement "hero", 16:5/4:3) +
+          BrandStrip (headline branding) di atasnya; bila belum ada banner
+          hero → HeroBanner fallback (sudah memuat headline, tanpa duplikat) */}
       {heroBanners.length > 0 ? (
-        <BannerCarousel banners={heroBanners} placement="hero" />
+        <>
+          <BrandStrip />
+          <BannerCarousel banners={heroBanners} placement="hero" />
+        </>
       ) : (
         <HeroBanner heroImageUrl={heroImageUrl} />
       )}
 
-      {/* T-63/T-78: carousel banner promosi (placement "strip", 16:5/2:1;
-          tidak dirender bila tidak ada banner) */}
+      {/* T-63/T-78/T-79: carousel banner promosi (placement "strip", 11:2/2:1
+          ramping untuk iklan; tidak dirender bila tidak ada banner) */}
       <BannerCarousel banners={banners} placement="strip" />
 
       {/* T-64: opt-in push notification (hanya user login + browser mendukung) */}
