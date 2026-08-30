@@ -141,6 +141,9 @@ npm run build       # exit 0
 | T-78 | P1 | Banner: hero jadi carousel (placement hero=atas, strip=bawah) + rasio frame dikunci (Hero 21:9/4:3, Promo 16:5/2:1) + note ukuran akurat per posisi + hero non-full-bleed | DONE |
 | T-79 | P1 | Redesign ukuran banner stack: Hero 16:5/4:3, Promo 11:2/2:1 + BrandStrip (headline di atas carousel) + pindah 2 banner existing ke strip | DONE |
 | T-80 | P2 | Hero settings dual input (desktop+mobile) di Pengaturan + overlay hero fallback diganti gradient kiri (opsi B pencerahan) | DONE |
+| T-81 | P1 | Wishlist fungsional: tab wishlist di profil (baca localStorage → fetch produk → render + hapus + live sync) + baca query ?tab= | DONE |
+| T-82 | P1 | Voucher kadaluarsa: badge admin cek waktu (Kadaluarsa ≠ Aktif) + filter halaman customer + bersihkan 4 voucher expired (is_active=false) + flash sale badge | DONE |
+| T-83 | P2 | Blog: gambar cover (upload temp, 16:9) + tag/keyword chips di form admin & kartu storefront | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -893,6 +896,9 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-78 | Dimulai & selesai (DONE): banner dual-carousel — BannerCarousel generik (rasio DIKUNCI aspect-ratio: hero 21:9/4:3, strip 16:5/2:1; ganti PromoBannerCarousel yang dihapus), page.tsx fetch 2 placement, HeroBanner → fallback non-full-bleed (max-w-7xl), BannerManager label "Hero (atas)"/"Promo (bawah)" + note ukuran dinamis (Hero 1600×685/800×600; Promo 1600×500/800×400) = patokan presisi; 2 banner live otomatis naik ke carousel atas. Bonus housekeeping: .env.local duplikat blok VAPID kosong-first (dotenv first-wins → kunci asli terabaikan, push mati diam-diam) dibersihkan; 6 branch worktree basi dihapus + worktree prune. Gerbang lint 13 · typecheck 0 · build 0; verifikasi visual post-deploy menyusul | zcode |
 | 2026-08-30 | T-79 | Dimulai & selesai (DONE): revisi owner "ketumpuk & hanya banner promo tampil" — redesign ukuran: Hero 16:5/4:3 (±1600×500/±800×600), Promo 11:2/2:1 (±1600×290/±800×400) ramping seperti iklan; + BrandStrip (headline "Solusi Produk Berkualitas" + CTA) di atas carousel hero (hanya saat ada banner hero; kosong → fallback headline lama); 2 banner existing dipindah ke placement strip via MCP (data saja, tanpa migration). Gerbang lint 13 · typecheck 0 · build 0 · push langsung atas instruksi owner | zcode |
 | 2026-08-30 | T-80 | Dimulai & selesai (DONE): hero settings dual input — Pengaturan→Informasi Toko "Gambar Hero Beranda" kini 2 upload (Desktop ±1600×500/16:5 + Mobile ±800×600/4:3, preview & hapus per gambar, simpan {image_url, image_url_mobile}); lib/hero.ts + page.tsx + HeroBanner render 2 gambar (mobile <640px pakai gambar mobile); overlay fallback diganti opsi B (gradient kiri from-emerald-950/50 via-/15 to-transparent — gambar terang, teks tetap terbaca). Gerbang lint 13 · typecheck 0 (fix TS null via ?? undefined) · build 0 · push | zcode |
+| 2026-08-30 | T-81 | Dimulai & selesai (DONE): wishlist fungsional — akar masalah: tab wishlist placeholder statis + ?tab= tidak dibaca. Fix: baca ?tab= saat mount (timer callback, lolos lint); tab wishlist baca hera_wishlist → fetch produk (products + product_images RLS publik) → kartu + hapus + live sync (wishlist-updated/storage) + loading/empty. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
+| 2026-08-30 | T-82 | Dimulai & selesai (DONE): voucher kadaluarsa — konfirmasi 4/5 voucher live expired tapi is_active=true. Fix: badge admin voucher & flash sale cek waktu ("Kadaluarsa" merah, bukan "Aktif"); halaman customer filter ends_at; DB via MCP 4 voucher → is_active=false (NEWUSER20 tetap). Validasi server sudah aman sebelumnya. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
+| 2026-08-30 | T-83 | Dimulai & selesai (DONE): blog gambar cover + tag — BlogArticle += image_url (upload temp, note 16:9 800×450) + tags (TagInput chips); form admin + kartu storefront render gambar (fallback icon) & chip #tag; tersimpan di page_blog jsonb tanpa migration. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 
 ---
 
@@ -2604,5 +2610,122 @@ via `?? undefined`) · build 0
 == UNVERIFIED ==
 Visual post-deploy (pola T-78/T-79); simpan hero via admin - verifikasi
 live key hero berisi 2 field via MCP.
+```
+
+---
+
+### T-81 — Wishlist fungsional (tab profil + baca ?tab=)
+
+| Field | Isi |
+|---|---|
+| Status | `IN_PROGRESS` (mulai 2026-08-30) |
+| Prioritas | P1 |
+| Sumber | Laporan owner 2026-08-30: wishlist bisa ditambah + ada notif, tapi klik ikon masuk ke akun dan wishlist kosong. Root cause: tab wishlist di ProfilClient = placeholder statis (selalu render "Wishlist kosong.", tidak baca localStorage/fetch produk) + query `?tab=wishlist` tidak dibaca (activeTab selalu overview) |
+
+**Scope-IN**
+- `src/components/ProfilClient.tsx` — (1) useEffect mount baca `window.location.search` `?tab=` → setActiveTab (wishlist/pesanan/alamat/pengaturan); (2) tab wishlist fungsional: baca `getWishlist()` (localStorage hera_wishlist) → fetch produk via client supabase `products` + `product_images` (RLS publik) `.in("id", ids)` → render kartu (getProductImage, formatRp + coret diskon, link /produk/slug, tombol hapus toggleWishlist) → live sync event `wishlist-updated` + `storage` (pola Navbar) → loading & empty state
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Logika toggle (sudah benar), server/API/DB (tanpa perubahan), halaman lain
+
+**Kriteria Selesai**
+1. Klik ikon wishlist di navbar → langsung ke tab Wishlist (bukan Ringkasan)
+2. Produk yang di-wishlist tampil (gambar, nama, harga, link); hapus berfungsi + live sync
+3. Wishlist kosong → empty state; guest → perilaku existing
+4. Gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ src/components/ProfilClient.tsx
+  - useEffect mount: baca ?tab= (pesanan/wishlist/alamat/pengaturan) →
+    setActiveTab (setState di timer callback — lolos set-state-in-effect)
+  - Tab wishlist fungsional: getWishlist() (localStorage hera_wishlist) →
+    fetch produk via client supabase products + product_images (RLS publik,
+    .in("id", ids)) → kartu (gambar getProductImage / fallback Package,
+    nama, harga formatRp + coret diskon, link /produk/slug, tombol hapus
+    Trash2 → toggleWishlist + reload) → live sync event wishlist-updated +
+    storage → loading & empty state "Wishlist kosong."
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+---
+
+### T-82 — Voucher kadaluarsa (badge + filter + bersihkan data)
+
+| Field | Isi |
+|---|---|
+| Status | `IN_PROGRESS` (mulai 2026-08-30) |
+| Prioritas | P1 |
+| Sumber | Pertanyaan owner 2026-08-30: status aktif voucher tidak otomatis mati saat periode selesai. Fakta live: 4/5 voucher expired (ends_at Jul/Agu) tapi is_active=true; badge admin & halaman customer hanya cek is_active. Validasi server SUDAH aman (validateVoucher tolak expired) — murni masalah tampilan + data |
+
+**Keputusan owner (terkonfirmasi):** fix tampilan + bersihkan data (4 voucher expired → is_active=false).
+
+**Scope-IN**
+- DB via MCP (data saja): HERA15, HERA10, GRATIS5K, BELANJA50K → is_active=false (NEWUSER20 tetap — berlaku s.d. 15 Sep 2026)
+- `src/app/admin/(dashboard)/promo/page.tsx` — badge status voucher & flash sale cek waktu: !is_active → Nonaktif; is_active && ends_at < now → Kadaluarsa (abu/merah); else Aktif (tombol toggle tetap)
+- `src/app/voucher/page.tsx` — query += `.or("ends_at.is.null,ends_at.gte.<now>")` — expired tidak tampil
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- Validasi voucher server (sudah benar), skema DB (tanpa migration), fitur lain
+
+**Kriteria Selesai**
+1. 4 voucher expired tidak tampil di halaman customer; NEWUSER20 tetap tampil
+2. Badge admin menunjukkan Kadaluarsa (bukan Aktif) untuk voucher/flash yang lewat waktu
+3. Data live is_active=false utk 4 voucher (verifikasi MCP)
+4. Gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== DB (via MCP — data saja) ==
+update vouchers set is_active=false where code in (HERA15, HERA10,
+GRATIS5K, BELANJA50K) and ends_at < now() → 4 rows; verifikasi live:
+keempat is_active=false, NEWUSER20 tetap true (berlaku s.d. 15 Sep 2026) ✓
+
+== Kode ==
+~ admin/(dashboard)/promo/page.tsx — badge voucher & flash sale cek waktu:
+  !is_active → Nonaktif; is_active && ends_at < now → "Kadaluarsa"
+  (bg-red-50 text-red-600 / bg-red-100 text-red-700); else Aktif.
+  Tombol toggle tetap berfungsi (bisa diaktifkan kembali).
+~ src/app/voucher/page.tsx — query += .or("ends_at.is.null,ends_at.gte." +
+  now) → voucher kadaluarsa tidak tampil di halaman customer.
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+---
+
+### T-83 — Blog: gambar cover + tag/keyword
+
+| Field | Isi |
+|---|---|
+| Status | `IN_PROGRESS` (mulai 2026-08-30) |
+| Prioritas | P2 |
+| Sumber | Pertanyaan owner 2026-08-30: blog tidak bisa upload gambar & tidak ada tag/keyword. Model lama: {slug, title, excerpt, emoji} di store_settings.page_blog (jsonb). Keputusan owner: gambar + tag sekalian |
+
+**Scope-IN**
+- `src/app/admin/(dashboard)/blog/page.tsx` — BlogArticle += image_url (upload jalur temp /api/admin/upload, preview + hapus, note 16:9 ±800×450) + tags string[] (input chip: ketik + Enter, hapus per chip)
+- `src/app/blog/page.tsx` — kartu render gambar cover (fallback icon FileText) + chip tag
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- DB skema (jsonb page_blog — tanpa migration), halaman blog detail (tidak ada), fitur lain
+
+**Kriteria Selesai**
+1. Admin bisa upload cover + isi tag per artikel; tersimpan di page_blog
+2. Storefront blog menampilkan gambar + tag
+3. Gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+~ admin/(dashboard)/blog/page.tsx — BlogArticle += image_url + tags[];
+  TagInput (chips: ketik + Enter/koma, hapus per chip, dedupe); upload
+  cover via /api/admin/upload jalur "temp" (pola banner) + preview +
+  hapus + note ±800×450 (16:9); form grid 2 kolom (cover + tag)
+~ src/app/blog/page.tsx — kartu render gambar cover (w-24 h-14 sm:w-32,
+  fallback icon FileText) + chip tag (#tag); field opsional → artikel
+  lama tetap tampil normal
+Data tersimpan di store_settings.page_blog (jsonb — tanpa migration).
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```
 

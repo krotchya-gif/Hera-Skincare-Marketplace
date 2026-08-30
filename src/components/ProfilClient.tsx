@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -25,8 +25,11 @@ import {
   ShoppingCart,
   Plus,
   X,
+  Trash2,
 } from "lucide-react";
 import type { Order, Profile } from "@/types/database";
+import { getWishlist, toggleWishlist } from "@/lib/cart-utils";
+import { getProductImage } from "@/lib/product-image";
 
 interface ShippingAddress {
   id: string;
@@ -231,6 +234,64 @@ export default function ProfilClient({ initialUser, initialProfile, orders }: Pr
   const [profile, setProfile] = useState(initialProfile);
   const [activeTab, setActiveTab] = useState<"overview" | "pesanan" | "wishlist" | "alamat" | "pengaturan">("overview");
   const [orderStatusTab, setOrderStatusTab] = useState<string>("semua");
+
+  // T-81: baca ?tab= dari URL (ikon navbar /profil?tab=wishlist dsb) —
+  // setState di timer callback agar lolos rule set-state-in-effect.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const tab = new URLSearchParams(window.location.search).get("tab");
+      if (tab === "pesanan" || tab === "wishlist" || tab === "alamat" || tab === "pengaturan") {
+        setActiveTab(tab);
+      }
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  // T-81: wishlist — baca localStorage hera_wishlist → fetch produk (RLS publik)
+  interface WishlistProduct {
+    id: string;
+    name: string;
+    slug: string | null;
+    price: number;
+    discount_price: number | null;
+    product_images?: { url: string; is_primary: boolean }[] | null;
+  }
+  const [wishlistProducts, setWishlistProducts] = useState<WishlistProduct[]>([]);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  const loadWishlist = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) {
+      setWishlistProducts([]);
+      return;
+    }
+    setWishlistLoading(true);
+    try {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("products")
+        .select("id, name, slug, price, discount_price, product_images(url, is_primary)")
+        .in("id", ids);
+      setWishlistProducts((data as unknown as WishlistProduct[]) ?? []);
+    } catch {
+      setWishlistProducts([]);
+    } finally {
+      setWishlistLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => {
+      void loadWishlist(getWishlist());
+    };
+    const timer = setTimeout(refresh, 0);
+    window.addEventListener("wishlist-updated", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("wishlist-updated", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, [loadWishlist]);
 
   // Auth form states
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
@@ -833,11 +894,60 @@ export default function ProfilClient({ initialUser, initialProfile, orders }: Pr
               </div>
             )}
 
-            {/* Wishlist Tab */}
+            {/* Wishlist Tab — T-81: fungsional (baca localStorage + fetch produk) */}
             {activeTab === "wishlist" && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
-                <Heart className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">Wishlist kosong.</p>
+              <div className="space-y-3">
+                {wishlistLoading ? (
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-sm text-gray-400">
+                    Memuat wishlist...
+                  </div>
+                ) : wishlistProducts.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+                    <Heart className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 text-sm">Wishlist kosong.</p>
+                  </div>
+                ) : (
+                  wishlistProducts.map((p) => {
+                    const img = getProductImage(p);
+                    return (
+                      <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
+                        <Link href={`/produk/${p.slug}`} className="shrink-0">
+                          {img ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn
+                            <img src={img} alt={p.name} className="w-16 h-16 rounded-xl object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center">
+                              <Package className="w-6 h-6 text-gray-300" />
+                            </div>
+                          )}
+                        </Link>
+                        <Link href={`/produk/${p.slug}`} className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm truncate">{p.name}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
+                            {p.discount_price ? (
+                              <>
+                                <span className="text-emerald-600 font-bold">{formatRp(p.discount_price)}</span>
+                                <span className="text-gray-400 line-through">{formatRp(p.price)}</span>
+                              </>
+                            ) : (
+                              <span className="text-emerald-600 font-bold">{formatRp(p.price)}</span>
+                            )}
+                          </p>
+                        </Link>
+                        <button
+                          onClick={() => {
+                            toggleWishlist(p.id);
+                            void loadWishlist(getWishlist());
+                          }}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                          aria-label={`Hapus ${p.name} dari wishlist`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             )}
 
