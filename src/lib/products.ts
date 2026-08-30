@@ -1,5 +1,6 @@
 // ─── Product Data Layer — Supabase queries ────────────────────────────────────
 import { createClient } from "@/utils/supabase/server";
+import { attachProfiles } from "@/lib/profiles";
 import type { Product, Category, Review, ProductFilters, PaginatedResult } from "@/types/database";
 
 // ─── Batch Rating & Sold Helper ────────────────────────────────
@@ -403,14 +404,15 @@ export async function getReviewsByProduct(productId: string): Promise<Review[]> 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reviews")
-    .select(`*, profiles(id, name, avatar_url)`)
+    .select(`*`)
     .eq("product_id", productId)
     .eq("is_visible", true)
     .order("created_at", { ascending: false })
     .limit(20);
 
   if (error) return [];
-  return (data as unknown as Review[]) ?? [];
+  const rows = await attachProfiles(supabase, (data as { user_id?: string | null }[]) ?? []);
+  return (rows as unknown as Review[]) ?? [];
 }
 
 export async function getProductRatingSummary(productId: string) {

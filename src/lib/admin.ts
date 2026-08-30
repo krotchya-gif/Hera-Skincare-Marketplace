@@ -1,5 +1,6 @@
 // ─── Admin Data Layer — Supabase queries ─────────────────────────────────────
 import { createClient } from "@/utils/supabase/server";
+import { attachProfiles } from "@/lib/profiles";
 import type { Profile, Product, Review, Voucher, DashboardStats, OrderStatus, Category, FlashSale } from "@/types/database";
 
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
@@ -60,11 +61,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const productsSoldChange = lastProductsSold > 0 ? Math.round(((thisProductsSold - lastProductsSold) / lastProductsSold) * 100) : 0;
 
   // Recent orders
-  const { data: recentOrders } = await supabase
+  const { data: recentOrdersRaw } = await supabase
     .from("orders")
-    .select(`*, profiles(id, name, email), order_items(product_name, qty, price)`)
+    .select(`*, order_items(product_name, qty, price)`)
     .order("created_at", { ascending: false })
     .limit(5);
+  const recentOrders = await attachProfiles(supabase, (recentOrdersRaw as { user_id?: string | null }[]) ?? []);
 
   // Top products (filtered by last 3 months for performance) — T-28: tanpa order dibatalkan
   const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString();
@@ -332,7 +334,7 @@ export async function getAllReviews(filters: { page?: number; pageSize?: number;
 
   let query = supabase
     .from("reviews")
-    .select(`*, profiles(id, name, avatar_url), products(id, name, slug)`, { count: "exact" })
+    .select(`*, products(id, name, slug)`, { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (isVisible !== undefined) query = query.eq("is_visible", isVisible);
@@ -343,8 +345,10 @@ export async function getAllReviews(filters: { page?: number; pageSize?: number;
   const { data, error, count } = await query;
   if (error) return { data: [], count: 0, totalPages: 0 };
 
+  const rows = await attachProfiles(supabase, (data as { user_id?: string | null }[]) ?? []);
+
   return {
-    data: (data as unknown as Review[]) ?? [],
+    data: (rows as unknown as Review[]) ?? [],
     count: count ?? 0,
     totalPages: Math.ceil((count ?? 0) / pageSize),
   };

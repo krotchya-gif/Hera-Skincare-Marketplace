@@ -2,6 +2,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { validateVoucher, redeemVoucher } from "@/lib/vouchers";
+import { attachProfiles } from "@/lib/profiles";
 import type { Order, OrderStatus, ShippingAddress } from "@/types/database";
 
 // ─── User orders ──────────────────────────────────────────────────────────────
@@ -38,17 +39,27 @@ export async function getAllOrders(filters: OrderFilters = {}) {
 
   let query = supabase
     .from("orders")
-    .select(
-      `*, profiles(id, name, email, phone), order_items(id, product_name, qty, price, subtotal)`,
-      { count: "exact" }
-    )
+    // embed `profiles(...)` TIDAK valid (orders.user_id -> auth.users, tanpa FK
+    // ke profiles) — nama pelanggan di-attach via attachProfiles() setelah query
+    .select(`*, order_items(id, product_name, qty, price, subtotal)`, { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (status && status !== "semua") {
     query = query.eq("status", status);
   }
   if (search) {
-    query = query.or(`order_number.ilike.%${search}%,profiles.name.ilike.%${search}%`);
+    // Cari nama pelanggan via profiles dulu, lalu filter order by user_id
+    const { data: matchedProfiles } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("name", `%${search}%`)
+      .limit(100);
+    const ids = (matchedProfiles ?? []).map((p) => p.id);
+    if (ids.length > 0) {
+      query = query.or(`order_number.ilike.%${search}%,user_id.in.(${ids.join(",")})`);
+    } else {
+      query = query.ilike("order_number", `%${search}%`);
+    }
   }
   if (dateFrom) query = query.gte("created_at", dateFrom);
   if (dateTo) query = query.lte("created_at", dateTo + "T23:59:59");
@@ -62,8 +73,10 @@ export async function getAllOrders(filters: OrderFilters = {}) {
     return { data: [], count: 0, page, pageSize, totalPages: 0 };
   }
 
+  const rows = await attachProfiles(supabase, (data as { user_id?: string | null }[]) ?? []);
+
   return {
-    data: (data as unknown as Order[]) ?? [],
+    data: (rows as unknown as Order[]) ?? [],
     count: count ?? 0,
     page,
     pageSize,
@@ -75,12 +88,13 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("orders")
-    .select(`*, profiles(id, name, email, phone), order_items(*, products(id, name, slug))`)
+    .select(`*, order_items(*, products(id, name, slug))`)
     .eq("id", orderId)
     .single();
 
   if (error) return null;
-  return data as unknown as Order;
+  const [order] = await attachProfiles(supabase, [data as { user_id?: string | null }]);
+  return (order ?? null) as unknown as Order;
 }
 
 // ─── Create order ─────────────────────────────────────────────────────────────

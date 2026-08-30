@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminRole, handleAdminError } from "@/lib/auth-utils";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
+import { attachProfiles } from "@/lib/profiles";
 
 // T-06.1: Daftar semua pertanyaan produk (untuk halaman admin ulasan/Q&A)
 export async function GET(request: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("product_qna")
-      .select(`*, products(id, name), profiles(email)`)
+      .select(`*, products(id, name)`)
       .order("created_at", { ascending: false })
       .limit(100);
 
@@ -22,7 +23,8 @@ export async function GET(request: NextRequest) {
       console.error("[QnA Admin List]", error);
       return NextResponse.json({ error: "Gagal memuat pertanyaan." }, { status: 500 });
     }
-    return NextResponse.json(data ?? []);
+    const rows = await attachProfiles(supabase, (data as { user_id?: string | null }[]) ?? []);
+    return NextResponse.json(rows);
   } catch (error) {
     return handleAdminError(error);
   }
