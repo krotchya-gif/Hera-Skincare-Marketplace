@@ -56,7 +56,7 @@ export default async function BlogPage() {
                   <div className="min-w-0">
                     <h2 className="font-semibold text-gray-900 text-sm leading-snug mb-1">{article.title}</h2>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{article.excerpt}</p>
-                    {article.tags && article.tags.length > 0 && (
+                    {Array.isArray(article.tags) && article.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {article.tags.map((tag) => (
                           <span key={tag} className="inline-flex items-center bg-green-50 text-green-700 text-[10px] font-medium px-2 py-0.5 rounded-full">

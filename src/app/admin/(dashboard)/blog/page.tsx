@@ -73,7 +73,13 @@ export default function BlogPage() {
       if (!res.ok) throw new Error("Gagal memuat data blog");
       const json = await res.json();
       const blogData = json.settings?.page_blog as { articles?: BlogArticle[] } | undefined;
-      setArticles(blogData?.articles || []);
+      setArticles(
+        (blogData?.articles || []).map((a) => ({
+          ...a,
+          image_url: a.image_url || "",
+          tags: Array.isArray(a.tags) ? a.tags : [],
+        }))
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
