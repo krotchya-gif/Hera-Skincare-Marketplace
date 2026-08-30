@@ -46,6 +46,25 @@ const EMPTY_FORM: BannerForm = {
 // URL gambar tersimpan di banners.image_url, bukan di tabel produk.
 const UPLOAD_NO_REF = "temp";
 
+// T-78: catatan ukuran per posisi — WAJIB sinkron dengan rasio frame di
+// BannerCarousel.tsx (hero: 21:9/4:3; strip: 16:5/2:1). Frame DIKUNCI
+// aspect-ratio sehingga catatan ini = patokan presisi (tidak kepotong/peyang).
+const PLACEMENT_NOTES: Record<
+  "hero" | "strip",
+  { label: string; desktop: string; mobile: string }
+> = {
+  hero: {
+    label: "Hero (atas)",
+    desktop: "±1600×685 px (rasio 21:9)",
+    mobile: "±800×600 px (rasio 4:3)",
+  },
+  strip: {
+    label: "Promo (bawah)",
+    desktop: "±1600×500 px (rasio 16:5)",
+    mobile: "±800×400 px (rasio 2:1)",
+  },
+};
+
 export default function BannerManager() {
   const { toast } = useToast();
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -164,7 +183,8 @@ export default function BannerManager() {
         <div>
           <h3 className="font-semibold text-gray-800 text-sm">Banner Promosi</h3>
           <p className="text-xs text-gray-400">
-            Tampil sebagai carousel di beranda storefront (di bawah hero). Kosong = beranda tanpa carousel.
+            Carousel beranda: <span className="font-medium text-gray-500">Hero (atas)</span> ukuran besar 21:9/4:3 ·
+            <span className="font-medium text-gray-500"> Promo (bawah)</span> ramping 16:5/2:1. Kosong = section tidak dirender.
           </p>
         </div>
         <button
@@ -246,7 +266,7 @@ export default function BannerManager() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Gambar Desktop * <span className="text-gray-400 font-normal">— ±1600×500 px (rasio 16:5)</span>
+                  Gambar Desktop * <span className="text-gray-400 font-normal">— {PLACEMENT_NOTES[form.placement].desktop}</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-1.5 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50">
@@ -272,7 +292,7 @@ export default function BannerManager() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Gambar Mobile <span className="text-gray-400 font-normal">— ±800×400 px (rasio 2:1)</span>
+                  Gambar Mobile <span className="text-gray-400 font-normal">— {PLACEMENT_NOTES[form.placement].mobile}</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-1.5 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50">
@@ -315,8 +335,8 @@ export default function BannerManager() {
                     value={form.placement}
                     onChange={(e) => setForm({ ...form, placement: e.target.value as BannerForm["placement"] })}
                   >
-                    <option value="hero">Carousel Beranda</option>
-                    <option value="strip">Strip</option>
+                    <option value="hero">Hero (atas) — 21:9 / 4:3</option>
+                    <option value="strip">Promo (bawah) — 16:5 / 2:1</option>
                   </select>
                 </div>
                 <div>

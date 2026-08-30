@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PromoBannerCarousel from "@/components/PromoBannerCarousel";
+import BannerCarousel from "@/components/BannerCarousel";
 import PushOptIn from "@/components/PushOptIn";
 import type { Banner } from "@/types/database";
 import { useToast } from "@/components/Toast";
@@ -67,31 +67,34 @@ function useCountdown(targetDate: string | null) {
   return time;
 }
 
-// ─── Hero Banner ──────────────────────────────────────────────────
+// ─── Hero Banner (fallback T-78) ─────────────────────────────────
+// Hanya dirender bila TIDAK ada banner hero (placement "hero") dari admin.
+// Gambar dibatasi max-w-7xl (T-78: tidak full-bleed lagi) + overlay gelap
+// menjaga keterbacaan teks. Kosong = gradient bawaan.
 function HeroBanner({ heroImageUrl }: { heroImageUrl?: string | null }) {
   return (
-    <section className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-700 relative overflow-hidden">
-      {/* T-71: gambar latar dari admin — overlay gelap menjaga keterbacaan teks */}
-      {heroImageUrl && (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
-          <img
-            src={heroImageUrl}
-            alt="Latar hero beranda"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-emerald-950/60" />
-        </>
-      )}
-      {/* Animated decorative circles */}
-      <div className="absolute top-0 right-0 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-white/[0.04] rounded-full translate-x-1/3 -translate-y-1/3 animate-float-slow" />
-      <div className="absolute bottom-0 left-1/4 w-24 sm:w-32 md:w-48 h-24 sm:h-32 md:h-48 bg-white/[0.04] rounded-full translate-y-1/2 animate-float-delayed" />
-      <div className="absolute top-1/2 right-1/4 w-16 md:w-24 h-16 md:h-24 bg-emerald-500/10 rounded-full animate-float" />
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-5" aria-label="Hero beranda">
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-700 shadow-sm border border-gray-100">
+        {heroImageUrl && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
+            <img
+              src={heroImageUrl}
+              alt="Latar hero beranda"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-emerald-950/60" />
+          </>
+        )}
+        {/* Animated decorative circles */}
+        <div className="absolute top-0 right-0 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-white/[0.04] rounded-full translate-x-1/3 -translate-y-1/3 animate-float-slow" />
+        <div className="absolute bottom-0 left-1/4 w-24 sm:w-32 md:w-48 h-24 sm:h-32 md:h-48 bg-white/[0.04] rounded-full translate-y-1/2 animate-float-delayed" />
+        <div className="absolute top-1/2 right-1/4 w-16 md:w-24 h-16 md:h-24 bg-emerald-500/10 rounded-full animate-float" />
 
-      {/* Subtle grid pattern overlay */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+        {/* Subtle grid pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 md:py-16 flex flex-col md:flex-row items-center gap-6 md:gap-12 relative z-10">
+        <div className="relative px-6 sm:px-10 py-8 sm:py-10 md:py-14 flex flex-col md:flex-row items-center gap-6 md:gap-12">
         <div className="flex-1 text-center md:text-left animate-fade-in-up">
           <div className="flex items-center justify-center md:justify-start gap-2 mb-3 sm:mb-4">
             <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
@@ -142,6 +145,7 @@ function HeroBanner({ heroImageUrl }: { heroImageUrl?: string | null }) {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </section>
   );
@@ -359,11 +363,12 @@ interface HomeClientProps {
   flashSaleEnd?: string | null;
   productStats?: Record<string, { average: number; count: number; sold: number }>;
   heroImageUrl?: string | null;
+  heroBanners: Banner[];
   banners: Banner[];
   allProducts: Product[];
 }
 
-export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {}, banners = [], allProducts = [], heroImageUrl = null }: HomeClientProps) {
+export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {}, banners = [], heroBanners = [], allProducts = [], heroImageUrl = null }: HomeClientProps) {
   const { toast } = useToast();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [emailSubscribe, setEmailSubscribe] = useState("");
@@ -429,10 +434,17 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
         </div>
       </nav>
 
-      <HeroBanner heroImageUrl={heroImageUrl} />
+      {/* T-78: hero = carousel banner (placement "hero", 21:9/4:3);
+          fallback HeroBanner hanya bila belum ada banner hero */}
+      {heroBanners.length > 0 ? (
+        <BannerCarousel banners={heroBanners} placement="hero" />
+      ) : (
+        <HeroBanner heroImageUrl={heroImageUrl} />
+      )}
 
-      {/* T-63: carousel banner promosi (tidak dirender bila tidak ada banner) */}
-      <PromoBannerCarousel banners={banners} />
+      {/* T-63/T-78: carousel banner promosi (placement "strip", 16:5/2:1;
+          tidak dirender bila tidak ada banner) */}
+      <BannerCarousel banners={banners} placement="strip" />
 
       {/* T-64: opt-in push notification (hanya user login + browser mendukung) */}
       <PushOptIn />

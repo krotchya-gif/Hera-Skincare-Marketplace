@@ -1,15 +1,35 @@
 "use client";
 
-// T-63: carousel banner promosi di homepage. Tanpa banner → tidak dirender
-// (zero impact saat fitur belum dipakai). Auto-rotate tiap 5 detik.
+// T-78: carousel banner generik (refactor PromoBannerCarousel T-63).
+// Dipakai 2× di homepage: placement "hero" (atas, 21:9/4:3) &
+// "strip" (bawah, 16:5/2:1). Rasio frame DIKUNCI aspect-ratio agar
+// catatan ukuran di admin = patokan presisi (tidak kepotong/peyang).
+// Tanpa banner → tidak dirender (zero impact). Auto-rotate tiap 5 detik.
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Banner } from "@/types/database";
 
-export default function PromoBannerCarousel({ banners }: { banners: Banner[] }) {
+export type BannerPlacement = "hero" | "strip";
+
+// Rasio frame per posisi — WAJIB sinkron dengan catatan ukuran di
+// BannerManager.tsx (Hero: 1600×685/21:9 & 800×600/4:3; Promo:
+// 1600×500/16:5 & 800×400/2:1).
+const RATIOS: Record<BannerPlacement, { mobile: string; desktop: string }> = {
+  hero: { mobile: "aspect-[4/3]", desktop: "sm:aspect-[21/9]" },
+  strip: { mobile: "aspect-[2/1]", desktop: "sm:aspect-[16/5]" },
+};
+
+export default function BannerCarousel({
+  banners,
+  placement,
+}: {
+  banners: Banner[];
+  placement: BannerPlacement;
+}) {
   const [index, setIndex] = useState(0);
   const count = banners.length;
+  const ratio = RATIOS[placement];
 
   useEffect(() => {
     if (count < 2) return;
@@ -28,14 +48,14 @@ export default function PromoBannerCarousel({ banners }: { banners: Banner[] }) 
       <img
         src={banner.image_url_mobile || banner.image_url}
         alt={banner.title}
-        className="w-full h-40 object-cover sm:hidden"
+        className={`w-full ${ratio.mobile} object-cover sm:hidden`}
         loading="lazy"
       />
       {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
       <img
         src={banner.image_url}
         alt={banner.title}
-        className="w-full h-40 sm:h-56 object-cover hidden sm:block"
+        className={`w-full ${ratio.desktop} object-cover hidden sm:block`}
         loading="lazy"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
@@ -47,7 +67,7 @@ export default function PromoBannerCarousel({ banners }: { banners: Banner[] }) 
   );
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-5" aria-label="Banner promosi">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-5" aria-label={placement === "hero" ? "Banner hero" : "Banner promosi"}>
       <div className="relative rounded-2xl overflow-hidden shadow-sm border border-gray-100">
         {banner.link_url ? (
           banner.link_url.startsWith("/") ? (

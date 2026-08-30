@@ -19,13 +19,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, banners, allProducts, hero] = await Promise.all([
+  const [categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, heroBanners, banners, allProducts, hero] = await Promise.all([
     getCategories(),
     getFlashSaleProducts(),
     getBestSellerProducts(8),
     getPromoProducts(8),
     getActiveFlashSaleEnd(),
     getActiveBanners("hero"),
+    getActiveBanners("strip"),
     getProducts({ page: 1, pageSize: 8, sort: "newest" }),
     getHeroSettings(),
   ]);
@@ -46,6 +47,7 @@ export default async function HomePage() {
       promoProducts={promoProducts}
       flashSaleEnd={flashSaleEnd}
       productStats={productStats}
+      heroBanners={heroBanners}
       banners={banners}
       allProducts={allProducts.data ?? []}
       heroImageUrl={hero.image_url}
