@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { STORE_NAME } from "@/utils/storeConfig";
 import { createClient } from "@/utils/supabase/server";
 import { FileText } from "lucide-react";
+import { optimizeImageUrl, BLOG_COVER } from "@/lib/image";
 
 export const metadata = {
   title: `Blog — ${STORE_NAME}`,
@@ -43,10 +44,11 @@ export default async function BlogPage() {
                   {article.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn
                     <img
-                      src={article.image_url}
+                      src={optimizeImageUrl(article.image_url, BLOG_COVER) ?? undefined}
                       alt={article.title}
                       className="w-24 h-14 sm:w-32 sm:h-18 rounded-xl object-cover border border-gray-100 shrink-0"
                       loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 shrink-0">

@@ -32,6 +32,7 @@ import { CategoryIcon } from "@/components/CategoryIcon";
 import { formatRp } from "@/utils/format";
 import { addToCart, getWishlist, toggleWishlist } from "@/lib/cart-utils";
 import { getProductImage } from "@/lib/product-image";
+import { optimizeImageUrl, BANNER_HERO } from "@/lib/image";
 
 export function getProductEmoji(slug: string | null, categoryIcon?: string | null): string {
   // T-47: emoji dihapus — fallback menggunakan icon Lucide kategori
@@ -79,15 +80,19 @@ function HeroBanner({ heroImageUrl, heroImageMobile }: { heroImageUrl?: string |
                 desktop (≥640px) pakai gambar desktop (pola T-75) */}
             {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
             <img
-              src={(heroImageMobile || heroImageUrl) ?? undefined}
+              src={optimizeImageUrl(heroImageMobile || heroImageUrl, BANNER_HERO.mobile) ?? undefined}
               alt="Latar hero beranda"
               className="absolute inset-0 w-full h-full object-cover sm:hidden"
+              fetchPriority="high"
+              decoding="async"
             />
             {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
             <img
-              src={heroImageUrl || ""}
+              src={optimizeImageUrl(heroImageUrl, BANNER_HERO.desktop) ?? undefined}
               alt="Latar hero beranda"
               className="absolute inset-0 w-full h-full object-cover hidden sm:block"
+              fetchPriority="high"
+              decoding="async"
             />
             {/* T-80 (opsi B): gradient lembut sisi kiri saja — teks terbaca,
                 gambar tidak digelapkan penuh */}
@@ -278,6 +283,7 @@ function ProductCard({
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
+              decoding="async"
             />
           ) : (
             <CategoryIcon name={emoji} className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 text-emerald-600/70 group-hover:scale-110 transition-transform duration-500" />

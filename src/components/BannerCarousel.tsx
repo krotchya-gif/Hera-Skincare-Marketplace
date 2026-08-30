@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Banner } from "@/types/database";
+import { optimizeImageUrl, BANNER_HERO, BANNER_STRIP } from "@/lib/image";
 
 export type BannerPlacement = "hero" | "strip";
 
@@ -31,6 +32,7 @@ export default function BannerCarousel({
   const [index, setIndex] = useState(0);
   const count = banners.length;
   const ratio = RATIOS[placement];
+  const size = placement === "hero" ? BANNER_HERO : BANNER_STRIP;
 
   useEffect(() => {
     if (count < 2) return;
@@ -47,17 +49,19 @@ export default function BannerCarousel({
           desktop (≥640px) memakai gambar desktop */}
       {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
       <img
-        src={banner.image_url_mobile || banner.image_url}
+        src={optimizeImageUrl(banner.image_url_mobile || banner.image_url, size.mobile) ?? undefined}
         alt={banner.title}
         className={`w-full ${ratio.mobile} object-cover sm:hidden`}
         loading="lazy"
+        decoding="async"
       />
       {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
       <img
-        src={banner.image_url}
+        src={optimizeImageUrl(banner.image_url, size.desktop) ?? undefined}
         alt={banner.title}
         className={`w-full ${ratio.desktop} object-cover hidden sm:block`}
         loading="lazy"
+        decoding="async"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
