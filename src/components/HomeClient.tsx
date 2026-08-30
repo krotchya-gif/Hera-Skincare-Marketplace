@@ -23,9 +23,6 @@ import {
   Heart,
   X,
   ArrowRight,
-  Droplets,
-  Sparkles,
-  Flower2,
   Package,
   Tag,
 } from "lucide-react";
@@ -138,25 +135,7 @@ function HeroBanner({ heroImageUrl, heroImageMobile }: { heroImageUrl?: string |
             </Link>
           </div>
         </div>
-
-        <div className="flex gap-3 md:gap-4 shrink-0 animate-fade-in-up delay-200">
-          {[<Droplets key="d" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />, <Sparkles key="s" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />, <Flower2 key="f" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />].map((icon, i) => (
-            <div
-              key={i}
-              className={`bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 md:p-6 border border-white/15 shadow-xl hover:bg-white/15 transition-all duration-300 ${i === 1 ? "-translate-y-3 md:-translate-y-5" : ""}`}
-              style={{ animationDelay: `${i * 150}ms` }}
-            >
-              <span className="block mb-2 text-white/90">{icon}</span>
-              <div className="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-white/80 to-emerald-200 rounded-full transition-all duration-1000"
-                  style={{ width: `${70 - i * 15}%` }}
-                />
-              </div>
-            </div>
-          ))}
         </div>
-      </div>
       </div>
     </section>
   );
