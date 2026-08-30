@@ -69,21 +69,32 @@ function useCountdown(targetDate: string | null) {
 
 // ─── Hero Banner (fallback T-78) ─────────────────────────────────
 // Hanya dirender bila TIDAK ada banner hero (placement "hero") dari admin.
-// Gambar dibatasi max-w-7xl (T-78: tidak full-bleed lagi) + overlay gelap
-// menjaga keterbacaan teks. Kosong = gradient bawaan.
-function HeroBanner({ heroImageUrl }: { heroImageUrl?: string | null }) {
+// Gambar dibatasi max-w-7xl (T-78: tidak full-bleed lagi). T-80: overlay
+// gelap penuh diganti gradient lembut di sisi kiri (opsi B) — gambar
+// terang, teks putih tetap terbaca. Kosong = gradient bawaan.
+function HeroBanner({ heroImageUrl, heroImageMobile }: { heroImageUrl?: string | null; heroImageMobile?: string | null }) {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-5" aria-label="Hero beranda">
       <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-700 shadow-sm border border-gray-100">
-        {heroImageUrl && (
+        {(heroImageUrl || heroImageMobile) && (
           <>
+            {/* T-80: dua gambar — mobile (<640px) pakai gambar mobile bila ada,
+                desktop (≥640px) pakai gambar desktop (pola T-75) */}
             {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
             <img
-              src={heroImageUrl}
+              src={(heroImageMobile || heroImageUrl) ?? undefined}
               alt="Latar hero beranda"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover sm:hidden"
             />
-            <div className="absolute inset-0 bg-emerald-950/60" />
+            {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
+            <img
+              src={heroImageUrl || ""}
+              alt="Latar hero beranda"
+              className="absolute inset-0 w-full h-full object-cover hidden sm:block"
+            />
+            {/* T-80 (opsi B): gradient lembut sisi kiri saja — teks terbaca,
+                gambar tidak digelapkan penuh */}
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/50 via-emerald-950/15 to-transparent" />
           </>
         )}
         {/* Animated decorative circles */}
@@ -400,12 +411,13 @@ interface HomeClientProps {
   flashSaleEnd?: string | null;
   productStats?: Record<string, { average: number; count: number; sold: number }>;
   heroImageUrl?: string | null;
+  heroImageMobile?: string | null;
   heroBanners: Banner[];
   banners: Banner[];
   allProducts: Product[];
 }
 
-export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {}, banners = [], heroBanners = [], allProducts = [], heroImageUrl = null }: HomeClientProps) {
+export default function HomeClient({ categories, flashSaleProducts, bestSellerProducts, promoProducts, flashSaleEnd, productStats = {}, banners = [], heroBanners = [], allProducts = [], heroImageUrl = null, heroImageMobile = null }: HomeClientProps) {
   const { toast } = useToast();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [emailSubscribe, setEmailSubscribe] = useState("");
@@ -480,7 +492,7 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
           <BannerCarousel banners={heroBanners} placement="hero" />
         </>
       ) : (
-        <HeroBanner heroImageUrl={heroImageUrl} />
+        <HeroBanner heroImageUrl={heroImageUrl} heroImageMobile={heroImageMobile} />
       )}
 
       {/* T-63/T-78/T-79: carousel banner promosi (placement "strip", 11:2/2:1

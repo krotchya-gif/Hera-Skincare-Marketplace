@@ -140,6 +140,7 @@ npm run build       # exit 0
 | T-77 | P0 | Fix eksekusi full_schema.sql: duplikat create policy/index tanpa drop → init project baru gagal | DONE |
 | T-78 | P1 | Banner: hero jadi carousel (placement hero=atas, strip=bawah) + rasio frame dikunci (Hero 21:9/4:3, Promo 16:5/2:1) + note ukuran akurat per posisi + hero non-full-bleed | DONE |
 | T-79 | P1 | Redesign ukuran banner stack: Hero 16:5/4:3, Promo 11:2/2:1 + BrandStrip (headline di atas carousel) + pindah 2 banner existing ke strip | DONE |
+| T-80 | P2 | Hero settings dual input (desktop+mobile) di Pengaturan + overlay hero fallback diganti gradient kiri (opsi B pencerahan) | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -891,6 +892,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-30 | T-77 | Dimulai & selesai (DONE): audit menemukan full_schema.sql tidak bisa eksekusi di project baru (duplikat create policy/index tanpa drop — uji T-52 hanya parse sintaks). Fix: 6 drop policy if exists sebelum create duplikat (5 notifications + order_items insert) + create index if not exists (2); state final tidak berubah (68 create / 10 drop / 0 index tanpa if-not-exists; set 59 unik = live). False positive "seed duplikat" = insert dalam body fungsi (tidak diubah). Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-30 | T-78 | Dimulai & selesai (DONE): banner dual-carousel — BannerCarousel generik (rasio DIKUNCI aspect-ratio: hero 21:9/4:3, strip 16:5/2:1; ganti PromoBannerCarousel yang dihapus), page.tsx fetch 2 placement, HeroBanner → fallback non-full-bleed (max-w-7xl), BannerManager label "Hero (atas)"/"Promo (bawah)" + note ukuran dinamis (Hero 1600×685/800×600; Promo 1600×500/800×400) = patokan presisi; 2 banner live otomatis naik ke carousel atas. Bonus housekeeping: .env.local duplikat blok VAPID kosong-first (dotenv first-wins → kunci asli terabaikan, push mati diam-diam) dibersihkan; 6 branch worktree basi dihapus + worktree prune. Gerbang lint 13 · typecheck 0 · build 0; verifikasi visual post-deploy menyusul | zcode |
 | 2026-08-30 | T-79 | Dimulai & selesai (DONE): revisi owner "ketumpuk & hanya banner promo tampil" — redesign ukuran: Hero 16:5/4:3 (±1600×500/±800×600), Promo 11:2/2:1 (±1600×290/±800×400) ramping seperti iklan; + BrandStrip (headline "Solusi Produk Berkualitas" + CTA) di atas carousel hero (hanya saat ada banner hero; kosong → fallback headline lama); 2 banner existing dipindah ke placement strip via MCP (data saja, tanpa migration). Gerbang lint 13 · typecheck 0 · build 0 · push langsung atas instruksi owner | zcode |
+| 2026-08-30 | T-80 | Dimulai & selesai (DONE): hero settings dual input — Pengaturan→Informasi Toko "Gambar Hero Beranda" kini 2 upload (Desktop ±1600×500/16:5 + Mobile ±800×600/4:3, preview & hapus per gambar, simpan {image_url, image_url_mobile}); lib/hero.ts + page.tsx + HeroBanner render 2 gambar (mobile <640px pakai gambar mobile); overlay fallback diganti opsi B (gradient kiri from-emerald-950/50 via-/15 to-transparent — gambar terang, teks tetap terbaca). Gerbang lint 13 · typecheck 0 (fix TS null via ?? undefined) · build 0 · push | zcode |
 
 ---
 
@@ -2553,3 +2555,54 @@ lint 13 (baseline) · typecheck 0 · build 0
 Ukur frame post-deploy: 1280px hero 16:5 & promo 11:2; 375px hero 4:3 &
 promo 2:1; 0 overflow. Dijamin CSS aspect-ratio (pola T-78).
 ```
+
+---
+
+### T-80 - Hero settings dual input (desktop+mobile) + pencerahan overlay
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-08-30 / 2026-08-30 |
+| Prioritas | P2 |
+| Sumber | Owner 2026-08-30: (1) UI Gambar Hero Beranda di Pengaturan - Informasi Toko cuma 1 input (desktop) padahal diminta 2 ukuran desktop & mobile; (2) hero fallback terlihat gelap - overlay emerald-950/60 terlalu pekat. Keputusan owner: pencerahan = opsi B (gradient sisi kiri saja, bukan overlay penuh) |
+
+**Scope-IN**
+- `src/components/HomeClient.tsx` - overlay fallback `bg-emerald-950/60` -` bg-gradient-to-r from-emerald-950/50 via-emerald-950/15 to-transparent` (opsi B); HeroBanner render 2 gambar (mobile <640px pakai image_url_mobile fallback image_url; desktop pakai image_url - pola T-75)
+- `src/lib/hero.ts` - HeroSettings += `image_url_mobile` (validasi http(s) via isHttpUrl)
+- `src/app/page.tsx` - prop heroImageMobile
+- `src/app/admin/(dashboard)/pengaturan/page.tsx` - 2 blok upload (Desktop * dan Mobile opsional) + preview + hapus per gambar + note: Desktop 1600x500 (16:5), Mobile 800x600 (4:3); simpan `{ image_url, image_url_mobile }` ke key hero
+- Entri plan.md ini + Changelog
+
+**Scope-OUT (dilarang disentuh)**
+- BannerCarousel/BannerManager (sudah dual), DB skema (jsonb - tanpa migration), fitur lain
+
+**Kriteria Selesai**
+1. Pengaturan - Informasi Toko: 2 input hero (desktop & mobile) + note ukuran
+2. Hero fallback lebih terang (gradient kiri, bukan overlay penuh 60%)
+3. HeroBanner memakai gambar mobile di <640px bila tersedia
+4. Gerbang DoD hijau + bukti tercatat
+
+**Bukti**
+```
+== Kode ==
+~ HomeClient.tsx - overlay opsi B: bg-gradient-to-r from-emerald-950/50
+  via-emerald-950/15 to-transparent (gambar terang, teks tetap terbaca);
+  HeroBanner(heroImageUrl, heroImageMobile) render 2 img (sm:hidden /
+  hidden sm:block - pola T-75)
+~ lib/hero.ts - HeroSettings { image_url, image_url_mobile }; isHttpUrl
+~ page.tsx - prop heroImageMobile
+~ pengaturan/page.tsx - state heroImageMobile; uploadHeroImage(file,
+  target); fetchSettings muat image_url_mobile; saveStoreInfo simpan
+  { image_url, image_url_mobile }; UI 2 blok upload + preview + hapus +
+  note Desktop 1600x500 (16:5) / Mobile 800x600 (4:3)
+
+== Gerbang ==
+lint 13 (baseline) · typecheck 0 (1 error TS null di src img - diperbaiki
+via `?? undefined`) · build 0
+
+== UNVERIFIED ==
+Visual post-deploy (pola T-78/T-79); simpan hero via admin - verifikasi
+live key hero berisi 2 field via MCP.
+```
+

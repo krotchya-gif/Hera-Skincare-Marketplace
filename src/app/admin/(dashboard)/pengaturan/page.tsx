@@ -65,8 +65,9 @@ export default function SettingsPage() {
   const [ttUrl, setTtUrl] = useState("");
   const [fbUrl, setFbUrl] = useState("");
   const [waNumber, setWaNumber] = useState("6281234567890");
-  // T-71: gambar latar hero beranda (settings key `hero`)
+  // T-71/T-80: gambar latar hero beranda (settings key `hero`) — 2 ukuran
   const [heroImageUrl, setHeroImageUrl] = useState("");
+  const [heroImageMobile, setHeroImageMobile] = useState("");
   const [heroUploading, setHeroUploading] = useState(false);
 
   // --- States for Shipping ---
@@ -172,6 +173,7 @@ export default function SettingsPage() {
       }
       if (settings.hero) {
         setHeroImageUrl(settings.hero.image_url || "");
+        setHeroImageMobile(settings.hero.image_url_mobile || "");
       }
       if (settings.whatsapp_number) setWaNumber(settings.whatsapp_number as string);
 
@@ -268,8 +270,8 @@ export default function SettingsPage() {
     });
   }, []);
 
-  // T-71: upload gambar hero via jalur "temp" (pola T-70 — tanpa referensi produk)
-  const uploadHeroImage = async (file: File) => {
+  // T-71/T-80: upload gambar hero via jalur "temp" (pola T-70 — tanpa referensi produk)
+  const uploadHeroImage = async (file: File, target: "desktop" | "mobile") => {
     try {
       setHeroUploading(true);
       const fd = new FormData();
@@ -278,7 +280,8 @@ export default function SettingsPage() {
       const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Gagal mengupload gambar hero");
-      setHeroImageUrl(json.url);
+      if (target === "mobile") setHeroImageMobile(json.url);
+      else setHeroImageUrl(json.url);
     } catch (err) {
       toast("error", err instanceof Error ? err.message : String(err));
     } finally {
@@ -324,11 +327,11 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: "whatsapp_number", value: waNumber })
       });
-      // T-71: gambar hero beranda (key `hero`) — kosong = gradient bawaan
+      // T-71/T-80: gambar hero beranda (key `hero`) — kosong = gradient bawaan
       await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "hero", value: { image_url: heroImageUrl || null } })
+        body: JSON.stringify({ key: "hero", value: { image_url: heroImageUrl || null, image_url_mobile: heroImageMobile || null } })
       });
       toast("success", "Informasi toko berhasil disimpan!");
     } catch (err) {
@@ -779,36 +782,73 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
-            {/* T-71: Gambar Hero Beranda */}
-            <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-100">
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">Gambar Hero Beranda</label>
-              <p className="text-[10px] text-gray-400 mb-2">Latar section hero di beranda. Ukuran disarankan ±1600×500 px (rasio 16:5), JPEG/PNG/WebP maks 2MB. Overlay gelap otomatis agar teks tetap terbaca. Kosong = warna gradient bawaan.</p>
-              {heroImageUrl && (
-                <div className="flex items-start gap-3 mb-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={heroImageUrl} alt="Preview hero" className="w-48 h-16 rounded-lg object-cover border border-gray-200" />
-                  <button
-                    onClick={() => setHeroImageUrl("")}
-                    className="text-xs text-red-600 hover:text-red-700 font-medium"
-                  >
-                    Hapus gambar
-                  </button>
+            {/* T-71/T-80: Gambar Hero Beranda — 2 ukuran (desktop & mobile) */}
+            <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-100 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Gambar Hero Beranda</label>
+                <p className="text-[10px] text-gray-400">Latar section hero di beranda (fallback saat belum ada banner hero di Marketing → Banner). Kosong = warna gradient bawaan.</p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                  Desktop * <span className="text-gray-400 font-normal">— ±1600×500 px (rasio 16:5), JPEG/PNG/WebP maks 2MB</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${heroUploading ? "bg-gray-100 text-gray-400 border-gray-200" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`}>
+                    {heroUploading ? "Mengunggah..." : (heroImageUrl ? "Ganti gambar" : "Pilih gambar")}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={heroUploading}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadHeroImage(f, "desktop");
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {heroImageUrl && (
+                    <div className="flex items-center gap-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={heroImageUrl} alt="Preview hero desktop" className="w-24 h-8 rounded-lg object-cover border border-gray-200" />
+                      <button onClick={() => setHeroImageUrl("")} className="text-xs text-red-600 hover:text-red-700 font-medium">
+                        Hapus
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-              <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${heroUploading ? "bg-gray-100 text-gray-400 border-gray-200" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`}>
-                {heroUploading ? "Mengunggah..." : (heroImageUrl ? "Ganti gambar" : "Pilih gambar")}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  disabled={heroUploading}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) uploadHeroImage(f);
-                    e.target.value = "";
-                  }}
-                />
-              </label>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                  Mobile (opsional) <span className="text-gray-400 font-normal">— ±800×600 px (rasio 4:3), JPEG/PNG/WebP maks 2MB</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${heroUploading ? "bg-gray-100 text-gray-400 border-gray-200" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`}>
+                    {heroUploading ? "Mengunggah..." : (heroImageMobile ? "Ganti gambar" : "Pilih gambar")}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={heroUploading}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadHeroImage(f, "mobile");
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {heroImageMobile && (
+                    <div className="flex items-center gap-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={heroImageMobile} alt="Preview hero mobile" className="w-24 h-8 rounded-lg object-cover border border-gray-200" />
+                      <button onClick={() => setHeroImageMobile("")} className="text-xs text-red-600 hover:text-red-700 font-medium">
+                        Hapus
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">Opsional — kosongkan untuk memakai gambar desktop di semua perangkat.</p>
+              </div>
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <label className="block text-xs font-medium text-gray-600 mb-1.5">No. WhatsApp (tombol mengambang)</label>

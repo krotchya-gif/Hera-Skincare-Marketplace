@@ -51,6 +51,7 @@ export default async function HomePage() {
       banners={banners}
       allProducts={allProducts.data ?? []}
       heroImageUrl={hero.image_url}
+      heroImageMobile={hero.image_url_mobile}
     />
   );
 }
