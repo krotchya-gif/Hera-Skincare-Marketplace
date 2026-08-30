@@ -18,7 +18,7 @@ export default async function BlogPage() {
     .maybeSingle();
 
   const blog = (blogData?.value as {
-    articles?: { slug: string; title: string; excerpt: string; emoji: string }[];
+    articles?: { slug: string; title: string; excerpt: string; emoji: string; image_url?: string; tags?: string[] }[];
   }) || {};
 
   const articles = blog.articles || [];
@@ -40,12 +40,31 @@ export default async function BlogPage() {
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 block"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 shrink-0">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
+                  {article.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn
+                    <img
+                      src={article.image_url}
+                      alt={article.title}
+                      className="w-24 h-14 sm:w-32 sm:h-18 rounded-xl object-cover border border-gray-100 shrink-0"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
                     <h2 className="font-semibold text-gray-900 text-sm leading-snug mb-1">{article.title}</h2>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{article.excerpt}</p>
+                    {article.tags && article.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {article.tags.map((tag) => (
+                          <span key={tag} className="inline-flex items-center bg-green-50 text-green-700 text-[10px] font-medium px-2 py-0.5 rounded-full">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

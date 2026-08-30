@@ -9,6 +9,49 @@ interface BlogArticle {
   title: string;
   excerpt: string;
   emoji: string;
+  image_url: string;
+  tags: string[];
+}
+
+// T-83: input tag (chips) — ketik + Enter/koma untuk menambah
+function TagInput({ tags, onTagsChange }: { tags: string[]; onTagsChange: (t: string[]) => void }) {
+  const [input, setInput] = useState("");
+  const add = () => {
+    const t = input.trim().replace(/^#/, "");
+    if (t && !tags.includes(t)) onTagsChange([...tags, t]);
+    setInput("");
+  };
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1.5 mb-1.5">
+        {tags.map((tag, i) => (
+          <span key={`${tag}-${i}`} className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-[11px] font-medium px-2 py-1 rounded-full">
+            #{tag}
+            <button
+              type="button"
+              onClick={() => onTagsChange(tags.filter((_, j) => j !== i))}
+              className="hover:text-red-500 leading-none"
+              aria-label={`Hapus tag ${tag}`}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            add();
+          }
+        }}
+        placeholder="Ketik tag lalu Enter (contoh: skincare, tips)"
+        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400"
+      />
+    </div>
+  );
 }
 
 export default function BlogPage() {
@@ -59,7 +102,7 @@ export default function BlogPage() {
   };
 
   const addArticle = () => {
-    setArticles([...articles, { slug: "", title: "", excerpt: "", emoji: "file" }]);
+    setArticles([...articles, { slug: "", title: "", excerpt: "", emoji: "file", image_url: "", tags: [] }]);
   };
 
   const removeArticle = (index: number) => {
@@ -70,6 +113,26 @@ export default function BlogPage() {
     const updated = [...articles];
     updated[index] = { ...updated[index], [field]: value };
     setArticles(updated);
+  };
+
+  // T-83: upload gambar cover via jalur "temp" (pola banner — tanpa referensi produk)
+  const [uploading, setUploading] = useState(false);
+  const uploadCover = async (index: number, file: File) => {
+    try {
+      setUploading(true);
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("productId", "temp");
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Gagal mengupload gambar cover");
+      updateArticle(index, "image_url", json.url);
+      toast("success", "Gambar cover terunggah.");
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : String(err));
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {
@@ -175,6 +238,51 @@ export default function BlogPage() {
                   placeholder="Ringkasan artikel..."
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 resize-none"
                 />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Gambar Cover (opsional) <span className="text-gray-400 font-normal">— ±800×450 px (rasio 16:9), JPEG/PNG/WebP maks 2MB</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className={`inline-flex items-center gap-1.5 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50 shrink-0 ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                      {article.image_url ? "Ganti Gambar" : "Upload Gambar"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        disabled={uploading}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) uploadCover(i, f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {article.image_url && (
+                      <div className="flex items-center gap-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- gambar dari storage/cdn */}
+                        <img src={article.image_url} alt="Preview cover" className="w-20 h-11 rounded-lg object-cover border border-gray-200" />
+                        <button
+                          type="button"
+                          onClick={() => updateArticle(i, "image_url", "")}
+                          className="text-xs text-red-600 hover:text-red-700 font-medium"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Tag / Keyword (opsional)</label>
+                  <TagInput tags={article.tags} onTagsChange={(t) => {
+                    const updated = [...articles];
+                    updated[i] = { ...updated[i], tags: t };
+                    setArticles(updated);
+                  }} />
+                </div>
               </div>
             </div>
           ))}
