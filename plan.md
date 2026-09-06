@@ -914,6 +914,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-31 | T-87 | Dimulai & selesai (DONE): revisi owner — link "Lihat Website" di sidebar admin (atas kartu profil, buka tab baru target=_blank): storeConfig.ts + export STORE_URL (NEXT_PUBLIC_SITE_URL strip slash + fallback localhost), AdminSidebar.tsx + ExternalLink; urutan Lihat Website → Profil → Keluar; tampil juga di drawer mobile. Gerbang lint 13 · typecheck 0 · build 0 · push | zcode |
 | 2026-08-31 | T-88 | Dimulai & selesai (DONE): optimasi loading image — akar masalah: banner/hero homepage PNG 1.3–1.9 MB (total ±10 MB). Solusi: helper src/lib/image.ts optimizeImageUrl() pakai Supabase Image Transformation (render/image, resize=cover + format=webp + quality=80) untuk BannerCarousel (BANNER_HERO/BANNER_STRIP 1232×385/800×600 & 1232×224/700×350), HeroBanner HomeClient (+ fetchPriority=high, LCP) & blog cover (BLOG_COVER 480); decoding=async di img produk Home/Category. Verifikasi live: 2244×701 PNG 1692KB → 32KB WebP (200 image/webp, -98%). Gambar produk sudah ringan (32KB) — tidak di-resize. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-31 | T-89 s/d T-91 | Dimulai & selesai (DONE): PWA penuh + install prompt + rebrand icon/OG. T-89: sw.js upgrade (CACHE_VERSION hera-pwa-v1, pre-cache app shell /+icons+manifest, fetch navigate network-first → fallback cache /, _next/static cache-first, activate cleanup) + auto-register semua visitor di layout. T-90: InstallPrompt.tsx (beforeinstallprompt → tombol Install prompt() native; iOS guide Add to Home Screen; dismiss TTL 1 hari via localStorage; hilang permanen saat appinstalled/standalone). T-91: public/icons/ statis dari heralogo.png (192/512/apple/favicon gradient gelap + logo; og 1200×630 gradient hijau) — hapus 4 route icon dinamis; manifest icons + metadata layout icons/openGraph(siteName, og.png absolute)/twitter(summary_large_image); sw.js path icon baru. .next/types regenerated (route icon lama dihapus). Gerbang lint 13 · typecheck 0 · build 0 | zcode |
+| 2026-09-07 | — | Push notification T-64 AKTIF produksi: owner pasang 3 env VAPID di Vercel — verifikasi user-level: login customer test → GET /api/push/subscribe = 200 + publicKey 87 char (guest 401 by design: handler cek auth sebelum cek env); sw.js produksi 200. Sinkron AGENTS.md Live Systems + catatan UNVERIFIED T-64. Sisa UNVERIFIED: E2E subscribe + broadcast (butuh perangkat nyata) | zcode |
 
 ---
 
@@ -2319,10 +2320,10 @@ applicationServerKey + catch binding sw.js) sampai baseline kembali.
 == UNVERIFIED (runtime) ==
 VERIFIKASI WEBHOOK ✓ (30 Agu 2026): Xendit dashboard Test → 200 OK
 (512ms) — callback token terpasang di Vercel, endpoint produksi
-terautentikasi. Sisa UNVERIFIED (keputusan owner: push diaktifkan
-setelah produksi penuh): subscribe E2E di browser (menunggu env VAPID
-dipasang owner di Vercel + redeploy — key sudah ada di .env.local) +
-alur kirim broadcast (menunggu ≥1 perangkat subscribe).
+terautentikasi. PUSH VAPID ✓ (7 Sep 2026): env VAPID terpasang owner di
+Vercel — probe user-level GET /api/push/subscribe (sesi login) → 200 +
+publicKey 87 char; sw.js produksi 200. Sisa UNVERIFIED: subscribe E2E di
+browser + alur kirim broadcast (butuh ≥1 perangkat subscribe nyata).
 ```
 
 ---
