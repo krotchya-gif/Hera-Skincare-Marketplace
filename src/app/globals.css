@@ -232,3 +232,32 @@ a, button, input, select, textarea,
     }
   }
 }
+
+/* ─── T-95: quick-nav marquee — pill berjalan di mobile, statis di desktop ── */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.quicknav-track {
+  width: max-content;
+}
+
+@media (max-width: 767.98px) {
+  .quicknav-track {
+    animation: marquee 20s linear infinite;
+  }
+  .quicknav-track:hover {
+    animation-play-state: paused;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quicknav-track {
+    animation: none !important;
+  }
+}

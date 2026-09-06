@@ -440,31 +440,48 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
     }
   };
 
+  // T-95: pill quick-nav — dirender 2 set untuk marquee (set ke-2 aria-hidden + inert,
+  // tabIndex -1 agar tidak bisa di-focus keyboard)
+  const quickNavPills = (duplicate: boolean) => (
+    <>
+      <a
+        href="#flash-sale"
+        tabIndex={duplicate ? -1 : undefined}
+        className="mr-2 flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-100 text-xs font-semibold hover:bg-yellow-100 transition-colors"
+      >
+        <Zap className="w-3.5 h-3.5" /> Flash Sale
+      </a>
+      <a
+        href="#promo"
+        tabIndex={duplicate ? -1 : undefined}
+        className="mr-2 flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-red-50 text-red-600 border border-red-100 text-xs font-semibold hover:bg-red-100 transition-colors"
+      >
+        <Tag className="w-3.5 h-3.5" /> Promo Terbatas
+      </a>
+      <Link
+        href="/kategori/semua"
+        tabIndex={duplicate ? -1 : undefined}
+        className="mr-2 flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-green-50 text-green-700 border border-green-100 text-xs font-semibold hover:bg-green-100 transition-colors"
+      >
+        <Package className="w-3.5 h-3.5" /> Semua Produk
+      </Link>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-slate-50 pb-20 md:pb-0">
       <Navbar />
 
-      {/* T-67 addendum: quick-nav section unggulan (Flash Sale / Promo Terbatas / Semua Produk) */}
-      <nav aria-label="Navigasi cepat" className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex gap-2 overflow-x-auto no-scrollbar">
-          <a
-            href="#flash-sale"
-            className="flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-100 text-xs font-semibold hover:bg-yellow-100 transition-colors"
-          >
-            <Zap className="w-3.5 h-3.5" /> Flash Sale
-          </a>
-          <a
-            href="#promo"
-            className="flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-red-50 text-red-600 border border-red-100 text-xs font-semibold hover:bg-red-100 transition-colors"
-          >
-            <Tag className="w-3.5 h-3.5" /> Promo Terbatas
-          </a>
-          <Link
-            href="/kategori/semua"
-            className="flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-green-50 text-green-700 border border-green-100 text-xs font-semibold hover:bg-green-100 transition-colors"
-          >
-            <Package className="w-3.5 h-3.5" /> Semua Produk
-          </Link>
+      {/* T-67/T-95: quick-nav unggulan — mobile berjalan (marquee), desktop statis.
+          Pill memakai mr-2 (bukan gap container) agar translateX(-50%) mulus tanpa seam. */}
+      <nav aria-label="Navigasi cepat" className="bg-white border-b border-gray-100 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5">
+          <div className="quicknav-track flex w-max">
+            {quickNavPills(false)}
+            <div className="flex md:hidden" aria-hidden inert>
+              {quickNavPills(true)}
+            </div>
+          </div>
         </div>
       </nav>
 

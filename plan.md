@@ -154,6 +154,8 @@ npm run build       # exit 0
 | T-91 | P2 | Icon & OG/Twitter rebrand ke heralogo.png (file statis /icons/, hapus 4 route dinamis, metadata openGraph+twitter) | DONE |
 | T-92 | P1 | Fix install prompt muncul tiap load/refresh: TTL dismiss tidak dicek di handler beforeinstallprompt (path Chrome) + tanpa jeda — evaluasi terpusat cek TTL di semua jalur + delay tampil 6 detik | DONE |
 | T-93 | P1 | Sinkronisasi logo & icon sesuai kebutuhan: slot logo UI (Navbar x3, Footer, AdminSidebar, InstallPrompt) masih icon generik Leaf/Download + favicon.ico = segitiga putih default scaffold (pra-rebrand) — ganti slot logo dgn heralogo.png (desain konsisten icon T-91) + regenerasi favicon.ico dari icon-512 | DONE |
+| T-94 | P1 | Fix tombol Invoice di OrderDetailModal mati (tanpa onClick) — implement download PDF invoice via jspdf (dynamic import): logo + info pesanan + tabel item + rincian biaya + status bayar | DONE |
+| T-95 | P2 | Quick-nav beranda (Flash Sale / Promo Terbatas / Semua Produk) kepotong di mobile — kasih animasi running (marquee) di mobile, statis di desktop, pause hover, hormati prefers-reduced-motion | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -919,6 +921,8 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-09-07 | — | Push notification T-64 AKTIF produksi: owner pasang 3 env VAPID di Vercel — verifikasi user-level: login customer test → GET /api/push/subscribe = 200 + publicKey 87 char (guest 401 by design: handler cek auth sebelum cek env); sw.js produksi 200. Sinkron AGENTS.md Live Systems + catatan UNVERIFIED T-64. Sisa UNVERIFIED: E2E subscribe + broadcast (butuh perangkat nyata) | zcode |
 | 2026-09-07 | T-92 | Dimulai & selesai (DONE): fix install prompt muncul tiap load/refresh — 2 akar masalah di InstallPrompt.tsx: (1) handler beforeinstallprompt (path Chrome) set mode TANPA cek TTL localStorage pwa-install-dismissed → walau sudah ditutup (X), banner muncul lagi di refresh berikutnya; (2) tanpa jeda tampil. Fix: evaluasi terpusat evaluate() — TTL dicek ulang di semua jalur (timer jeda + event BIP), banner baru tampil setelah jeda 6 detik (SHOW_DELAY_MS) di halaman, initial state null murni (lazy initializer dihapus). Perilaku lain tetap: standalone/appinstalled tidak pernah tampil, X/Install-dibatalkan → TTL 1 hari, iOS petunjuk Share→Add to Home Screen. Entri T-92 + AGENTS.md PWA note. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-09-07 | T-93 | Dimulai & selesai (DONE): audit pemakaian logo/icon seluruh app — TEMUAN: (1) src/app/favicon.ico = segitiga putih default Next.js (19 Jun, pra-rebrand T-91) yang disajikan di /favicon.ico utk browser yang minta ico (Safari/bookmark/crawler) → diregenerasi multi-size 16/32/48/256 dari public/icons/icon-512.png (desain gradient gelap + logo, identik PWA); (2) slot logo UI memakai icon generik Leaf (Navbar mobile/desktop/drawer, Footer, AdminSidebar) & Download (InstallPrompt) → diganti heralogo.png dgn treatment konsisten icon T-91 (gradient #022c22→#09090b, logo contain, ring utk konteks gelap); Leaf di Navbar:574 (quick-nav) & icon navigasi lain TETAP (bukan slot logo). Sudah sesuai: manifest icons, metadata icons/OG/twitter, sw.js push icon/badge, OG produk. Verifikasi: next start (build produksi lokal) + browser — navbar desktop & drawer mobile, footer, sidebar admin, install banner (logo tampil konsisten), hydration OK (uji modal kategori), /favicon.ico 200 image/x-icon multi-size; 3 gerbang hijau. GOTCHA dev: SW lama + chunk Turbopack basi → 'Module factory not available' bikin hydration mati di dev — artefak dev, BUKAN bug kode (produksi lolos); solusi: unregister SW / hapus .next / uji via next start. Post-deploy: cek /favicon.ico live | zcode |
+| 2026-09-07 | T-95 | Dimulai & selesai (DONE): quick-nav beranda (HomeClient) di mobile selalu kepotong (overflow-x-auto, pill ke-3 tersemat) → animasi running marquee: track digandakan 2 set (salinan kedua aria-hidden), keyframes marquee translateX(-50%) 20s linear infinite HANYA di <md (desktop statis 1 set), pause animation saat hover, hormati prefers-reduced-motion (animation: none). Keyframes + class .quicknav-track di globals.css. REVISI: set duplikat semula `hidden md:flex` (KEBALIK — desktop tampil 6 pill) → diperbaiki `flex md:hidden` (duplikat hanya utk marquee <md). Gerbang lint 13 · typecheck 0 · build 0. Verifikasi DOM+visual: desktop 1280 = 3 pill statis (animation none); mobile 375 = 6 pill, marquee berjalan (transform bergeser ±11px/s, screenshot pill terpotong di tepi = mid-animation). Catatan: screenshot IAB bisa menyusun 2 tile berdampingan pada clip — pakai inspeksi DOM sbg sumber kebenaran | zcode |
+| 2026-09-07 | T-94 | Dimulai & selesai (DONE): akar masalah — tombol "Invoice" di OrderDetailModal sejak awal TIDAK punya onClick (tombol mati; tidak ada lib PDF di project). Fix: deps jspdf (dynamic import di handler → chunk lazy, tidak membebani bundle awal); handleDownloadInvoice generate A4: logo heralogo (fetch→dataURL, gagal = lanjut tanpa logo), header toko, INVOICE + no. order + tanggal, Ditagihkan kepada (nama/HP/alamat), info bayar/kirim/resi, tabel item (wrap nama), Subtotal/Ongkir/Diskon/TOTAL, footer ucapan terima kasih; save Invoice-<order_number>.pdf; state isDownloadingInvoice (tombol disabled). Gerbang lint 13 · typecheck 0 · build 0. Verifikasi (next start lokal + browser, admin login): klik Invoice → download event + file Downloads/Invoice-<order_number>.pdf valid (%PDF-1.3, logo ter-embed). Optimasi: logo di-downscale canvas 160px → PDF 114KB (versi awal full-res 6,3MB — turun 98%). Gotcha verifikasi: download ke-2+ dalam sesi IAB bisa pending izin multi-download Chrome — event fire tapi file tertunda; klik ulang/izin → file muncul | zcode |
 
 ---
 
@@ -3142,5 +3146,63 @@ bukan segitiga; 3 gerbang hijau + verifikasi visual.
   dlm kotak gradient gelap rounded-xl (p-1 ~80% contain)
 ~ Leaf tersisa hanya quick-nav Navbar:574; import Leaf dibersihkan di
   Footer/AdminSidebar, Download di InstallPrompt
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+
+---
+
+### T-94 — Fix download invoice (tombol Invoice mati di admin)
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-09-07 / 2026-09-07 |
+| Prioritas | P1 |
+| Sumber | Owner 2026-09-07 — "perbaiki invoice tidak bisa di download" |
+
+**Akar masalah:** tombol "Invoice" di `OrderDetailModal.tsx` (baris akhir) tidak
+punya `onClick` — mati sejak dibuat; tidak ada library PDF di project.
+
+**Desain:** deps `jspdf`, dynamic import di dalam handler (`await import("jspdf")`)
+→ lazy chunk. `handleDownloadInvoice` merakit invoice A4 dari data `order` yang
+sudah ada di modal (tanpa endpoint baru): logo heralogo.png (fetch → dataURL;
+gagal ambil logo = lanjut tanpa logo, tidak memblokir), header toko + website,
+judul INVOICE + nomor + tanggal + status, blok pelanggan (nama/HP/alamat kirim),
+metode bayar + status + resi, tabel item (nama di-wrap splitTextToSize),
+Subtotal/Ongkos Kirim/Diskon/Total, footer terima kasih + timestamp. Save sebagai
+`Invoice-<order_number>.pdf`. State `isDownloadingInvoice` disable tombol saat proses.
+
+**Scope-IN:** OrderDetailModal.tsx, package.json (jspdf), Entri plan.md ini.
+**Scope-OUT:** invoice sisi customer (belum ada tombolnya), ubah format data order.
+**Kriteria:** klik Invoice → file .pdf ter-download & bisa dibuka; 3 gerbang hijau.
+
+---
+
+### T-95 — Animasi running (marquee) quick-nav beranda
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-09-07 / 2026-09-07 |
+| Prioritas | P2 |
+| Sumber | Owner 2026-09-07 + screenshot — quick-nav (Flash Sale / Promo Terbatas / Semua) kepotong di mobile; "kasih animasi running aja" |
+
+**Desain:** track pill digandakan (salinan ke-2 `aria-hidden`, hidden di sm+),
+animasi marquee `translateX(0 → -50%)` 20s linear infinite hanya di layar <md
+(desktop tetap statis 1 set), `:hover` pause, `prefers-reduced-motion: reduce` →
+animasi off. Keyframes `marquee` + class `.quicknav-track` di globals.css;
+markup HomeClient tetap 1 sumber link (duplikat statis di JSX).
+
+**Scope-IN:** HomeClient.tsx (blok quick-nav), globals.css, Entri plan.md ini.
+**Scope-OUT:** menambah link/pill baru, navbar drawer admin.
+**Kriteria:** mobile = pill berjalan mulus tanpa putus & tetap bisa diklik;
+desktop = statis; reduced-motion = statis; 3 gerbang hijau + verifikasi visual.
+
+**Bukti**
+```
+~ globals.css: @keyframes marquee + .quicknav-track (<md only) + reduced-motion
+~ HomeClient: quicknav-track 2 set pill (set-2 aria-hidden + hidden sm:flex)
+~ OrderDetailModal: handleDownloadInvoice + jspdf dynamic import + isDownloading
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```

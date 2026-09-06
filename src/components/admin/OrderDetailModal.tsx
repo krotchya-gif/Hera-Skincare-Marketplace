@@ -18,6 +18,7 @@ export default function OrderDetailModal({
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [trackingNumberInput, setTrackingNumberInput] = useState("");
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const fetchOrderDetail = useCallback(async () => {
@@ -80,6 +81,184 @@ export default function OrderDetailModal({
         console.error("Failed to verify payment", error);
       }
     });
+  };
+
+  // T-94: download invoice PDF — jspdf di-import dinamis (chunk lazy, tidak
+  // membebani bundle awal). Data diambil dari objek `order` yang sudah ada.
+  const handleDownloadInvoice = async () => {
+    if (!order || isDownloadingInvoice) return;
+    setIsDownloadingInvoice(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const GREEN: [number, number, number] = [5, 150, 105];
+      const DARK: [number, number, number] = [17, 24, 39];
+      const GRAY: [number, number, number] = [107, 114, 128];
+      const M = 14;
+      const W = 210;
+
+      // Logo toko — di-downscale via canvas (160px) agar PDF ringan;
+      // gagal ambil = lanjut tanpa logo (tidak memblokir invoice)
+      try {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement("canvas");
+            c.width = 160;
+            c.height = 160;
+            const ctx = c.getContext("2d");
+            if (!ctx) return reject(new Error("canvas"));
+            ctx.drawImage(img, 0, 0, 160, 160);
+            resolve(c.toDataURL("image/png"));
+          };
+          img.onerror = () => reject(new Error("logo"));
+          img.src = "/heralogo.png";
+        });
+        doc.addImage(dataUrl, "PNG", M, 10, 20, 20);
+      } catch {
+        /* tanpa logo */
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(...DARK);
+      doc.text("Hera Skincare", M + 24, 16);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...GRAY);
+      doc.text("Marketplace skincare & perawatan pribadi", M + 24, 21);
+      doc.text("marketplace.calysta.fun", M + 24, 25.5);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(...GREEN);
+      doc.text("INVOICE", W - M, 18, { align: "right" });
+      doc.setFontSize(10);
+      doc.setTextColor(...DARK);
+      doc.text(`#${order.order_number}`, W - M, 24, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...GRAY);
+      doc.text(
+        new Date(order.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+        W - M,
+        28.5,
+        { align: "right" }
+      );
+
+      doc.setDrawColor(...GREEN);
+      doc.setLineWidth(0.5);
+      doc.line(M, 34, W - M, 34);
+
+      const y = 42;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(...GRAY);
+      doc.text("DITAGIHKAN KEPADA", M, y);
+      doc.setFontSize(10);
+      doc.setTextColor(...DARK);
+      doc.text(order.profiles?.name || "Pelanggan", M, y + 5.5);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...GRAY);
+      const phone = order.profiles?.phone || order.shipping_address?.phone || "-";
+      doc.text(`No. HP: ${phone}`, M, y + 10.5);
+      const addr = order.shipping_address
+        ? `${order.shipping_address.address}, ${order.shipping_address.city}, ${order.shipping_address.province} ${order.shipping_address.postal_code}`
+        : "-";
+      const addrLines = doc.splitTextToSize(addr, 92);
+      doc.text(addrLines, M, y + 15.5);
+
+      const payLabel =
+        order.payment_status === "lunas" ? "Lunas" : order.payment_status === "gagal" ? "Gagal" : "Belum Bayar";
+      const infoRows = [
+        `Metode: ${order.payment_method || "Transfer"}`,
+        `Status: ${payLabel}`,
+        `Kurir: ${order.shipping_method || "Regular"}`,
+        order.tracking_number ? `Resi: ${order.tracking_number}` : null,
+      ].filter((t): t is string => t !== null);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(...GRAY);
+      doc.text("PEMBAYARAN & PENGIRIMAN", W - M, y, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...DARK);
+      infoRows.forEach((t, i) => doc.text(t, W - M, y + 5.5 + i * 5, { align: "right" }));
+
+      // Tabel item
+      const tableTop = Math.max(78, y + 16 + addrLines.length * 4.6 + 4);
+      doc.setFillColor(...GREEN);
+      doc.rect(M, tableTop, W - 2 * M, 8, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(255, 255, 255);
+      doc.text("Produk", M + 2, tableTop + 5.5);
+      doc.text("Qty", 118, tableTop + 5.5, { align: "right" });
+      doc.text("Harga", 140, tableTop + 5.5, { align: "right" });
+      doc.text("Subtotal", W - M - 2, tableTop + 5.5, { align: "right" });
+
+      let ry = tableTop + 8;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...DARK);
+      for (const item of order.order_items ?? []) {
+        const nameLines = doc.splitTextToSize(item.product_name, 96) as string[];
+        const rowH = Math.max(nameLines.length * 4.6 + 3, 9);
+        doc.setDrawColor(229, 231, 235);
+        doc.line(M, ry + rowH - 1, W - M, ry + rowH - 1);
+        doc.setFontSize(9);
+        doc.text(nameLines, M + 2, ry + 4);
+        doc.text(String(item.qty), 118, ry + 4, { align: "right" });
+        doc.text(formatRp(item.price), 140, ry + 4, { align: "right" });
+        doc.setFont("helvetica", "bold");
+        doc.text(formatRp(item.subtotal), W - M - 2, ry + 4, { align: "right" });
+        doc.setFont("helvetica", "normal");
+        ry += rowH;
+      }
+
+      // Rincian biaya
+      let ly = ry + 6;
+      const costRows: Array<[string, string]> = [
+        ["Subtotal", formatRp(order.subtotal)],
+        [`Ongkos Kirim (${order.shipping_method || "Regular"})`, formatRp(order.shipping_cost)],
+        ["Diskon", `- ${formatRp(order.discount)}`],
+      ];
+      for (const [label, val] of costRows) {
+        doc.setFontSize(9);
+        doc.setTextColor(...GRAY);
+        doc.text(label, M + 2, ly);
+        doc.setTextColor(...DARK);
+        doc.text(val, W - M - 2, ly, { align: "right" });
+        ly += 5.5;
+      }
+      doc.setDrawColor(...GREEN);
+      doc.setLineWidth(0.4);
+      doc.line(M + 2, ly, W - M - 2, ly);
+      ly += 7;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(...DARK);
+      doc.text("TOTAL", M + 2, ly);
+      doc.setTextColor(...GREEN);
+      doc.text(formatRp(order.total), W - M - 2, ly, { align: "right" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAY);
+      doc.text(
+        "Terima kasih telah berbelanja di Hera Skincare. Invoice ini dibuat otomatis dan sah tanpa tanda tangan basah.",
+        M,
+        285,
+        { maxWidth: W - 2 * M }
+      );
+      doc.text(`Dicetak: ${new Date().toLocaleString("id-ID")}`, M, 290);
+
+      doc.save(`Invoice-${order.order_number}.pdf`);
+    } catch (err) {
+      console.error("[Invoice] Gagal membuat PDF", err);
+      alert("Gagal membuat invoice. Silakan coba lagi.");
+    } finally {
+      setIsDownloadingInvoice(false);
+    }
   };
 
   if (isLoading || !order) {
@@ -308,8 +487,12 @@ export default function OrderDetailModal({
                 Batalkan
               </button>
             )}
-            <button className="px-4 border border-gray-200 text-gray-600 font-semibold py-2.5 rounded-xl text-xs hover:bg-gray-50">
-              Invoice
+            <button
+              disabled={isDownloadingInvoice}
+              onClick={handleDownloadInvoice}
+              className="px-4 border border-gray-200 text-gray-600 font-semibold py-2.5 rounded-xl text-xs hover:bg-gray-50 disabled:opacity-50"
+            >
+              {isDownloadingInvoice ? "Menyiapkan..." : "Invoice"}
             </button>
           </div>
         </div>
