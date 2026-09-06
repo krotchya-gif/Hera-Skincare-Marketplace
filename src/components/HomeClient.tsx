@@ -25,6 +25,7 @@ import {
   ArrowRight,
   Package,
   Tag,
+  TicketPercent,
 } from "lucide-react";
 import type { Product, Category } from "@/types/database";
 import { CategoryIcon } from "@/components/CategoryIcon";
@@ -458,6 +459,13 @@ export default function HomeClient({ categories, flashSaleProducts, bestSellerPr
       >
         <Tag className="w-3.5 h-3.5" /> Promo Terbatas
       </a>
+      <Link
+        href="/voucher"
+        tabIndex={duplicate ? -1 : undefined}
+        className="mr-2 flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full bg-violet-50 text-violet-700 border border-violet-100 text-xs font-semibold hover:bg-violet-100 transition-colors"
+      >
+        <TicketPercent className="w-3.5 h-3.5" /> Voucher
+      </Link>
       <Link
         href="/kategori/semua"
         tabIndex={duplicate ? -1 : undefined}
