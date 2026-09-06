@@ -55,7 +55,7 @@ marketplace/
 ## Fitur
 
 ### Customer (18 halaman)
-- **Homepage** — Hero, Kategori Populer, Flash Sale (countdown), Terlaris, Promo
+- **Homepage** — Hero, Kategori Populer, Flash Sale (countdown), Terlaris, Promo; quick-nav strip berjalan (marquee di mobile, statis di desktop): Flash Sale / Promo Terbatas / **Voucher** / Semua Produk (T-95/96)
 - **Kategori** — Breadcrumb, sub-kategori, filter, pagination
 - **Detail Produk** — Galeri gambar, varian, qty, CTA, tab deskripsi/ulasan/**tanya jawab**, rekomendasi, tombol perbandingan
 - **Perbandingan** — Bandingkan hingga 4 produk side-by-side (`/perbandingan`)
@@ -74,7 +74,7 @@ marketplace/
 ### Admin Dashboard (12 halaman)
 - **Overview** — 4 KPI + LineChart 30 hari + PieChart + badge status payment
 - **Produk** — CRUD + toggle status + upload foto, slide-out form modal
-- **Pesanan** — Filter status/date, detail modal, update status + resi + **verifikasi pembayaran manual** (lunas/gagal)
+- **Pesanan** — Filter status/date, detail modal, update status + resi + **verifikasi pembayaran manual** (lunas/gagal) + **download invoice PDF** (jspdf: logo toko, item, rincian biaya — T-94)
 - **Pelanggan** — Tabel + total belanja + riwayat + block/activate
 - **Kategori** — Card grid + CRUD + **pemilih icon Lucide**
 - **Blog** — CRUD artikel blog (slug, title, excerpt, ikon)
@@ -98,7 +98,7 @@ marketplace/
 - **Client Routing** — Navigasi internal memakai `useRouter().push()` (bukan `window.location.href`).
 - **Pembayaran Online** — Xendit Invoice API v2 (QRIS/e-wallet/VA/kartu/retail) via route server-side; webhook `x-callback-token` verified + idempotent + cek `paid_amount`; alur transfer manual tetap utuh (customer lapor → admin verifikasi).
 - **Notifikasi Otomatis** — Email (Resend) & WhatsApp (Fonnte) ke customer saat status pesanan berubah; fire-and-forget, nonaktif bila env kosong.
-- **Push Notification (T-64)** — Web Push VAPID: opt-in di homepage (user login), service worker `public/sw.js`, broadcast dari tab Marketing → Push; prune langganan mati otomatis; nonaktif bila env kosong.
+- **Push Notification (T-64)** — Web Push VAPID: opt-in di homepage (user login), service worker `public/sw.js`, broadcast dari tab Marketing → Push; prune langganan mati otomatis; nonaktif bila env kosong. **Env VAPID terpasang — aktif di produksi sejak 2026-09-07.**
 - **Banner Promosi (T-63/78/79)** — CRUD banner di tab Marketing → Banner; 2 posisi: **Hero (atas, 16:5/4:3)** & **Promo (bawah, 11:2/2:1)**; dua layout gambar (desktop & mobile, ukuran dicantumkan di form sebagai patokan); carousel auto-rotate di homepage. Frame efektif di layar: hero 1232×385/800×600, promo 1232×224/700×350 — gambar WAJIB mengikuti rasio frame agar tidak terpotong (object-cover).
 - **Event Tracking & UTM** — event_logs (5 pemicu) + utm_visits + orders.utm_source untuk atribusi kampanye.
 - **Ikon** — Semua UI memakai icon Lucide (termasuk kategori — nama icon disimpan di DB, dirender via `CategoryIcon`).
@@ -209,9 +209,9 @@ Terapkan pada project baru via **Supabase MCP** (`apply_migration`) — DILARANG
 | `XENDIT_SECRET_KEY` / `XENDIT_CALLBACK_TOKEN` | opsional | Pembayaran online Xendit |
 | `RESEND_API_KEY` / `RESEND_FROM_EMAIL` / `FONNTE_TOKEN` | opsional | Notifikasi Email/WA |
 | `RAJAONGKIR_API_KEY` | opsional | Ongkir real RajaOngkir V2/Komerce (T-54); kosong = tarif flat |
-| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | opsional | Web Push notification (T-64); kosong = fitur nonaktif |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | opsional | Web Push notification (T-64); terpasang di Vercel — push aktif produksi (2026-09-07); kosong = fitur nonaktif |
 | `NEXT_PUBLIC_STORE_*` (5 var) | opsional | Fallback di `storeConfig.ts` |
 
 ## Status
 
-Semua pekerjaan aktif dilacak di **[`plan.md`](plan.md)** (single source of truth — protokol task, Definition of Done, changelog). Riwayat audit lama: `doc.md` & `Todo.md` (arsip lokal — sudah dihapus 2026-08-29, lihat T-15).
+Roadmap **T-01..T-96 semuanya DONE** — tracker, protokol, dan bukti tiap task ada di **[`plan.md`](plan.md)** (single source of truth — protokol task, Definition of Done, changelog). Produksi live di https://marketplace.calysta.fun (Vercel auto-deploy dari push `master`; build harus exit 0 dulu). Push notification (VAPID) & ongkir real (RajaOngkir, `origin_area_id` 6529) aktif. Sisa aksi owner: enable Search Console API + SA Owner di GCP (GSC), transisi Xendit ke Live setelah verifikasi bisnis. Riwayat audit lama: `doc.md` & `Todo.md` (arsip lokal — sudah dihapus 2026-08-29, lihat T-15).
