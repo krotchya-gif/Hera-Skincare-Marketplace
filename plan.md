@@ -152,6 +152,7 @@ npm run build       # exit 0
 | T-89 | P1 | PWA penuh: auto-register SW semua visitor + pre-cache app shell + offline fallback (network-first navigasi, cache-first _next/static) | DONE |
 | T-90 | P1 | Install prompt terkendali: banner custom (beforeinstallprompt + iOS guide), dismiss TTL 1 hari, hilang permanen saat ter-install | DONE |
 | T-91 | P2 | Icon & OG/Twitter rebrand ke heralogo.png (file statis /icons/, hapus 4 route dinamis, metadata openGraph+twitter) | DONE |
+| T-92 | P1 | Fix install prompt muncul tiap load/refresh: TTL dismiss tidak dicek di handler beforeinstallprompt (path Chrome) + tanpa jeda — evaluasi terpusat cek TTL di semua jalur + delay tampil 6 detik | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -915,6 +916,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-31 | T-88 | Dimulai & selesai (DONE): optimasi loading image — akar masalah: banner/hero homepage PNG 1.3–1.9 MB (total ±10 MB). Solusi: helper src/lib/image.ts optimizeImageUrl() pakai Supabase Image Transformation (render/image, resize=cover + format=webp + quality=80) untuk BannerCarousel (BANNER_HERO/BANNER_STRIP 1232×385/800×600 & 1232×224/700×350), HeroBanner HomeClient (+ fetchPriority=high, LCP) & blog cover (BLOG_COVER 480); decoding=async di img produk Home/Category. Verifikasi live: 2244×701 PNG 1692KB → 32KB WebP (200 image/webp, -98%). Gambar produk sudah ringan (32KB) — tidak di-resize. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-08-31 | T-89 s/d T-91 | Dimulai & selesai (DONE): PWA penuh + install prompt + rebrand icon/OG. T-89: sw.js upgrade (CACHE_VERSION hera-pwa-v1, pre-cache app shell /+icons+manifest, fetch navigate network-first → fallback cache /, _next/static cache-first, activate cleanup) + auto-register semua visitor di layout. T-90: InstallPrompt.tsx (beforeinstallprompt → tombol Install prompt() native; iOS guide Add to Home Screen; dismiss TTL 1 hari via localStorage; hilang permanen saat appinstalled/standalone). T-91: public/icons/ statis dari heralogo.png (192/512/apple/favicon gradient gelap + logo; og 1200×630 gradient hijau) — hapus 4 route icon dinamis; manifest icons + metadata layout icons/openGraph(siteName, og.png absolute)/twitter(summary_large_image); sw.js path icon baru. .next/types regenerated (route icon lama dihapus). Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-09-07 | — | Push notification T-64 AKTIF produksi: owner pasang 3 env VAPID di Vercel — verifikasi user-level: login customer test → GET /api/push/subscribe = 200 + publicKey 87 char (guest 401 by design: handler cek auth sebelum cek env); sw.js produksi 200. Sinkron AGENTS.md Live Systems + catatan UNVERIFIED T-64. Sisa UNVERIFIED: E2E subscribe + broadcast (butuh perangkat nyata) | zcode |
+| 2026-09-07 | T-92 | Dimulai & selesai (DONE): fix install prompt muncul tiap load/refresh — 2 akar masalah di InstallPrompt.tsx: (1) handler beforeinstallprompt (path Chrome) set mode TANPA cek TTL localStorage pwa-install-dismissed → walau sudah ditutup (X), banner muncul lagi di refresh berikutnya; (2) tanpa jeda tampil. Fix: evaluasi terpusat evaluate() — TTL dicek ulang di semua jalur (timer jeda + event BIP), banner baru tampil setelah jeda 6 detik (SHOW_DELAY_MS) di halaman, initial state null murni (lazy initializer dihapus). Perilaku lain tetap: standalone/appinstalled tidak pernah tampil, X/Install-dibatalkan → TTL 1 hari, iOS petunjuk Share→Add to Home Screen. Entri T-92 + AGENTS.md PWA note. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 
 ---
 
@@ -3055,3 +3057,43 @@ Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```
 
+
+
+---
+
+### T-92 — Fix install prompt PWA muncul tiap load/refresh (jeda + TTL di semua jalur)
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-09-07 / 2026-09-07 |
+| Prioritas | P1 |
+| Sumber | Owner 2026-09-07 — "sangat mengganggu muncul setiap buka halaman, atau refresh seharusnya dibuat jeda" |
+
+**Akar masalah (2):**
+1. Handler `beforeinstallprompt` (Chrome/Android) langsung `setMode("chrome")`
+   TANPA cek `localStorage pwa-install-dismissed` — cek TTL hanya ada di lazy
+   initializer yang di Chrome selalu `return null` (guard
+   `"onbeforeinstallprompt" in window`). Hasil: banner yang sudah ditutup (X)
+   tetap muncul lagi tiap refresh di Chrome/Android.
+2. Tidak ada jeda — banner tampil instan begitu halaman load.
+
+**Desain (fix InstallPrompt.tsx):** evaluasi terpusat `evaluate()` yang
+selalu cek ulang TTL, dipanggil dari event BIP dan timer jeda
+`SHOW_DELAY_MS = 6000` (banner tampil setelah ±6 detik di halaman —
+bukan instan saat load/refresh). Initial state `null` murni (lazy
+initializer dihapus). Perilaku lain tetap: standalone/appinstalled →
+tidak pernah tampil; X/Install-dibatalkan → TTL 1 hari; iOS tetap petunjuk
+Share → Add to Home Screen.
+
+**Scope-IN:** `src/components/InstallPrompt.tsx`; Entri plan.md ini + AGENTS.md PWA note.
+**Scope-OUT:** TTL tetap 1 hari (keputusan T-90), prompt native mini-infobar, PushOptIn.
+**Kriteria:** Chrome: X → tidak muncul 24 jam meski refresh; tampil baru
+setelah jeda; 3 gerbang hijau + bukti.
+
+**Bukti**
+```
+~ InstallPrompt.tsx: evaluate() terpusat (cek TTL di BIP + timer),
+  SHOW_DELAY_MS 6000, listeners + timeout di-cleanup
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
