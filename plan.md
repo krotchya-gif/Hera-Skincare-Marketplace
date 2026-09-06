@@ -153,6 +153,7 @@ npm run build       # exit 0
 | T-90 | P1 | Install prompt terkendali: banner custom (beforeinstallprompt + iOS guide), dismiss TTL 1 hari, hilang permanen saat ter-install | DONE |
 | T-91 | P2 | Icon & OG/Twitter rebrand ke heralogo.png (file statis /icons/, hapus 4 route dinamis, metadata openGraph+twitter) | DONE |
 | T-92 | P1 | Fix install prompt muncul tiap load/refresh: TTL dismiss tidak dicek di handler beforeinstallprompt (path Chrome) + tanpa jeda — evaluasi terpusat cek TTL di semua jalur + delay tampil 6 detik | DONE |
+| T-93 | P1 | Sinkronisasi logo & icon sesuai kebutuhan: slot logo UI (Navbar x3, Footer, AdminSidebar, InstallPrompt) masih icon generik Leaf/Download + favicon.ico = segitiga putih default scaffold (pra-rebrand) — ganti slot logo dgn heralogo.png (desain konsisten icon T-91) + regenerasi favicon.ico dari icon-512 | DONE |
 
 Urutan pengerjaan = urutan ID. Jangan mengerjakan ID lebih tinggi sebelum ID lebih rendah DONE (kecuali pemilik project secara eksplisit mengubah urutan di tabel ini).
 > ⚠️ Pengecualian aktif: **T-08 dikerjakan lebih dahulu atas instruksi eksplisit pemilik project (22 Agu 2026)** tanpa menunda status task lain.
@@ -917,6 +918,7 @@ Gerbang   : lint 14 err/0 warn · typecheck exit 0 · build exit 0
 | 2026-08-31 | T-89 s/d T-91 | Dimulai & selesai (DONE): PWA penuh + install prompt + rebrand icon/OG. T-89: sw.js upgrade (CACHE_VERSION hera-pwa-v1, pre-cache app shell /+icons+manifest, fetch navigate network-first → fallback cache /, _next/static cache-first, activate cleanup) + auto-register semua visitor di layout. T-90: InstallPrompt.tsx (beforeinstallprompt → tombol Install prompt() native; iOS guide Add to Home Screen; dismiss TTL 1 hari via localStorage; hilang permanen saat appinstalled/standalone). T-91: public/icons/ statis dari heralogo.png (192/512/apple/favicon gradient gelap + logo; og 1200×630 gradient hijau) — hapus 4 route icon dinamis; manifest icons + metadata layout icons/openGraph(siteName, og.png absolute)/twitter(summary_large_image); sw.js path icon baru. .next/types regenerated (route icon lama dihapus). Gerbang lint 13 · typecheck 0 · build 0 | zcode |
 | 2026-09-07 | — | Push notification T-64 AKTIF produksi: owner pasang 3 env VAPID di Vercel — verifikasi user-level: login customer test → GET /api/push/subscribe = 200 + publicKey 87 char (guest 401 by design: handler cek auth sebelum cek env); sw.js produksi 200. Sinkron AGENTS.md Live Systems + catatan UNVERIFIED T-64. Sisa UNVERIFIED: E2E subscribe + broadcast (butuh perangkat nyata) | zcode |
 | 2026-09-07 | T-92 | Dimulai & selesai (DONE): fix install prompt muncul tiap load/refresh — 2 akar masalah di InstallPrompt.tsx: (1) handler beforeinstallprompt (path Chrome) set mode TANPA cek TTL localStorage pwa-install-dismissed → walau sudah ditutup (X), banner muncul lagi di refresh berikutnya; (2) tanpa jeda tampil. Fix: evaluasi terpusat evaluate() — TTL dicek ulang di semua jalur (timer jeda + event BIP), banner baru tampil setelah jeda 6 detik (SHOW_DELAY_MS) di halaman, initial state null murni (lazy initializer dihapus). Perilaku lain tetap: standalone/appinstalled tidak pernah tampil, X/Install-dibatalkan → TTL 1 hari, iOS petunjuk Share→Add to Home Screen. Entri T-92 + AGENTS.md PWA note. Gerbang lint 13 · typecheck 0 · build 0 | zcode |
+| 2026-09-07 | T-93 | Dimulai & selesai (DONE): audit pemakaian logo/icon seluruh app — TEMUAN: (1) src/app/favicon.ico = segitiga putih default Next.js (19 Jun, pra-rebrand T-91) yang disajikan di /favicon.ico utk browser yang minta ico (Safari/bookmark/crawler) → diregenerasi multi-size 16/32/48/256 dari public/icons/icon-512.png (desain gradient gelap + logo, identik PWA); (2) slot logo UI memakai icon generik Leaf (Navbar mobile/desktop/drawer, Footer, AdminSidebar) & Download (InstallPrompt) → diganti heralogo.png dgn treatment konsisten icon T-91 (gradient #022c22→#09090b, logo contain, ring utk konteks gelap); Leaf di Navbar:574 (quick-nav) & icon navigasi lain TETAP (bukan slot logo). Sudah sesuai: manifest icons, metadata icons/OG/twitter, sw.js push icon/badge, OG produk. Verifikasi: next start (build produksi lokal) + browser — navbar desktop & drawer mobile, footer, sidebar admin, install banner (logo tampil konsisten), hydration OK (uji modal kategori), /favicon.ico 200 image/x-icon multi-size; 3 gerbang hijau. GOTCHA dev: SW lama + chunk Turbopack basi → 'Module factory not available' bikin hydration mati di dev — artefak dev, BUKAN bug kode (produksi lolos); solusi: unregister SW / hapus .next / uji via next start. Post-deploy: cek /favicon.ico live | zcode |
 
 ---
 
@@ -3095,5 +3097,50 @@ setelah jeda; 3 gerbang hijau + bukti.
 ```
 ~ InstallPrompt.tsx: evaluate() terpusat (cek TTL di BIP + timer),
   SHOW_DELAY_MS 6000, listeners + timeout di-cleanup
+Gerbang: lint 13 (baseline) · typecheck 0 · build 0
+```
+
+
+---
+
+### T-93 — Sinkronisasi penggunaan logo & icon sesuai kebutuhan
+
+| Field | Isi |
+|---|---|
+| Status | `DONE` |
+| Mulai / Selesai | 2026-09-07 / 2026-09-07 |
+| Prioritas | P1 |
+| Sumber | Owner 2026-09-07 — "penggunaan icon dan logo pastikan berlaku sesuai kebutuhan" |
+
+**Hasil audit:**
+- SESUAI: manifest icons (192 maskable + 512 any), metadata layout (favicon.png
+  32, apple 180, OG/twitter og.png 1200x630), sw.js push icon/badge = icon-192,
+  OG produk (route-level), STORE_NAME.
+- TIDAK SESUAI (diperbaiki):
+  1. `src/app/favicon.ico` = segitiga putih default scaffold Next.js (19 Jun,
+     pra-rebrand) — disajikan di `/favicon.ico` untuk konteks yang minta ico
+     (Safari, bookmark, sebagian crawler) → diregenerasi dari icon-512.png
+     (multi-size 16/32/48/256, desain identik ikon PWA).
+  2. Slot logo UI memakai ikon generik, bukan logo toko: Navbar (mobile top,
+     desktop, drawer) + Footer = Leaf; AdminSidebar = Leaf; InstallPrompt =
+     Download → diganti `heralogo.png` dgn treatment konsisten ikon T-91
+     (gradient #022c22→#09090b, logo contain ~80%, ring-white/15 di konteks gelap).
+- SENGaja TETAP: Leaf Navbar:574 (fallback ikon quick-nav), ikon navigasi
+  lucide lainnya (bukan slot logo), letter-avatar kurir di checkout.
+
+**Scope-IN:** Navbar.tsx, Footer.tsx, admin/AdminSidebar.tsx, InstallPrompt.tsx,
+src/app/favicon.ico; Entri plan.md ini + README + AGENTS.md.
+**Scope-OUT:** manifest icons (sudah sesuai), ikon kategori (categories.icon),
+letter-avatar kurir/pembayaran checkout.
+**Kriteria:** slot logo tampil logo toko konsisten dgn icon app; /favicon.ico
+bukan segitiga; 3 gerbang hijau + verifikasi visual.
+
+**Bukti**
+```
+~ favicon.ico: 16/32/48/256 dari icon-512 (PIL, LANCZOS)
+~ Navbar x3 + Footer + AdminSidebar + InstallPrompt: <img /heralogo.png>
+  dlm kotak gradient gelap rounded-xl (p-1 ~80% contain)
+~ Leaf tersisa hanya quick-nav Navbar:574; import Leaf dibersihkan di
+  Footer/AdminSidebar, Download di InstallPrompt
 Gerbang: lint 13 (baseline) · typecheck 0 · build 0
 ```

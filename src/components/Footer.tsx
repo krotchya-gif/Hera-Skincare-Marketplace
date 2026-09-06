@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Leaf, Camera, Music2, ThumbsUp, CreditCard, Landmark, Smartphone, Banknote } from "lucide-react";
+import { Camera, Music2, ThumbsUp, CreditCard, Landmark, Smartphone, Banknote } from "lucide-react";
 import { STORE_NAME } from "@/utils/storeConfig";
 
 export default function Footer() {
@@ -41,8 +41,9 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-3 group">
-              <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-emerald-500/30 transition-all duration-300">
-                <Leaf className="w-5 h-5 text-white" />
+              <div className="w-9 h-9 bg-gradient-to-br from-[#022c22] to-[#09090b] rounded-xl flex items-center justify-center shadow-md ring-1 ring-white/15 group-hover:shadow-emerald-500/30 transition-all duration-300 overflow-hidden shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element -- logo toko statis dari /public */}
+                <img src="/heralogo.png" alt={`Logo ${STORE_NAME}`} className="w-full h-full object-contain p-1" />
               </div>
               <span className="font-bold text-white tracking-tight">{STORE_NAME}</span>
             </Link>

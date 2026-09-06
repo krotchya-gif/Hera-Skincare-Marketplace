@@ -12,7 +12,7 @@
 // Prompt native browser (mini-infobar) dibiarkan apa adanya.
 
 import { useEffect, useState } from "react";
-import { Download, X } from "lucide-react";
+import { X } from "lucide-react";
 
 const LS_KEY = "pwa-install-dismissed";
 const DISMISS_TTL = 24 * 60 * 60 * 1000;
@@ -105,8 +105,9 @@ export default function InstallPrompt() {
   return (
     <div className="fixed bottom-20 sm:bottom-6 left-0 right-0 z-50 px-4 flex justify-center pointer-events-none">
       <div className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 flex items-center gap-3 animate-fade-in-up">
-        <div className="w-11 h-11 rounded-xl bg-green-600 flex items-center justify-center shrink-0 shadow-lg shadow-green-900/30">
-          <Download className="w-5 h-5 text-white" />
+        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#022c22] to-[#09090b] flex items-center justify-center shrink-0 shadow-lg ring-1 ring-black/5 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element -- logo toko statis dari /public */}
+          <img src="/heralogo.png" alt="Logo Hera Skincare" className="w-full h-full object-contain p-1" />
         </div>
         <div className="flex-1 min-w-0">
           {mode === "chrome" ? (

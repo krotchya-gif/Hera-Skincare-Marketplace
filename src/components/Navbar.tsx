@@ -203,8 +203,9 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
             <div className="flex items-center justify-between">
               {/* Logo */}
               <Link href="/" className="flex items-center gap-2 shrink-0 group">
-                <div className="w-8.5 h-8.5 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-md">
-                  <Leaf className="w-4 h-4 text-white" />
+                <div className="w-8.5 h-8.5 bg-gradient-to-br from-[#022c22] to-[#09090b] rounded-xl flex items-center justify-center shadow-md overflow-hidden shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- logo toko statis dari /public */}
+                  <img src="/heralogo.png" alt={`Logo ${STORE_NAME}`} className="w-full h-full object-contain p-1" />
                 </div>
                 <div>
                   <p className="font-bold text-emerald-700 text-sm leading-none tracking-tight">
@@ -292,8 +293,9 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
           <div className="hidden md:flex items-center gap-3 py-3.5">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-emerald-200 transition-all duration-300">
-                <Leaf className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-[#022c22] to-[#09090b] rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-emerald-200 transition-all duration-300 overflow-hidden shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element -- logo toko statis dari /public */}
+                <img src="/heralogo.png" alt={`Logo ${STORE_NAME}`} className="w-full h-full object-contain p-1" />
               </div>
               <div>
                 <p className="font-bold text-emerald-700 text-base leading-tight tracking-tight">
@@ -503,8 +505,9 @@ export default function Navbar({ hideBottomBar = false }: { hideBottomBar?: bool
 
             {/* Logo inside drawer */}
             <div className="flex items-center gap-2">
-              <div className="w-7.5 h-7.5 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center shadow-sm">
-                <Leaf className="w-3.5 h-3.5 text-white" />
+              <div className="w-7.5 h-7.5 bg-gradient-to-br from-[#022c22] to-[#09090b] rounded-lg flex items-center justify-center shadow-sm overflow-hidden shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element -- logo toko statis dari /public */}
+                <img src="/heralogo.png" alt={`Logo ${STORE_NAME}`} className="w-full h-full object-contain p-0.5" />
               </div>
               <span className="font-bold text-emerald-700 text-sm tracking-tight">{STORE_NAME}</span>
             </div>
